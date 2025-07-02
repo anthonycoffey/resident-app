@@ -7,6 +7,8 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import { AuthProvider, useAuth } from '@/lib/providers/AuthProvider';
+import { useRouter } from 'expo-router';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -15,7 +17,7 @@ export {
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  initialRouteName: '(auth)/login',
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -42,16 +44,43 @@ export default function RootLayout() {
     return null;
   }
 
-  return <RootLayoutNav />;
+  return (
+    <AuthProvider>
+      <RootLayoutNav />
+    </AuthProvider>
+  );
 }
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (!user) {
+      router.replace('/(auth)/login');
+      return;
+    }
+
+    const roles = user.claims.roles || [];
+    let route: `/(resident)` | `/(service-provider)` | `/(auth)/login` = '/(auth)/login';
+
+    if (roles.includes('resident') || roles.includes('admin')) {
+      route = '/(resident)';
+    } else if (roles.includes('service_provider')) {
+      route = '/(service-provider)';
+    }
+    router.replace(route);
+  }, [user, loading]);
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(resident)" options={{ headerShown: false }} />
+        <Stack.Screen name="(service-provider)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
     </ThemeProvider>

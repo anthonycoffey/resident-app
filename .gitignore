@@ -31,7 +31,20 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
 .env*.local
 
 # typescript
 *.tsbuildinfo
+
+# Cline Memory Bank
+memory-bank/
+example/
+
+# Credentials
+google-services.json
+GoogleService-Info.plist
+
+# native directories
+android/
+ios/
