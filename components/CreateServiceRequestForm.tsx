@@ -24,8 +24,10 @@ import { db } from '@/lib/config/firebaseConfig';
 import { Property } from '@/lib/providers/AuthProvider';
 import DateTimePicker, {
   DateTimePickerEvent,
+  DateTimePickerAndroid,
 } from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { format, formatDistanceToNow, addMinutes } from 'date-fns';
 import DropDownPicker from 'react-native-dropdown-picker';
 import Badge from '@/components/ui/Badge';
 
@@ -46,8 +48,8 @@ const CreateServiceRequestForm = ({
   const [residentName, setResidentName] = useState(user?.displayName || '');
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState('');
-  const [serviceDateTime, setServiceDateTime] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [arrivalTime, setArrivalTime] = useState(addMinutes(new Date(), 30));
+  const [showDateTimePicker, setShowDateTimePicker] = useState(false);
   const [serviceLocationObject, setServiceLocationObject] = useState<
     object | null
   >(null);
@@ -245,7 +247,7 @@ const CreateServiceRequestForm = ({
         organizationId: user.organizationId,
         propertyId: user.propertyId,
         residentNotes: residentNotes.trim(),
-        serviceDateTime: serviceDateTime.toISOString(),
+        arrivalTime: arrivalTime.toISOString(),
         phone: phone.trim(),
         smsConsent,
         serviceLocationAddress: serviceLocationObject,
@@ -266,7 +268,7 @@ const CreateServiceRequestForm = ({
       setSelectedVehicle(null);
       setResidentNotes('');
       setSmsConsent(false);
-      setServiceDateTime(new Date());
+      setArrivalTime(addMinutes(new Date(), 30));
     } catch (error) {
       console.error('Error submitting service request:', error);
       Alert.alert('Error', 'Failed to submit service request.');
@@ -275,10 +277,66 @@ const CreateServiceRequestForm = ({
     }
   };
 
-  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    const currentDate = selectedDate || serviceDateTime;
-    setShowDatePicker(Platform.OS === 'ios');
-    setServiceDateTime(currentDate);
+  const handleAppleDateTimeChange = (
+    event: DateTimePickerEvent,
+    selectedDate?: Date
+  ) => {
+    const pickerIsCurrentlyVisible = showDateTimePicker;
+
+    if (event.type === 'set' && selectedDate) {
+      setArrivalTime(selectedDate);
+    }
+    if (pickerIsCurrentlyVisible) {
+      setShowDateTimePicker(false);
+    }
+  };
+
+  const handleAndroidTimeChange = (
+    event: DateTimePickerEvent,
+    selectedTime?: Date,
+    dateFromPicker?: Date
+  ) => {
+    if (event.type === 'set' && selectedTime) {
+      const finalArrivalTime = new Date(dateFromPicker || arrivalTime);
+      finalArrivalTime.setHours(selectedTime.getHours());
+      finalArrivalTime.setMinutes(selectedTime.getMinutes());
+      finalArrivalTime.setSeconds(0);
+      finalArrivalTime.setMilliseconds(0);
+      setArrivalTime(finalArrivalTime);
+    }
+  };
+
+  const handleAndroidDateChange = (
+    event: DateTimePickerEvent,
+    selectedDate?: Date
+  ) => {
+    if (event.type === 'set' && selectedDate) {
+      const newArrivalTime = new Date(arrivalTime);
+      newArrivalTime.setFullYear(selectedDate.getFullYear());
+      newArrivalTime.setMonth(selectedDate.getMonth());
+      newArrivalTime.setDate(selectedDate.getDate());
+      setArrivalTime(newArrivalTime);
+
+      DateTimePickerAndroid.open({
+        mode: 'time',
+        value: newArrivalTime,
+        onChange: (event, time) =>
+          handleAndroidTimeChange(event, time, newArrivalTime),
+        is24Hour: false,
+      });
+    }
+  };
+
+  const openDateTimePicker = () => {
+    if (Platform.OS === 'android') {
+      DateTimePickerAndroid.open({
+        mode: 'date',
+        value: arrivalTime,
+        onChange: handleAndroidDateChange,
+      });
+    } else if (Platform.OS === 'ios') {
+      setShowDateTimePicker(true);
+    }
   };
 
   return (
@@ -299,20 +357,20 @@ const CreateServiceRequestForm = ({
       />
 
       <Text style={styles.label}>Service Date & Time</Text>
-      {Platform.OS === 'android' && (
-        <Button
-          onPress={() => setShowDatePicker(true)}
-          title='Select Date and Time'
-        />
-      )}
-      {(showDatePicker || Platform.OS === 'ios') && (
+      <TouchableOpacity onPress={openDateTimePicker}>
+        <Text style={styles.input}>
+          {format(arrivalTime, 'MM/dd/yyyy hh:mm a')}
+        </Text>
+      </TouchableOpacity>
+      <Text style={styles.subText}>
+        {formatDistanceToNow(arrivalTime, { addSuffix: true })}
+      </Text>
+      {Platform.OS === 'ios' && showDateTimePicker && (
         <DateTimePicker
-          testID='dateTimePicker'
-          value={serviceDateTime}
+          value={arrivalTime}
           mode='datetime'
-          is24Hour={true}
           display='default'
-          onChange={onDateChange}
+          onChange={handleAppleDateTimeChange}
         />
       )}
 
@@ -432,6 +490,11 @@ const CreateServiceRequestForm = ({
 };
 
 const styles = StyleSheet.create({
+  subText: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
   container: {
     flex: 1,
   },
