@@ -14,7 +14,8 @@ interface ButtonProps {
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
-  variant?: 'filled' | 'outline';
+  variant?: 'filled' | 'outline' | 'destructive';
+  disabled?: boolean;
 }
 
 const Button = ({
@@ -23,6 +24,7 @@ const Button = ({
   style,
   textStyle,
   variant = 'filled',
+  disabled = false,
 }: ButtonProps) => {
   const primaryColor = useThemeColor(
     { light: '#007BFF', dark: '#007BFF' },
@@ -34,6 +36,7 @@ const Button = ({
   );
 
   const isOutline = variant === 'outline';
+  const isDestructive = variant === 'destructive';
 
   // Extract border color from style prop, if it exists
   const flatStyle = StyleSheet.flatten(style);
@@ -42,21 +45,32 @@ const Button = ({
   const buttonStyles = [
     styles.button,
     {
-      backgroundColor: isOutline ? 'transparent' : primaryColor,
-      borderColor: isOutline ? borderColorFromStyle || primaryColor : 'transparent',
+      backgroundColor: isOutline
+        ? 'transparent'
+        : isDestructive
+        ? '#DC3545'
+        : primaryColor,
+      borderColor: isOutline
+        ? borderColorFromStyle || primaryColor
+        : 'transparent',
       borderWidth: isOutline ? 1 : 0,
     },
     style,
+    disabled && styles.disabled,
   ];
 
   const textStyles = [
     styles.text,
-    { color: isOutline ? borderColorFromStyle || primaryColor : textColor },
+    {
+      color: isOutline
+        ? borderColorFromStyle || primaryColor
+        : textColor,
+    },
     textStyle,
   ];
 
   return (
-    <TouchableOpacity style={buttonStyles} onPress={onPress}>
+    <TouchableOpacity style={buttonStyles} onPress={onPress} disabled={disabled}>
       <Text style={textStyles}>{title}</Text>
     </TouchableOpacity>
   );
@@ -69,6 +83,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  disabled: {
+    opacity: 0.5,
   },
   text: {
     fontSize: 16,

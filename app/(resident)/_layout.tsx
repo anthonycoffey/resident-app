@@ -13,8 +13,8 @@ export default function ResidentLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <MaterialIcons size={28} name="home" color={color} />,
+          title: 'Dashboard',
+          tabBarIcon: ({ color }) => <MaterialIcons size={28} name="dashboard" color={color} />,
         }}
       />
       <Tabs.Screen
@@ -43,6 +43,14 @@ export default function ResidentLayout() {
         options={{
           title: 'AI Assistant',
           tabBarIcon: ({ color }) => <MaterialIcons size={28} name="smart-toy" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="my-profile/vehicle-modal"
+        options={{
+          href: null, // Hide this screen from the tab bar
+          presentation: 'modal',
+          title: 'Vehicle Details',
         }}
       />
     </Tabs>
