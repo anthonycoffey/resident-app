@@ -1,9 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { View, Text } from '@/components/Themed';
+import {
+  StyleSheet,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Text } from '@/components/Themed';
 import MessageList from '@/components/MessageList';
 import ChatInput from '@/components/ChatInput';
 import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
 type ChatMessage = {
@@ -14,6 +22,7 @@ type ChatMessage = {
 };
 
 const AiAssistantScreen = () => {
+  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +75,8 @@ const AiAssistantScreen = () => {
       };
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+      const errorMessage =
+        err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errorMessage);
       console.error('Error calling getGptChatResponse:', err);
     } finally {
@@ -75,35 +85,48 @@ const AiAssistantScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
-    >
+    <View style={styles.container}>
       <Button
-        title="Connect to Live Agent"
-        onPress={() => Alert.alert('Coming Soon!', 'This feature is not yet available.')}
-        variant="outline"
+        title='Connect to Live Agent'
+        onPress={() =>
+          Alert.alert('Coming Soon!', 'This feature is not yet available.')
+        }
+        variant='outline'
         style={styles.liveAgentButton}
       />
-      {error && <Text style={styles.errorText}>{error}</Text>}
-      <MessageList messages={messages} isLoading={isLoading} />
-      <ChatInput
-        ref={chatInputRef}
-        onSendMessage={handleSendMessage}
-        isLoading={isLoading}
-      />
-    </KeyboardAvoidingView>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={insets.top + 60}
+      >
+        <Card style={styles.card}>
+          {error && <Text style={styles.errorText}>{error}</Text>}
+          <View style={{ flex: 1 }}>
+            <MessageList messages={messages} isLoading={isLoading} />
+          </View>
+          <ChatInput
+            ref={chatInputRef}
+            onSendMessage={handleSendMessage}
+            isLoading={isLoading}
+          />
+        </Card>
+      </KeyboardAvoidingView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   liveAgentButton: {
     margin: 10,
+  },
+  keyboardAvoidingContainer: {
+    flex: 1,
+  },
+  card: {
+    flex: 1,
   },
   errorText: {
     color: 'red',

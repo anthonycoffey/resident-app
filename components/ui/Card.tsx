@@ -20,6 +20,7 @@ const Card = (props: ViewProps) => {
 
 const styles = StyleSheet.create({
   card: {
+    margin: 10,
     borderRadius: 12,
     borderWidth: 1,
     padding: 16,
@@ -31,6 +32,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    marginBottom: 16,
   },
 });
 

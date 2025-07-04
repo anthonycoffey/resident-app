@@ -16,6 +16,10 @@ const ServiceRequestScreen = () => {
   return (
     <ScrollView style={styles.container}>
       <Card>
+        <View style={styles.header}>
+          <MaterialIcons name="build" size={24} color="black" />
+          <Text style={styles.title}>New Service Request</Text>
+        </View>
         <CreateServiceRequestForm
           onServiceRequestSubmitted={handleServiceRequestSubmitted}
           address={address}
@@ -28,7 +32,11 @@ const ServiceRequestScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   title: {
     fontSize: 20,

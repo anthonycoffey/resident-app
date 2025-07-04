@@ -129,7 +129,6 @@ const MyPropertyScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
   },
   centered: {
     flex: 1,
