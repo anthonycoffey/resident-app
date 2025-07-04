@@ -30,15 +30,19 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { format, formatDistanceToNow, addMinutes } from 'date-fns';
 import DropDownPicker from 'react-native-dropdown-picker';
 import Badge from '@/components/ui/Badge';
+import { useServiceRequest } from '@/lib/context/ServiceRequestContext';
 
 type CreateServiceRequestFormProps = {
   onServiceRequestSubmitted: () => void;
+  address: any;
 };
 
 const CreateServiceRequestForm = ({
   onServiceRequestSubmitted,
+  address,
 }: CreateServiceRequestFormProps) => {
   const { user, residentProfile } = useAuth();
+  const { isOffPremise, setIsOffPremise } = useServiceRequest();
   const router = useRouter();
   const params = useLocalSearchParams();
 
@@ -53,7 +57,6 @@ const CreateServiceRequestForm = ({
   const [serviceLocationObject, setServiceLocationObject] = useState<
     object | null
   >(null);
-  const [isOffPremise, setIsOffPremise] = useState(false);
   const [propertyFullAddressString, setPropertyFullAddressString] =
     useState<string>('');
   const [isLoadingPropertyAddress, setIsLoadingPropertyAddress] =
@@ -142,46 +145,43 @@ const CreateServiceRequestForm = ({
   }, [user, isOffPremise]);
 
   useEffect(() => {
-    if (params.address) {
-      const details = JSON.parse(params.address as string);
-      if (details) {
-        const { lat, lng } = details.geometry.location;
-        const components = details.address_components;
-        let streetNumber = '';
-        let route = '';
-        let city = '';
-        let state = '';
-        let postalCode = '';
-        let country = '';
+    if (address) {
+      const { lat, lng } = address.geometry.location;
+      const components = address.address_components;
+      let streetNumber = '';
+      let route = '';
+      let city = '';
+      let state = '';
+      let postalCode = '';
+      let country = '';
 
-        components.forEach((component: any) => {
-          if (component.types.includes('street_number'))
-            streetNumber = component.long_name;
-          if (component.types.includes('route')) route = component.long_name;
-          if (component.types.includes('locality')) city = component.long_name;
-          if (component.types.includes('administrative_area_level_1'))
-            state = component.short_name;
-          if (component.types.includes('postal_code'))
-            postalCode = component.long_name;
-          if (component.types.includes('country'))
-            country = component.short_name;
-        });
+      components.forEach((component: any) => {
+        if (component.types.includes('street_number'))
+          streetNumber = component.long_name;
+        if (component.types.includes('route')) route = component.long_name;
+        if (component.types.includes('locality')) city = component.long_name;
+        if (component.types.includes('administrative_area_level_1'))
+          state = component.short_name;
+        if (component.types.includes('postal_code'))
+          postalCode = component.long_name;
+        if (component.types.includes('country'))
+          country = component.short_name;
+      });
 
-        const addressObject = {
-          address_1: `${streetNumber} ${route}`.trim(),
-          city,
-          state,
-          zipcode: postalCode,
-          country,
-          fullAddress: details.formatted_address,
-          latitude: lat,
-          longitude: lng,
-        };
-        setServiceLocationObject(addressObject);
-        setAddressInput(addressObject.fullAddress);
-      }
+      const addressObject = {
+        address_1: `${streetNumber} ${route}`.trim(),
+        city,
+        state,
+        zipcode: postalCode,
+        country,
+        fullAddress: address.formatted_address,
+        latitude: lat,
+        longitude: lng,
+      };
+      setServiceLocationObject(addressObject);
+      setAddressInput(addressObject.fullAddress);
     }
-  }, [params.address]);
+  }, [address]);
 
   useEffect(() => {
     if (selectedVehiclePlate) {
@@ -377,28 +377,29 @@ const CreateServiceRequestForm = ({
       <Text style={styles.label}>Service Location</Text>
 
       {isOffPremise ? (
-        <TouchableOpacity
-          style={styles.input}
-          onPress={() => router.push('/service-request/address-search')}
-        >
-          <Text>{addressInput || 'Search for an address'}</Text>
-        </TouchableOpacity>
+        <>
+          <Button
+            title="Search for Address"
+            onPress={() => router.push('/service-request/address-search')}
+          />
+          {address && (
+            <View style={styles.addressContainer}>
+              <Text>{address.formatted_address}</Text>
+            </View>
+          )}
+        </>
       ) : (
         <View>
           {isLoadingPropertyAddress ? (
             <ActivityIndicator />
           ) : (
-            <TextInput
-              style={styles.input}
-              value={addressInput}
-              editable={false}
-            />
+            <Text style={styles.input}>{addressInput}</Text>
           )}
         </View>
       )}
 
       <View style={styles.switchContainer}>
-        <Text style={styles.label}>Request service at a different address</Text>
+        <Text style={styles.caption}>Request service at a different address?</Text>
         <Switch
           onValueChange={(value) => {
             setIsOffPremise(value);
@@ -490,6 +491,17 @@ const CreateServiceRequestForm = ({
 };
 
 const styles = StyleSheet.create({
+  addressContainer: {
+    marginTop: 10,
+    padding: 10,
+    paddingVertical: 15,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
+  },
+  addressTitle: {
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
   subText: {
     fontSize: 12,
     textAlign: 'center',

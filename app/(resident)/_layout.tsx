@@ -32,8 +32,9 @@ export default function ResidentLayout() {
         }}
       />
       <Tabs.Screen
-        name="service-request/index"
+        name="service-request"
         options={{
+          headerShown: false,
           title: 'Service Request',
           tabBarIcon: ({ color }) => <MaterialIcons size={28} name="build" color={color} />,
         }}
@@ -49,7 +50,6 @@ export default function ResidentLayout() {
         name="my-profile/vehicle-modal"
         options={{
           href: null, // Hide this screen from the tab bar
-          presentation: 'modal',
           title: 'Vehicle Details',
         }}
       />

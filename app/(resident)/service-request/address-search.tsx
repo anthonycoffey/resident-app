@@ -9,9 +9,11 @@ import {
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useServiceRequest } from '@/lib/context/ServiceRequestContext';
 
 const AddressSearchScreen = () => {
   const router = useRouter();
+  const { setAddress } = useServiceRequest();
   const googlePlacesAutocompleteRef = useRef<any>(null);
 
   return (
@@ -45,9 +47,9 @@ const AddressSearchScreen = () => {
           }}
           onPress={(data, details = null) => {
             Keyboard.dismiss();
+            setAddress(details);
             router.replace({
               pathname: '/(resident)/service-request',
-              params: { address: JSON.stringify(details) },
             });
           }}
           query={{
