@@ -89,9 +89,11 @@ const ServiceRequestItem = ({ item }: { item: ServiceRequest }) => {
             {/* Map Pin Icon */}
             <MaterialIcons name='location-pin' size={18} color={color} />
           </View>
-          <Text style={[styles.itemTitle, { color }]}>
-            {item.serviceLocation || 'No location specified'}
-          </Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.itemTitle, { color }]}>
+              {item.serviceLocation || 'No location specified'}
+            </Text>
+          </View>
         </View>
         <View style={styles.chipContainer}>
           {item.requestType.split(',').map((type, index) => (

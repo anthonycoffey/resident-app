@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useContext, ReactNode, useMe
 import { onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { auth, db } from '@/lib/config/firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
+import { registerForPushNotificationsAsync } from '../services/notifications';
 
 // Basic types based on the web app's data model
 export interface Vehicle {
@@ -88,6 +89,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           propertyId: claims.propertyId as string | undefined,
         };
         setUser(appUser);
+
+        // Register for push notifications
+        registerForPushNotificationsAsync(firebaseUser.uid);
 
         if (appUser.organizationId && appUser.propertyId) {
           fetchResidentProfile(appUser.uid, appUser.organizationId, appUser.propertyId);

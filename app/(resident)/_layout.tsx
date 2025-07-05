@@ -2,6 +2,7 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useThemeColor } from '@/components/Themed';
+import NotificationBell from '@/components/ui/NotificationBell';
 
 export default function ResidentLayout() {
   const theme = useThemeColor({}, 'text');
@@ -9,6 +10,7 @@ export default function ResidentLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: theme === 'dark' ? 'white' : 'black',
+        headerRight: () => <NotificationBell />,
       }}>
       <Tabs.Screen
         name="index"

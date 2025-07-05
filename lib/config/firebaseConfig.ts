@@ -1,11 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import {
-  initializeAuth,
-  // @ts-ignore
-  getReactNativePersistence,
-} from 'firebase/auth';
-import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
+import { initializeAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getSecureStorePersistence } from './secureStorePersistence';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 GoogleSignin.configure({
@@ -25,7 +21,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+  persistence: getSecureStorePersistence(),
 });
 const db = getFirestore(app);
 

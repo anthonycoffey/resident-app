@@ -48,12 +48,7 @@ const VehicleModalScreen = () => {
     }
     // TODO: This should call the main save function, not just update local state.
     // For now, we navigate back and the profile screen will refetch.
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      // Fallback if there's no screen to go back to
-      router.push('/my-profile');
-    }
+    router.push('/(resident)/my-profile');
   };
 
   return (
@@ -86,7 +81,7 @@ const VehicleModalScreen = () => {
         onChangeText={(val) => handleInputChange('plate', val)}
       />
       <Button title={isEditing ? 'Save Changes' : 'Add Vehicle'} onPress={handleSave} />
-      <Button title="Cancel" onPress={() => router.back()} variant="outline" style={{ marginTop: 10 }} />
+      <Button title="Cancel" onPress={() => router.push('/(resident)/my-profile')} variant="outline" style={{ marginTop: 10 }} />
 
       {/* Use a light status bar on iOS to account for the black space above the modal */}
       <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />

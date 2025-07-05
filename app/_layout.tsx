@@ -9,6 +9,7 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { AuthProvider, useAuth } from '@/lib/providers/AuthProvider';
+import { NotificationsProvider } from '@/lib/context/NotificationsContext';
 import { useRouter } from 'expo-router';
 
 export {
@@ -47,7 +48,9 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <RootLayoutNav />
+      <NotificationsProvider>
+        <RootLayoutNav />
+      </NotificationsProvider>
     </AuthProvider>
   );
 }
