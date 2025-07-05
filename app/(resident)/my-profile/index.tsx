@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
-  StyleSheet,
   ActivityIndicator,
   Alert,
-  FlatList,
+  ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import { View, Text } from '@/components/Themed';
+import { View, Text, useThemeColor } from '@/components/Themed';
 import { Link, useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '@/lib/providers/AuthProvider';
 import { doc, getDoc } from 'firebase/firestore';
@@ -15,6 +14,7 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import Divider from '@/components/ui/Divider';
 import { MaterialIcons } from '@expo/vector-icons';
 
 // Define types based on the example component
@@ -43,6 +43,12 @@ const MyProfileScreen = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const textColor = useThemeColor({}, 'text');
+  const labelColor = useThemeColor({}, 'label');
+  const primaryColor = useThemeColor({}, 'primary');
+  const errorColor = useThemeColor({}, 'error');
+  const dividerColor = useThemeColor({}, 'divider');
 
   const formatPhoneNumberOnInput = useCallback((value: string): string => {
     if (!value) return value;
@@ -170,54 +176,54 @@ const MyProfileScreen = () => {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={primaryColor} />
       </View>
     );
   }
 
   const renderHeader = () => (
-    <View>
-      <View style={styles.header}>
-        <MaterialIcons name="person" size={24} color="black" />
-        <Text style={styles.title}>My Profile</Text>
+    <View style={{ backgroundColor: 'transparent' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15, backgroundColor: 'transparent' }}>
+        <MaterialIcons name="person" size={24} color={textColor} />
+        <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>My Profile</Text>
       </View>
-      {error && <Text style={styles.errorText}>{error}</Text>}
-      <Text style={styles.label}>Full Name</Text>
+      {error && <Text style={{ color: errorColor, marginBottom: 10, textAlign: 'center' }}>{error}</Text>}
+      <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>Full Name</Text>
       <Input
         placeholder="Full Name"
         value={residentData.displayName || ''}
         onChangeText={(val: string) => handleInputChange('displayName', val)}
       />
-      <Text style={styles.label}>Email Address</Text>
+      <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>Email Address</Text>
       <Input
         placeholder="Email Address"
         value={residentData.email || ''}
         editable={false}
       />
-      <Text style={styles.label}>Phone Number</Text>
+      <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>Phone Number</Text>
       <Input
         placeholder="Phone Number"
         value={residentData.phone || ''}
         onChangeText={(val: string) => handleInputChange('phone', val)}
         keyboardType="phone-pad"
       />
-      <Text style={styles.label}>Unit Number</Text>
+      <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>Unit Number</Text>
       <Input
         placeholder="Unit Number"
         value={residentData.unitNumber || ''}
         editable={false}
       />
-      <View style={styles.divider} />
-      <View style={styles.header}>
-        <MaterialIcons name="directions-car" size={24} color="black" />
-        <Text style={styles.title}>Vehicle Information</Text>
+      <Divider style={{ marginVertical: 20 }} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15, backgroundColor: 'transparent' }}>
+        <MaterialIcons name="directions-car" size={24} color={textColor} />
+        <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>Vehicle Information</Text>
       </View>
     </View>
   );
 
   const renderFooter = () => (
-    <View>
+    <View style={{ backgroundColor: 'transparent' }}>
       {vehicles.length < 2 && (
         <Link href="/my-profile/vehicle-modal" asChild>
           <Button
@@ -228,9 +234,9 @@ const MyProfileScreen = () => {
           />
         </Link>
       )}
-      <View style={styles.divider} />
       <Button
         title={saving ? 'Saving...' : 'Save Profile'}
+        style={{ marginTop: 10 }}
         onPress={handleSaveProfile}
         disabled={saving}
       />
@@ -244,102 +250,35 @@ const MyProfileScreen = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={{ flex: 1 }}>
       <Card>
-        <FlatList
-          data={vehicles}
-          keyExtractor={(item, index) => `${item.plate}-${index}`}
-          ListHeaderComponent={renderHeader}
-          ListFooterComponent={renderFooter}
-          renderItem={({ item, index }) => (
-            <View style={styles.vehicleItem}>
-              <View>
-                <Text style={styles.vehicleText}>{`${item.year} ${item.color} ${item.make} ${item.model}`}</Text>
-                <Text style={styles.vehicleSubText}>{`Plate: ${item.plate}`}</Text>
+        {renderHeader()}
+        {vehicles.length === 0 ? (
+          <Text style={{ textAlign: 'center', marginVertical: 20, color: labelColor }}>No vehicles added.</Text>
+        ) : (
+          vehicles.map((item, index) => (
+            <View key={`${item.plate}-${index}`} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: dividerColor, backgroundColor: 'transparent' }}>
+              <View style={{ backgroundColor: 'transparent' }}>
+                <Text style={{ fontSize: 16, fontWeight: '500' }}>{`${item.year} ${item.color} ${item.make} ${item.model}`}</Text>
+                <Text style={{ fontSize: 14, color: labelColor }}>{`Plate: ${item.plate}`}</Text>
               </View>
-              <View style={styles.vehicleActions}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15, backgroundColor: 'transparent' }}>
                 <Link href={{ pathname: "/my-profile/vehicle-modal", params: { vehicle: JSON.stringify(item), index: index.toString() } }} asChild>
                   <TouchableOpacity>
-                    <MaterialIcons name="edit" size={24} color="#007BFF" />
+                    <MaterialIcons name="edit" size={24} color={primaryColor} />
                   </TouchableOpacity>
                 </Link>
                 <TouchableOpacity onPress={() => handleDeleteVehicle(index)}>
-                  <MaterialIcons name="delete" size={24} color="#F44336" />
+                  <MaterialIcons name="delete" size={24} color={errorColor} />
                 </TouchableOpacity>
               </View>
             </View>
-          )}
-          ListEmptyComponent={<Text style={styles.emptyListText}>No vehicles added.</Text>}
-        />
+          ))
+        )}
+        {renderFooter()}
       </Card>
-    </View>
+    </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  cardContent: {
-    padding: 10,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginLeft: 10,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 5,
-    color: '#333',
-  },
-  errorText: {
-    color: 'red',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#e0e0e0',
-    marginVertical: 20,
-  },
-  vehicleItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  vehicleText: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  vehicleSubText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  vehicleActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 15,
-  },
-  emptyListText: {
-    textAlign: 'center',
-    marginVertical: 20,
-    color: '#888',
-  },
-});
 
 export default MyProfileScreen;

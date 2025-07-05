@@ -1,6 +1,6 @@
 import React from 'react';
 import { ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
-import { View, Text } from '@/components/Themed';
+import { View, Text, useThemeColor } from '@/components/Themed';
 
 type ChatMessage = {
   id: string;
@@ -15,6 +15,27 @@ type MessageListProps = {
 };
 
 const MessageList = ({ messages, isLoading }: MessageListProps) => {
+  const userMessageBg = useThemeColor({}, 'primary');
+  const assistantMessageBg = useThemeColor({}, 'secondary');
+  const systemMessageBg = useThemeColor({}, 'error');
+  const textColor = useThemeColor({}, 'text');
+  const primaryTextColor = '#fff'; // Assuming primary/secondary buttons have white text
+
+  const getMessageStyle = (role: ChatMessage['role']) => {
+    switch (role) {
+      case 'user':
+        return { ...styles.userMessage, backgroundColor: userMessageBg };
+      case 'assistant':
+        return { ...styles.assistantMessage, backgroundColor: assistantMessageBg };
+      case 'system_notification':
+        return { ...styles.systemMessage, backgroundColor: systemMessageBg };
+    }
+  };
+
+  const getTextColor = (role: ChatMessage['role']) => {
+    return role === 'user' || role === 'assistant' ? primaryTextColor : textColor;
+  };
+
   return (
     <ScrollView style={styles.container}>
       {messages.map((message) => (
@@ -22,16 +43,15 @@ const MessageList = ({ messages, isLoading }: MessageListProps) => {
           key={message.id}
           style={[
             styles.messageContainer,
-            message.role === 'user' ? styles.userMessage : styles.assistantMessage,
-            message.role === 'system_notification' && styles.systemMessage,
+            getMessageStyle(message.role),
           ]}
         >
-          <Text style={styles.messageText}>{message.content}</Text>
+          <Text style={[styles.messageText, { color: getTextColor(message.role) }]}>{message.content}</Text>
         </View>
       ))}
       {isLoading && (
-        <View style={[styles.messageContainer, styles.assistantMessage]}>
-          <ActivityIndicator size="small" color="#fff" />
+        <View style={[styles.messageContainer, styles.assistantMessage, { backgroundColor: assistantMessageBg }]}>
+          <ActivityIndicator size="small" color={primaryTextColor} />
         </View>
       )}
     </ScrollView>
@@ -50,22 +70,17 @@ const styles = StyleSheet.create({
     maxWidth: '80%',
   },
   userMessage: {
-    backgroundColor: '#007BFF',
     alignSelf: 'flex-end',
   },
   assistantMessage: {
-    backgroundColor: '#6c757d',
     alignSelf: 'flex-start',
   },
   systemMessage: {
-    backgroundColor: '#f8d7da',
     alignSelf: 'center',
     width: '100%',
     maxWidth: '100%',
   },
-  messageText: {
-    color: '#fff',
-  },
+  messageText: {},
 });
 
 export default MessageList;

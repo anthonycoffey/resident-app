@@ -1,10 +1,6 @@
-// @ts-nocheck
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   StyleSheet,
-  View,
-  Text,
-  TextInput,
   Switch,
   Alert,
   Platform,
@@ -12,6 +8,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import { View, Text, useThemeColor } from '@/components/Themed';
+import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { useAuth, Vehicle } from '@/lib/providers/AuthProvider';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -21,6 +19,7 @@ import {
 } from '@/lib/services/phoenixService';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/config/firebaseConfig';
+// @ts-ignore
 import { Property } from '@/lib/providers/AuthProvider';
 import DateTimePicker, {
   DateTimePickerEvent,
@@ -30,6 +29,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { format, formatDistanceToNow, addMinutes } from 'date-fns';
 import DropDownPicker from 'react-native-dropdown-picker';
 import Badge from '@/components/ui/Badge';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useServiceRequest } from '@/lib/context/ServiceRequestContext';
 
 type CreateServiceRequestFormProps = {
@@ -46,7 +46,14 @@ const CreateServiceRequestForm = ({
   const router = useRouter();
   const params = useLocalSearchParams();
 
-  console.log(process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY);
+  const labelColor = useThemeColor({}, 'label');
+  const textColor = useThemeColor({}, 'text');
+  const primaryColor = useThemeColor({}, 'primary');
+  const readOnlyBackgroundColor = useThemeColor({}, 'readOnlyBackground');
+  const inputBackgroundColor = useThemeColor({}, 'input');
+  const dividerColor = useThemeColor({}, 'divider');
+  const colorScheme =
+    useThemeColor({}, 'background') === '#000000' ? 'dark' : 'light';
 
   // Form State
   const [residentName, setResidentName] = useState(user?.displayName || '');
@@ -164,8 +171,7 @@ const CreateServiceRequestForm = ({
           state = component.short_name;
         if (component.types.includes('postal_code'))
           postalCode = component.long_name;
-        if (component.types.includes('country'))
-          country = component.short_name;
+        if (component.types.includes('country')) country = component.short_name;
       });
 
       const addressObject = {
@@ -341,28 +347,40 @@ const CreateServiceRequestForm = ({
 
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps='handled'>
-      <Text style={styles.label}>Name</Text>
-      <TextInput style={styles.input} value={residentName} editable={false} />
+      <Text style={[styles.label, { color: labelColor }]}>Name</Text>
+      <Input value={residentName} editable={false} />
 
-      <Text style={styles.label}>Email</Text>
-      <TextInput style={styles.input} value={email} editable={false} />
+      <Text style={[styles.label, { color: labelColor }]}>Email</Text>
+      <Input value={email} editable={false} />
 
-      <Text style={styles.label}>Contact Phone</Text>
-      <TextInput
-        style={styles.input}
+      <Text style={[styles.label, { color: labelColor }]}>Contact Phone</Text>
+      <Input
         placeholder='Your contact phone number'
         value={phone}
         onChangeText={setPhone}
         keyboardType='phone-pad'
       />
 
-      <Text style={styles.label}>Service Date & Time</Text>
+      <Text style={[styles.label, { color: labelColor }]}>
+        Service Date & Time
+      </Text>
       <TouchableOpacity onPress={openDateTimePicker}>
-        <Text style={styles.input}>
-          {format(arrivalTime, 'MM/dd/yyyy hh:mm a')}
-        </Text>
+        <View
+          style={[
+            styles.inputImitation,
+            {
+              backgroundColor: inputBackgroundColor,
+              borderColor: dividerColor,
+              justifyContent: 'center',
+            },
+          ]}
+        >
+          <Text style={{ color: textColor, textAlign: 'center' }}>
+            {format(arrivalTime, 'MM/dd/yyyy hh:mm a')}
+          </Text>
+        </View>
       </TouchableOpacity>
-      <Text style={styles.subText}>
+      <Text style={[styles.subText, { color: labelColor }]}>
         {formatDistanceToNow(arrivalTime, { addSuffix: true })}
       </Text>
       {Platform.OS === 'ios' && showDateTimePicker && (
@@ -371,36 +389,57 @@ const CreateServiceRequestForm = ({
           mode='datetime'
           display='default'
           onChange={handleAppleDateTimeChange}
+          themeVariant={colorScheme}
         />
       )}
 
-      <Text style={styles.label}>Service Location</Text>
+      <Text style={[styles.label, { color: labelColor }]}>
+        Service Location
+      </Text>
 
       {isOffPremise ? (
         <>
           <Button
-            title="Search for Address"
+            title='Search for Address'
             onPress={() => router.push('/service-request/address-search')}
           />
           {address && (
-            <View style={styles.addressContainer}>
+            <View
+              style={[
+                styles.addressContainer,
+                { backgroundColor: useThemeColor({}, 'chip') },
+              ]}
+            >
               <Text>{address.formatted_address}</Text>
             </View>
           )}
         </>
       ) : (
-        <View>
+        <View style={{ backgroundColor: 'transparent' }}>
           {isLoadingPropertyAddress ? (
-            <ActivityIndicator />
+            <ActivityIndicator color={primaryColor} />
           ) : (
-            <Text style={styles.input}>{addressInput}</Text>
+            <View
+              style={[
+                styles.readOnlyContainer,
+                { backgroundColor: readOnlyBackgroundColor },
+              ]}
+            >
+              <Text style={{ color: textColor }}>{addressInput}</Text>
+            </View>
           )}
         </View>
       )}
 
-      <View style={styles.switchContainer}>
-        <Text style={styles.caption}>Request service at a different address?</Text>
+      <View
+        style={[styles.switchContainer, { backgroundColor: 'transparent' }]}
+      >
+        <Text style={[styles.caption, { color: labelColor }]}>
+          Request service at a different address?
+        </Text>
         <Switch
+          trackColor={{ false: '#767577', true: primaryColor }}
+          thumbColor={useThemeColor({}, 'text')}
           onValueChange={(value) => {
             setIsOffPremise(value);
             if (value) {
@@ -412,8 +451,16 @@ const CreateServiceRequestForm = ({
         />
       </View>
 
-      <Text style={styles.label}>Service Type</Text>
+      <Text style={[styles.label, { color: labelColor }]}>Service Type</Text>
       <DropDownPicker
+        theme={colorScheme.toUpperCase() as 'LIGHT' | 'DARK'}
+        style={{
+          backgroundColor: inputBackgroundColor,
+          borderColor: dividerColor,
+          borderWidth: 1,
+        }}
+        textStyle={{ color: textColor }}
+        placeholderStyle={{ color: labelColor }}
         open={openServices}
         value={selectedPhoenixServices}
         items={phoenixServices.map((s) => ({
@@ -446,8 +493,18 @@ const CreateServiceRequestForm = ({
         residentProfile.vehicles &&
         residentProfile.vehicles.length > 0 && (
           <>
-            <Text style={styles.label}>Select Vehicle</Text>
+            <Text style={[styles.label, { color: labelColor }]}>
+              Select Vehicle
+            </Text>
             <DropDownPicker
+              theme={colorScheme.toUpperCase() as 'LIGHT' | 'DARK'}
+              style={{
+                backgroundColor: inputBackgroundColor,
+                borderColor: dividerColor,
+                borderWidth: 1,
+              }}
+              textStyle={{ color: textColor }}
+              placeholderStyle={{ color: labelColor }}
               open={openVehicles}
               value={selectedVehiclePlate}
               items={residentProfile.vehicles.map((v, index) => ({
@@ -465,9 +522,10 @@ const CreateServiceRequestForm = ({
           </>
         )}
 
-      <Text style={styles.label}>Additional Notes</Text>
-      <TextInput
-        style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
+      <Text style={[styles.label, { color: labelColor }]}>
+        Additional Notes
+      </Text>
+      <Input
         placeholder='e.g., vehicle make/model, specific issue details'
         value={residentNotes}
         onChangeText={setResidentNotes}
@@ -475,10 +533,19 @@ const CreateServiceRequestForm = ({
         numberOfLines={4}
       />
 
-      <View style={styles.switchContainer}>
-        <Text style={styles.label}>Consent to SMS Updates</Text>
-        <Switch onValueChange={setSmsConsent} value={smsConsent} />
-      </View>
+      <TouchableOpacity
+        style={[styles.switchContainer, { backgroundColor: 'transparent' }]}
+        onPress={() => setSmsConsent(!smsConsent)}
+      >
+        <MaterialIcons
+          name={smsConsent ? 'check-box' : 'check-box-outline-blank'}
+          size={24}
+          color={primaryColor}
+        />
+        <Text style={[styles.caption, { color: labelColor, marginLeft: 10 }]}>
+          I consent to receive SMS updates for this service request.
+        </Text>
+      </TouchableOpacity>
 
       <Button
         title={saving ? 'Submitting...' : 'Submit Request'}
@@ -491,16 +558,24 @@ const CreateServiceRequestForm = ({
 };
 
 const styles = StyleSheet.create({
+  inputImitation: {
+    height: 40,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    width: '100%',
+  },
+  readOnlyContainer: {
+    minHeight: 40,
+    paddingHorizontal: 12,
+    justifyContent: 'center',
+    borderRadius: 8,
+  },
   addressContainer: {
     marginTop: 10,
     padding: 10,
     paddingVertical: 15,
-    backgroundColor: '#f0f0f0',
     borderRadius: 5,
-  },
-  addressTitle: {
-    fontWeight: 'bold',
-    marginBottom: 5,
   },
   subText: {
     fontSize: 12,
@@ -509,6 +584,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    backgroundColor: 'transparent',
   },
   label: {
     fontSize: 16,
@@ -516,37 +592,16 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     marginTop: 15,
   },
+  caption: {
+    fontSize: 14,
+    flex: 1,
+  },
   input: {
-    backgroundColor: '#fff',
+    height: 40,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    fontSize: 16,
-  },
-  suggestionsContainer: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    marginTop: 5,
-  },
-  suggestionItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  listView: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    backgroundColor: '#fff',
-    borderRadius: 5,
-    marginTop: 5,
-  },
-  row: {
-    padding: 10,
-    height: 44,
-    flexDirection: 'row',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    width: '100%',
   },
   switchContainer: {
     flexDirection: 'row',
@@ -560,7 +615,6 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderRadius: 8,
     paddingHorizontal: 8,
-    backgroundColor: 'white',
   },
   placeholderStyle: {
     fontSize: 16,

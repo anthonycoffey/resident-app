@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TextInput, StyleSheet, TouchableOpacity } from 'react-native';
-import { View } from '@/components/Themed';
+import { View, useThemeColor } from '@/components/Themed';
 import { MaterialIcons } from '@expo/vector-icons';
 
 type ChatInputProps = {
@@ -10,6 +10,10 @@ type ChatInputProps = {
 
 const ChatInput = React.forwardRef(({ onSendMessage, isLoading }: ChatInputProps, ref) => {
   const [text, setText] = useState('');
+  const primaryColor = useThemeColor({}, 'primary');
+  const dividerColor = useThemeColor({}, 'divider');
+  const inputBackgroundColor = useThemeColor({}, 'input');
+  const textColor = useThemeColor({}, 'text');
 
   const handleSend = () => {
     if (text.trim()) {
@@ -19,17 +23,25 @@ const ChatInput = React.forwardRef(({ onSendMessage, isLoading }: ChatInputProps
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { borderTopColor: dividerColor, backgroundColor: 'transparent' }]}>
       <TextInput
         ref={ref as any}
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            borderColor: dividerColor,
+            backgroundColor: inputBackgroundColor,
+            color: textColor,
+          },
+        ]}
         value={text}
         onChangeText={setText}
         placeholder="Type your message..."
+        placeholderTextColor={useThemeColor({}, 'label')}
         editable={!isLoading}
       />
       <TouchableOpacity onPress={handleSend} disabled={isLoading} style={styles.sendButton}>
-        <MaterialIcons name="send" size={24} color={isLoading ? '#ccc' : '#007BFF'} />
+        <MaterialIcons name="send" size={24} color={isLoading ? dividerColor : primaryColor} />
       </TouchableOpacity>
     </View>
   );
@@ -41,16 +53,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 10,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
   },
   input: {
     flex: 1,
     height: 40,
     borderWidth: 1,
-    borderColor: '#ccc',
     borderRadius: 20,
     paddingHorizontal: 15,
-    backgroundColor: '#fff',
   },
   sendButton: {
     marginLeft: 10,

@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, StyleSheet, View, Text } from 'react-native';
+import { ScrollView } from 'react-native';
+import { Text, View, useThemeColor } from '@/components/Themed';
 import Card from '@/components/ui/Card';
 import CreateServiceRequestForm from '@/components/CreateServiceRequestForm';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -7,6 +8,7 @@ import { useServiceRequest } from '@/lib/context/ServiceRequestContext';
 
 const ServiceRequestScreen = () => {
   const { address } = useServiceRequest();
+  const iconColor = useThemeColor({}, 'text');
 
   const handleServiceRequestSubmitted = () => {
     // Could potentially trigger a refresh or navigation
@@ -14,11 +16,11 @@ const ServiceRequestScreen = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={{ flex: 1 }}>
       <Card>
-        <View style={styles.header}>
-          <MaterialIcons name="build" size={24} color="black" />
-          <Text style={styles.title}>New Service Request</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, backgroundColor: 'transparent' }}>
+          <MaterialIcons name="build" size={24} color={iconColor} />
+          <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>Service Request Form</Text>
         </View>
         <CreateServiceRequestForm
           onServiceRequestSubmitted={handleServiceRequestSubmitted}
@@ -28,21 +30,5 @@ const ServiceRequestScreen = () => {
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginLeft: 10,
-  },
-});
 
 export default ServiceRequestScreen;

@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  StyleSheet,
   Alert,
   KeyboardAvoidingView,
   Platform,
-  View,
+  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text } from '@/components/Themed';
+import { Text, View, useThemeColor } from '@/components/Themed';
 import MessageList from '@/components/MessageList';
 import ChatInput from '@/components/ChatInput';
 import Button from '@/components/ui/Button';
@@ -24,6 +23,7 @@ type ChatMessage = {
 const AiAssistantScreen = () => {
   const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const errorColor = useThemeColor({}, 'error');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const chatInputRef = useRef<{ focus: () => void }>(null);
@@ -85,23 +85,21 @@ const AiAssistantScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={{ flex: 1 }}>
       <Button
         title='Connect to Live Agent'
-        onPress={() =>
-          Alert.alert('Coming Soon!', 'This feature is not yet available.')
-        }
+        onPress={() => Linking.openURL('tel:+18665848488')}
         variant='outline'
-        style={styles.liveAgentButton}
+        style={{ margin: 10 }}
       />
       <KeyboardAvoidingView
-        style={styles.keyboardAvoidingContainer}
+        style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={insets.top + 60}
       >
-        <Card style={styles.card}>
-          {error && <Text style={styles.errorText}>{error}</Text>}
-          <View style={{ flex: 1 }}>
+        <Card style={{ flex: 1, backgroundColor: 'transparent' }}>
+          {error && <Text style={{ color: errorColor, textAlign: 'center', padding: 10 }}>{error}</Text>}
+          <View style={{ flex: 1, backgroundColor: 'transparent' }}>
             <MessageList messages={messages} isLoading={isLoading} />
           </View>
           <ChatInput
@@ -114,25 +112,5 @@ const AiAssistantScreen = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  liveAgentButton: {
-    margin: 10,
-  },
-  keyboardAvoidingContainer: {
-    flex: 1,
-  },
-  card: {
-    flex: 1,
-  },
-  errorText: {
-    color: 'red',
-    textAlign: 'center',
-    padding: 10,
-  },
-});
 
 export default AiAssistantScreen;

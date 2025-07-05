@@ -15,22 +15,27 @@ interface CustomInputProps extends TextInputProps {
 }
 
 const Input = (props: CustomInputProps) => {
-  const { rightIcon, onRightIconPress, ...rest } = props;
-  const color = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
-  const borderColor = useThemeColor(
-    { light: '#ccc', dark: '#555' },
-    'tabIconDefault'
-  );
-  const backgroundColor = useThemeColor(
-    { light: '#fff', dark: '#333' },
-    'background'
-  );
+  const { rightIcon, onRightIconPress, multiline, numberOfLines, ...rest } = props;
+  const color = useThemeColor({}, 'text');
+  const borderColor = useThemeColor({}, 'divider');
+  const backgroundColor = useThemeColor({}, 'input');
+  const placeholderColor = useThemeColor({}, 'label');
 
   return (
     <View style={styles.container}>
       <TextInput
-        style={[styles.input, { color, borderColor, backgroundColor }]}
-        placeholderTextColor={borderColor}
+        style={[
+          styles.input,
+          { color, borderColor, backgroundColor },
+          multiline && {
+            textAlignVertical: 'top',
+            paddingTop: 10,
+            height: (numberOfLines || 4) * 20, // Approximate height
+          },
+        ]}
+        placeholderTextColor={placeholderColor}
+        multiline={multiline}
+        numberOfLines={numberOfLines}
         {...rest}
       />
       {rightIcon && (
@@ -49,11 +54,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   input: {
-    height: 40,
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 12,
     width: '100%',
+    paddingVertical: 10,
   },
   rightIcon: {
     position: 'absolute',

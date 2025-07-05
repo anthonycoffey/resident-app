@@ -6,7 +6,7 @@ export default function ServiceRequestLayout() {
   return (
     <ServiceRequestProvider>
       <Stack>
-        <Stack.Screen name="index" options={{ title: 'Request New Service' }} />
+        <Stack.Screen name="index" options={{ title: 'Request Service' }} />
         <Stack.Screen
           name="address-search"
           options={{

@@ -26,48 +26,45 @@ const Button = ({
   variant = 'filled',
   disabled = false,
 }: ButtonProps) => {
-  const primaryColor = useThemeColor(
-    { light: '#007BFF', dark: '#007BFF' },
-    'tint'
-  );
-  const textColor = useThemeColor(
-    { light: '#FFFFFF', dark: '#FFFFFF' },
-    'text'
-  );
+  const primaryColor = useThemeColor({}, 'primary');
+  const errorColor = useThemeColor({}, 'error');
+  const backgroundColor = useThemeColor({}, 'background');
+  const textColor = useThemeColor({}, 'text');
 
   const isOutline = variant === 'outline';
   const isDestructive = variant === 'destructive';
 
-  // Extract border color from style prop, if it exists
-  const flatStyle = StyleSheet.flatten(style);
-  const borderColorFromStyle = flatStyle?.borderColor;
+  const getBackgroundColor = () => {
+    if (isOutline) return 'transparent';
+    if (isDestructive) return errorColor;
+    return primaryColor;
+  };
+
+  const getBorderColor = () => {
+    if (!isOutline) return 'transparent';
+    if (isDestructive) return errorColor;
+    return primaryColor;
+  };
+
+  const getTextColor = () => {
+    if (isOutline) {
+      return isDestructive ? errorColor : primaryColor;
+    }
+    return textColor;
+  };
 
   const buttonStyles = [
     styles.button,
     {
-      backgroundColor: isOutline
-        ? 'transparent'
-        : isDestructive
-        ? '#DC3545'
-        : primaryColor,
-      borderColor: isOutline
-        ? borderColorFromStyle || primaryColor
-        : 'transparent',
+      backgroundColor: getBackgroundColor(),
+      borderColor: getBorderColor(),
       borderWidth: isOutline ? 1 : 0,
     },
     style,
     disabled && styles.disabled,
   ];
 
-  const textStyles = [
-    styles.text,
-    {
-      color: isOutline
-        ? borderColorFromStyle || primaryColor
-        : textColor,
-    },
-    textStyle,
-  ];
+  const textStyles = [styles.text, { color: getTextColor() }, textStyle];
 
   return (
     <TouchableOpacity style={buttonStyles} onPress={onPress} disabled={disabled}>

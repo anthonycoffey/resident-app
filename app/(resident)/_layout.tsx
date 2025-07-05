@@ -5,11 +5,11 @@ import { useThemeColor } from '@/components/Themed';
 import NotificationBell from '@/components/ui/NotificationBell';
 
 export default function ResidentLayout() {
-  const theme = useThemeColor({}, 'text');
+  const activeTintColor = useThemeColor({}, 'tint');
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: theme === 'dark' ? 'white' : 'black',
+        tabBarActiveTintColor: activeTintColor,
         headerRight: () => <NotificationBell />,
       }}>
       <Tabs.Screen
@@ -53,6 +53,12 @@ export default function ResidentLayout() {
         options={{
           href: null, // Hide this screen from the tab bar
           title: 'Vehicle Details',
+        }}
+      />
+      <Tabs.Screen
+        name="job/[id]"
+        options={{
+          href: null, // Hide this screen from the tab bar
         }}
       />
     </Tabs>

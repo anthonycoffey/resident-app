@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, ActivityIndicator } from 'react-native';
-import { View, Text } from '@/components/Themed';
+import { View, Text, useThemeColor } from '@/components/Themed';
 import { useAuth } from '@/lib/providers/AuthProvider';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/config/firebaseConfig';
 import Card from '@/components/ui/Card';
+import Divider from '@/components/ui/Divider';
 import { MaterialIcons } from '@expo/vector-icons';
 
 // Assuming a basic Property type structure
@@ -25,15 +26,22 @@ type DetailRowProps = {
   icon: React.ComponentProps<typeof MaterialIcons>['name'];
   label: string;
   value: string;
+  iconColor: string;
+  labelColor: string;
+  valueColor: string;
+  hideDivider?: boolean;
 };
 
-const DetailRow = ({ icon, label, value }: DetailRowProps) => (
-  <View style={styles.detailRow}>
-    <MaterialIcons name={icon} size={24} color="#555" style={styles.icon} />
-    <View>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value}</Text>
+const DetailRow = ({ icon, label, value, iconColor, labelColor, valueColor, hideDivider = false }: DetailRowProps) => (
+  <View style={{ backgroundColor: 'transparent' }}>
+    <View style={styles.detailRow}>
+      <MaterialIcons name={icon} size={24} color={iconColor} style={styles.icon} />
+      <View style={{ backgroundColor: 'transparent' }}>
+        <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
+        <Text style={[styles.value, { color: valueColor }]}>{value}</Text>
+      </View>
     </View>
+    {!hideDivider && <Divider />}
   </View>
 );
 
@@ -42,6 +50,11 @@ const MyPropertyScreen = () => {
   const [propertyDetails, setPropertyDetails] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const textColor = useThemeColor({}, 'text');
+  const labelColor = useThemeColor({}, 'label');
+  const primaryColor = useThemeColor({}, 'primary');
+  const errorColor = useThemeColor({}, 'error');
 
   useEffect(() => {
     const fetchPropertyDetails = async () => {
@@ -82,7 +95,7 @@ const MyPropertyScreen = () => {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={primaryColor} />
       </View>
     );
   }
@@ -90,7 +103,7 @@ const MyPropertyScreen = () => {
   if (error) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.errorText}>{error}</Text>
+        <Text style={[styles.errorText, { color: errorColor }]}>{error}</Text>
       </View>
     );
   }
@@ -108,17 +121,21 @@ const MyPropertyScreen = () => {
   return (
     <View style={styles.container}>
       <Card>
-        <View style={styles.header}>
-          <MaterialIcons name="home-work" size={24} color="black" />
+        <View style={[styles.header, { backgroundColor: 'transparent' }]}>
+          <MaterialIcons name="home-work" size={24} color={textColor} />
           <Text style={styles.title}>Property Information</Text>
         </View>
-        <DetailRow icon="business" label="Property Name" value={name} />
-        <DetailRow icon="apartment" label="Property Type" value={type} />
+        <DetailRow icon="business" label="Property Name" value={name} iconColor={labelColor} labelColor={textColor} valueColor={labelColor} />
+        <DetailRow icon="apartment" label="Property Type" value={type} iconColor={labelColor} labelColor={textColor} valueColor={labelColor} />
         {address && (
           <DetailRow
             icon="location-on"
             label="Address"
             value={`${address.street}\n${address.city}, ${address.state} ${address.zip}`}
+            iconColor={labelColor}
+            labelColor={textColor}
+            valueColor={labelColor}
+            hideDivider={true}
           />
         )}
       </Card>
@@ -138,7 +155,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   title: {
     fontSize: 20,
@@ -146,14 +163,13 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   errorText: {
-    color: 'red',
+    fontSize: 16,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    backgroundColor: 'transparent',
   },
   icon: {
     marginRight: 15,
@@ -162,11 +178,9 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
   },
   value: {
     fontSize: 16,
-    color: '#555',
     marginTop: 2,
   },
 });

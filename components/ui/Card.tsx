@@ -3,16 +3,12 @@ import { View, StyleSheet, ViewProps } from 'react-native';
 import { useThemeColor } from '../Themed';
 
 const Card = (props: ViewProps) => {
-  const backgroundColor = useThemeColor({ light: '#fff', dark: '#1C1C1E' }, 'background');
-  const borderColor = useThemeColor({ light: '#E5E5EA', dark: '#3A3A3C' }, 'tabIconDefault');
+  const backgroundColor = useThemeColor({}, 'card');
+  const borderColor = useThemeColor({}, 'divider');
 
   return (
     <View
-      style={[
-        styles.card,
-        { backgroundColor, borderColor },
-        props.style,
-      ]}
+      style={[styles.card, { backgroundColor, borderColor }, props.style]}
       {...props}
     />
   );
@@ -32,7 +28,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    marginBottom: 16,
   },
 });
 

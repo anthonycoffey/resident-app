@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Platform, Alert } from 'react-native';
+import { Platform, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import { Text } from '@/components/Themed';
+import { Text, View } from '@/components/Themed';
 
 type Vehicle = {
   make: string;
@@ -52,8 +52,8 @@ const VehicleModalScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{isEditing ? 'Edit Vehicle' : 'Add Vehicle'}</Text>
+    <View style={{ flex: 1, padding: 20, justifyContent: 'center' }}>
+      <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' }}>{isEditing ? 'Edit Vehicle' : 'Add Vehicle'}</Text>
       <Input
         placeholder="Make (e.g., Toyota)"
         value={vehicle.make}
@@ -88,19 +88,5 @@ const VehicleModalScreen = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-});
 
 export default VehicleModalScreen;

@@ -5,13 +5,15 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-import { View, Text } from '@/components/Themed';
-import { useThemeColor } from '@/components/Themed';
+import { useRouter } from 'expo-router';
+import { View, Text, useThemeColor } from '@/components/Themed';
 import { db } from '@/lib/config/firebaseConfig';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '@/lib/providers/AuthProvider';
 import { Timestamp } from 'firebase/firestore';
 import Card from './ui/Card';
+import Chip from './ui/Chip';
+import Divider from './ui/Divider';
 import { MaterialIcons } from '@expo/vector-icons';
 
 type ServiceStatus = 'Completed' | 'In Progress' | 'Pending' | 'submitted';
@@ -25,37 +27,27 @@ type ServiceRequest = {
   serviceLocation?: string;
 };
 
-const getStatusColor = (status: ServiceStatus) => {
+const getStatusColorName = (
+  status: ServiceStatus
+): keyof typeof import('../constants/Colors').default['light'] => {
   switch (status) {
     case 'Completed':
-      return '#4CAF50'; // Green
+      return 'success';
     case 'In Progress':
-      return '#FFC107'; // Amber
+      return 'warning';
     case 'Pending':
-      return '#F44336'; // Red
+      return 'error';
     case 'submitted':
-      return '#2196F3'; // Blue
+      return 'primary';
     default:
-      return '#9E9E9E'; // Grey
+      return 'secondary';
   }
 };
 
-const Chip = ({ label }: { label: string }) => {
-  const chipColor = useThemeColor(
-    { light: '#E5E5EA', dark: '#3A3A3C' },
-    'tabIconDefault'
-  );
-  const textColor = useThemeColor({}, 'text');
-  return (
-    <View style={[styles.chip, { backgroundColor: chipColor }]}>
-      <Text style={[styles.chipText, { color: textColor }]}>{label}</Text>
-    </View>
-  );
-};
-
 const ServiceRequestItem = ({ item }: { item: ServiceRequest }) => {
+  const router = useRouter();
   const color = useThemeColor({}, 'text');
-  const statusColor = getStatusColor(item.status);
+  const statusColor = useThemeColor({}, getStatusColorName(item.status));
 
   const formatDate = (timestamp: Timestamp) => {
     if (!timestamp) return '';
@@ -64,7 +56,10 @@ const ServiceRequestItem = ({ item }: { item: ServiceRequest }) => {
 
   const handlePress = () => {
     if (item.phoenixSubmissionId) {
-      console.log('View Job:', item.phoenixSubmissionId);
+      router.push({
+        pathname: '/(resident)/job/[id]',
+        params: { id: item.phoenixSubmissionId },
+      });
     }
   };
 
@@ -73,8 +68,9 @@ const ServiceRequestItem = ({ item }: { item: ServiceRequest }) => {
       <TouchableOpacity
         onPress={handlePress}
         disabled={!item.phoenixSubmissionId}
+        style={{ backgroundColor: 'transparent' }}
       >
-        <View style={styles.itemHeader}>
+        <View style={[styles.itemHeader, { backgroundColor: 'transparent' }]}>
           <Text style={[styles.itemDate, { color }]}>
             {formatDate(item.submittedAt)}
           </Text>
@@ -83,19 +79,26 @@ const ServiceRequestItem = ({ item }: { item: ServiceRequest }) => {
           </Text>
         </View>
         <View
-          style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginTop: 10,
+            backgroundColor: 'transparent',
+          }}
         >
-          <View style={{ marginRight: 6 }}>
+          <View style={{ marginRight: 6, backgroundColor: 'transparent' }}>
             {/* Map Pin Icon */}
             <MaterialIcons name='location-pin' size={18} color={color} />
           </View>
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, backgroundColor: 'transparent' }}>
             <Text style={[styles.itemTitle, { color }]}>
               {item.serviceLocation || 'No location specified'}
             </Text>
           </View>
         </View>
-        <View style={styles.chipContainer}>
+        <View
+          style={[styles.chipContainer, { backgroundColor: 'transparent' }]}
+        >
           {item.requestType.split(',').map((type, index) => (
             <Chip key={index} label={type.trim()} />
           ))}
@@ -108,6 +111,9 @@ const ServiceRequestItem = ({ item }: { item: ServiceRequest }) => {
 const ServiceRequestList = () => {
   const { user } = useAuth();
   const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
+  const primaryColor = useThemeColor({}, 'primary');
+  const labelColor = useThemeColor({}, 'label');
+  const disabledColor = useThemeColor({}, 'divider');
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const rowsPerPage = 5;
@@ -155,7 +161,7 @@ const ServiceRequestList = () => {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size='large' />
+        <ActivityIndicator size='large' color={primaryColor} />
       </View>
     );
   }
@@ -175,42 +181,63 @@ const ServiceRequestList = () => {
             renderItem={({ item }) => <ServiceRequestItem item={item} />}
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ flexGrow: 1 }}
+            ListFooterComponent={
+              <View
+                style={[
+                  styles.paginationContainer,
+                  { backgroundColor: 'transparent' },
+                ]}
+              >
+                <Divider />
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    backgroundColor: 'transparent',
+                  }}
+                >
+                  <TouchableOpacity
+                    onPress={() => setPage((p) => Math.max(0, p - 1))}
+                    disabled={page === 0}
+                    style={styles.paginationButton}
+                  >
+                    <MaterialIcons
+                      name='keyboard-arrow-left'
+                      size={24}
+                      color={page === 0 ? disabledColor : primaryColor}
+                    />
+                  </TouchableOpacity>
+                  <Text style={[styles.pageNumberText, { color: labelColor }]}>
+                    Page {page + 1} of {totalPages}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() =>
+                      setPage((p) =>
+                        (p + 1) * rowsPerPage < serviceRequests.length
+                          ? p + 1
+                          : p
+                      )
+                    }
+                    disabled={
+                      (page + 1) * rowsPerPage >= serviceRequests.length
+                    }
+                    style={styles.paginationButton}
+                  >
+                    <MaterialIcons
+                      name='keyboard-arrow-right'
+                      size={24}
+                      color={
+                        (page + 1) * rowsPerPage >= serviceRequests.length
+                          ? disabledColor
+                          : primaryColor
+                      }
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            }
           />
-          <View style={styles.paginationContainer}>
-            <TouchableOpacity
-              onPress={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={page === 0}
-              style={styles.paginationButton}
-            >
-              <MaterialIcons
-                name='keyboard-arrow-left'
-                size={24}
-                color={page === 0 ? '#ccc' : '#007AFF'}
-              />
-            </TouchableOpacity>
-            <Text style={styles.pageNumberText}>
-              Page {page + 1} of {totalPages}
-            </Text>
-            <TouchableOpacity
-              onPress={() =>
-                setPage((p) =>
-                  (p + 1) * rowsPerPage < serviceRequests.length ? p + 1 : p
-                )
-              }
-              disabled={(page + 1) * rowsPerPage >= serviceRequests.length}
-              style={styles.paginationButton}
-            >
-              <MaterialIcons
-                name='keyboard-arrow-right'
-                size={24}
-                color={
-                  (page + 1) * rowsPerPage >= serviceRequests.length
-                    ? '#ccc'
-                    : '#007AFF'
-                }
-              />
-            </TouchableOpacity>
-          </View>
         </>
       ) : (
         <Text style={styles.noRequestsText}>
@@ -236,7 +263,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
     fontSize: 16,
-    color: '#888',
   },
   title: {
     fontSize: 20,
@@ -250,7 +276,7 @@ const styles = StyleSheet.create({
   },
   itemTitle: {
     fontSize: 16,
-    fontWeight: 'medium',
+    fontWeight: '500',
   },
   itemDate: {
     fontSize: 12,
@@ -265,21 +291,8 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     marginTop: 10,
   },
-  chip: {
-    borderRadius: 15,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    marginRight: 5,
-    marginBottom: 5,
-  },
-  chipText: {
-    fontSize: 12,
-  },
   paginationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 1,
   },
   paginationButton: {
     padding: 4,
@@ -287,7 +300,6 @@ const styles = StyleSheet.create({
   pageNumberText: {
     marginHorizontal: 15,
     fontSize: 16,
-    color: '#888',
   },
 });
 

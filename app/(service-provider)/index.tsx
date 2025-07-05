@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, Button } from 'react-native';
+import { Text, View } from '@/components/Themed';
+import Button from '@/components/ui/Button';
 import { useAuth } from '@/lib/providers/AuthProvider';
 
 const ServiceProviderDashboard = () => {

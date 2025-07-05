@@ -1,14 +1,9 @@
 import React, { useRef } from 'react';
-import {
-  View,
-  StyleSheet,
-  SafeAreaView,
-  Keyboard,
-  TouchableOpacity,
-} from 'react-native';
+import { SafeAreaView, Keyboard, TouchableOpacity } from 'react-native';
+import { View, useThemeColor } from '@/components/Themed';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useServiceRequest } from '@/lib/context/ServiceRequestContext';
 
 const AddressSearchScreen = () => {
@@ -16,36 +11,57 @@ const AddressSearchScreen = () => {
   const { setAddress } = useServiceRequest();
   const googlePlacesAutocompleteRef = useRef<any>(null);
 
+  const backgroundColor = useThemeColor({}, 'background');
+  const inputBackgroundColor = useThemeColor({}, 'input');
+  const textColor = useThemeColor({}, 'text');
+  const placeholderColor = useThemeColor({}, 'label');
+  const dividerColor = useThemeColor({}, 'divider');
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
+    <SafeAreaView style={{ flex: 1, backgroundColor }}>
+      <View style={{ flex: 1, padding: 15, backgroundColor: 'transparent' }}>
         <GooglePlacesAutocomplete
           ref={googlePlacesAutocompleteRef}
           placeholder='Search for an address'
           textInputProps={{
-            placeholderTextColor: '#000',
+            placeholderTextColor: placeholderColor,
             clearButtonMode: 'always',
-          }}
-          styles={{
-            container: {
+            style: {
+              backgroundColor: inputBackgroundColor,
+              color: textColor,
+              paddingVertical: 10,
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              fontSize: 16,
+              borderWidth: 1,
+              borderColor: dividerColor,
               flex: 1,
             },
-            textInput: {
-              backgroundColor: '#f0f0f0',
-              borderRadius: 5,
-              paddingVertical: 10,
-              paddingHorizontal: 15,
-              fontSize: 16,
+          }}
+          styles={{
+            textInputContainer: {
+              width: '100%',
             },
             listView: {
               borderWidth: 1,
-              borderColor: '#ddd',
-              backgroundColor: '#fff',
-              borderRadius: 5,
+              borderColor: dividerColor,
+              backgroundColor: inputBackgroundColor,
+              borderRadius: 8,
               marginTop: 10,
             },
+            row: {
+              backgroundColor: 'transparent',
+            },
+            description: {
+              color: textColor,
+            },
+            separator: {
+              height: 1,
+              backgroundColor: dividerColor,
+            },
           }}
-          onPress={(data, details = null) => {
+          onPress={(_data, details = null) => {
+            /* clear search */
             Keyboard.dismiss();
             setAddress(details);
             router.replace({
@@ -93,30 +109,30 @@ const AddressSearchScreen = () => {
           textInputHide={false}
           timeout={20000}
           renderRightButton={() => (
-            <TouchableOpacity
-              onPress={() => {
-                googlePlacesAutocompleteRef.current?.clear();
+            <View
+              style={{
+                justifyContent: 'center',
+                alignItems: 'center',
+                paddingHorizontal: 10,
               }}
-              style={{ justifyContent: 'center', paddingHorizontal: 10 }}
             >
-              <Ionicons name='close-circle' size={20} color='#888' />
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  googlePlacesAutocompleteRef.current?.setAddressText('');
+                }}
+              >
+                <MaterialIcons
+                  name='close'
+                  size={20}
+                  color={placeholderColor}
+                />
+              </TouchableOpacity>
+            </View>
           )}
         />
       </View>
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'white',
-  },
-  content: {
-    flex: 1,
-    padding: 15,
-  },
-});
 
 export default AddressSearchScreen;
