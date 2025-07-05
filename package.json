@@ -23,6 +23,7 @@
     "@react-native-google-signin/google-signin": "^15.0.0",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/native": "^7.1.6",
+    "@sentry/react-native": "^6.16.1",
     "date-fns": "^4.1.0",
     "expo": "53.0.17",
     "expo-crypto": "~14.1.5",

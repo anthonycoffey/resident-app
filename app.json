@@ -29,7 +29,15 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "resident-app",
+          "organization": "24hr-car-unlock-2f6982a53"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
