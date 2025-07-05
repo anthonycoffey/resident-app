@@ -14,14 +14,18 @@ module.exports = ({ config }) => {
       package: 'com.phoenix.resident',
       ...config.android,
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON,
-      googleMaps: {
-        apiKey: process.env.GOOGLE_MAPS_API_KEY,
+      config: {
+        googleMaps: {
+          apiKey: process.env.GOOGLE_MAPS_API_KEY,
+        },
       },
     },
     ios: {
       ...config.ios,
       googleServicesFile: process.env.GOOGLE_SERVICES_PLIST,
-      googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
+      config: {
+        googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
+      },
     },
   };
 };
