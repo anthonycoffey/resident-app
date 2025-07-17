@@ -20,7 +20,8 @@ import Card from '@/components/ui/Card';
 import { View, Text } from '@/components/Themed';
 import { Link } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
-import { useColorScheme } from '@/components/useColorScheme';
+import { useColorScheme,  } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -28,7 +29,8 @@ const LoginScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { updateUser } = useAuth();
-  const colorScheme = useColorScheme();
+  const colorScheme = useColorScheme() ?? 'light';
+
 
   React.useEffect(() => {
     GoogleSignin.configure({
@@ -128,6 +130,7 @@ const LoginScreen = () => {
           <Button title='Sign In with Email' onPress={handleLogin} />
         )}
 
+
         <View
           style={{
             flexDirection: 'row',
@@ -135,11 +138,12 @@ const LoginScreen = () => {
             marginTop: 12,
             width: '100%',
             alignSelf: 'center',
+            backgroundColor: 'transparent',
           }}
         >
-          <View style={{ flex: 1, height: 1, backgroundColor: colorScheme === 'dark' ? '#333' : '#e0e0e0' }} />
+          <View style={{ flex: 1, height: 1, backgroundColor: colorScheme === 'dark' ? Colors.dark.divider : Colors.light.divider }} />
           <Text style={{ marginHorizontal: 8, color: '#888' }}>OR</Text>
-          <View style={{ flex: 1, height: 1, backgroundColor: colorScheme === 'dark' ? '#333' : '#e0e0e0' }} />
+          <View style={{ flex: 1, height: 1, backgroundColor: colorScheme === 'dark' ? Colors.dark.divider : Colors.light.divider }} />
         </View>
 
         <View style={styles.socialContainer}>

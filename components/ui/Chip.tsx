@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, StyleProp, ViewStyle } from 'react-native';
-import { useThemeColor } from '../Themed';
+import { StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import { View, Text } from '../Themed';
 
 interface ChipProps {
   label: string;
@@ -8,12 +8,9 @@ interface ChipProps {
 }
 
 const Chip: React.FC<ChipProps> = ({ label, style }) => {
-  const backgroundColor = useThemeColor({}, 'chip');
-  const textColor = useThemeColor({}, 'text');
-
   return (
-    <View style={[styles.chip, { backgroundColor }, style]}>
-      <Text style={[styles.label, { color: textColor }]}>{label}</Text>
+    <View style={[styles.chip, style]} backgroundColorName="chip">
+      <Text style={styles.label}>{label}</Text>
     </View>
   );
 };

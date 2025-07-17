@@ -3,11 +3,11 @@ import {
   TextInput,
   StyleSheet,
   TextInputProps,
-  View,
   TouchableOpacity,
+  useColorScheme,
+  View, // Use the default View
 } from 'react-native';
-import { useThemeColor } from '../Themed';
-import { FontAwesome } from '@expo/vector-icons';
+import Colors from '@/constants/Colors';
 
 interface CustomInputProps extends TextInputProps {
   rightIcon?: React.ReactNode;
@@ -15,25 +15,29 @@ interface CustomInputProps extends TextInputProps {
 }
 
 const Input = (props: CustomInputProps) => {
-  const { rightIcon, onRightIconPress, multiline, numberOfLines, ...rest } = props;
-  const color = useThemeColor({}, 'text');
-  const borderColor = useThemeColor({}, 'divider');
-  const backgroundColor = useThemeColor({}, 'input');
-  const placeholderColor = useThemeColor({}, 'label');
+  const { rightIcon, onRightIconPress, multiline, numberOfLines, style, ...rest } =
+    props;
+  const theme = useColorScheme() ?? 'light';
+  const themeColors = Colors[theme];
 
   return (
     <View style={styles.container}>
       <TextInput
         style={[
           styles.input,
-          { color, borderColor, backgroundColor },
+          {
+            color: themeColors.text,
+            borderColor: themeColors.divider,
+            backgroundColor: themeColors.input,
+          },
           multiline && {
             textAlignVertical: 'top',
             paddingTop: 10,
             height: (numberOfLines || 4) * 20, // Approximate height
           },
+          style, // Allow overriding styles
         ]}
-        placeholderTextColor={placeholderColor}
+        placeholderTextColor={themeColors.label}
         multiline={multiline}
         numberOfLines={numberOfLines}
         {...rest}

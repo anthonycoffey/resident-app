@@ -1,15 +1,15 @@
 import React from 'react';
-import { View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
-import { useThemeColor } from '../Themed';
+import { StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import { View } from '../Themed';
 
 interface DividerProps {
   style?: StyleProp<ViewStyle>;
 }
 
 const Divider: React.FC<DividerProps> = ({ style }) => {
-  const backgroundColor = useThemeColor({}, 'divider');
-
-  return <View style={[styles.divider, { backgroundColor }, style]} />;
+  return (
+    <View style={[styles.divider, style]} backgroundColorName="divider" />
+  );
 };
 
 const styles = StyleSheet.create({

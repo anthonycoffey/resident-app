@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useThemeColor } from '../Themed';
+import { View, Text } from '../Themed';
+import Colors from '@/constants/Colors';
 
 interface BadgeProps {
   label: string;
@@ -9,27 +10,31 @@ interface BadgeProps {
 }
 
 const Badge: React.FC<BadgeProps> = ({ label, onPress }) => {
-  const badgeColor = useThemeColor({}, 'badge');
-  const textColor = '#fff'; // Badges typically have white text for contrast
+  const textColor = Colors.light.white; // Badge text is almost always white for contrast
 
   return (
     <TouchableOpacity
       onPress={() => onPress(label)}
-      style={[styles.badge, { backgroundColor: badgeColor }]}>
-      <Text style={[styles.badgeText, { color: textColor }]}>{label}</Text>
-      <MaterialIcons name="close" size={14} color={textColor} />
+      style={styles.container}
+    >
+      <View style={styles.badge} backgroundColorName="badge">
+        <Text style={[styles.badgeText, { color: textColor }]}>{label}</Text>
+        <MaterialIcons name="close" size={14} color={textColor} />
+      </View>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    margin: 2,
+  },
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 15,
     paddingVertical: 5,
     paddingHorizontal: 10,
-    margin: 2,
   },
   badgeText: {
     marginRight: 5,

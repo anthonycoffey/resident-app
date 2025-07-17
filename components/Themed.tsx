@@ -1,20 +1,16 @@
-/**
- * Learn more about Light and Dark modes:
- * https://docs.expo.io/guides/color-schemes/
- */
-
-import { Text as DefaultText, View as DefaultView } from 'react-native';
+import {
+  Text as DefaultText,
+  View as DefaultView,
+  StyleSheet,
+  useColorScheme,
+} from 'react-native';
 
 import Colors from '@/constants/Colors';
-import { useColorScheme } from './useColorScheme';
 
 type ThemeProps = {
   lightColor?: string;
   darkColor?: string;
 };
-
-export type TextProps = ThemeProps & DefaultText['props'];
-export type ViewProps = ThemeProps & DefaultView['props'];
 
 export function useThemeColor(
   props: { light?: string; dark?: string },
@@ -30,16 +26,87 @@ export function useThemeColor(
   }
 }
 
-export function Text(props: TextProps) {
-  const { style, lightColor, darkColor, ...otherProps } = props;
-  const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+// =================================================================
+// Enhanced Text Component
+// =================================================================
 
-  return <DefaultText style={[{ color }, style]} {...otherProps} />;
+type TextVariant = 'default' | 'title' | 'subtitle' | 'caption' | 'link';
+
+type TextProps = ThemeProps &
+  DefaultText['props'] & {
+    variant?: TextVariant;
+    colorName?: keyof typeof Colors.light;
+  };
+
+export function Text(props: TextProps) {
+  const {
+    style,
+    lightColor,
+    darkColor,
+    colorName = 'text',
+    variant = 'default',
+    ...otherProps
+  } = props;
+  const color = useThemeColor({ light: lightColor, dark: darkColor }, colorName);
+
+  return (
+    <DefaultText
+      style={[{ color }, styles[variant], style]}
+      {...otherProps}
+    />
+  );
 }
 
+// =================================================================
+// Enhanced View Component
+// =================================================================
+
+export type ViewProps = ThemeProps &
+  DefaultView['props'] & {
+    backgroundColorName?: keyof typeof Colors.light;
+  };
+
 export function View(props: ViewProps) {
-  const { style, lightColor, darkColor, ...otherProps } = props;
-  const backgroundColor = useThemeColor({ light: lightColor, dark: darkColor }, 'background');
+  const {
+    style,
+    lightColor,
+    darkColor,
+    backgroundColorName = 'background',
+    ...otherProps
+  } = props;
+  const backgroundColor = useThemeColor(
+    { light: lightColor, dark: darkColor },
+    backgroundColorName
+  );
 
   return <DefaultView style={[{ backgroundColor }, style]} {...otherProps} />;
 }
+
+// =================================================================
+// Typography Styles
+// =================================================================
+
+const styles = StyleSheet.create({
+  default: {
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    lineHeight: 36,
+  },
+  subtitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  caption: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  link: {
+    fontSize: 16,
+    lineHeight: 30,
+    color: Colors.light.primary, // Link color is often consistent
+  },
+});

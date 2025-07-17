@@ -1,14 +1,19 @@
 import React from 'react';
-import { View, StyleSheet, ViewProps } from 'react-native';
-import { useThemeColor } from '../Themed';
+import { StyleSheet, useColorScheme } from 'react-native';
+import { View, ViewProps } from '../Themed';
+import Colors from '@/constants/Colors';
 
 const Card = (props: ViewProps) => {
-  const backgroundColor = useThemeColor({}, 'card');
-  const borderColor = useThemeColor({}, 'divider');
+  const theme = useColorScheme() ?? 'light';
 
   return (
     <View
-      style={[styles.card, { backgroundColor, borderColor }, props.style]}
+      backgroundColorName="card"
+      style={[
+        styles.card,
+        theme === 'light' ? styles.shadowLight : styles.shadowDark,
+        props.style,
+      ]}
       {...props}
     />
   );
@@ -18,8 +23,9 @@ const styles = StyleSheet.create({
   card: {
     margin: 10,
     borderRadius: 12,
-    borderWidth: 1,
     padding: 16,
+  },
+  shadowLight: {
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -28,6 +34,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: Colors.light.divider,
+  },
+  shadowDark: {
+    borderWidth: 1,
+    borderColor: Colors.dark.divider,
   },
 });
 
