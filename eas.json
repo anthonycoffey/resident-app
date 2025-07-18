@@ -27,6 +27,12 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+       "ios": {
+        "appleId": "coffey.j.anthony@gmail.com",
+        "ascAppId": "6748718753",
+        "appleTeamId": "B8A6QJXBA9"
+      }
+    }
   }
 }
