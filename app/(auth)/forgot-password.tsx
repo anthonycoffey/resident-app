@@ -63,7 +63,7 @@ const localStyles = StyleSheet.create({
     height: 200,
     resizeMode: 'contain',
     alignSelf: 'center',
-    marginBottom: 0,
+    marginBottom: 10,
   },
   linkContainer: {
     flexDirection: 'row',

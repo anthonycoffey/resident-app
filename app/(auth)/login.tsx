@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     height: 200,
     resizeMode: 'contain',
     alignSelf: 'center',
-    marginBottom: 0,
+    marginBottom: 10,
   },
   socialContainer: {
     marginTop: 16,
