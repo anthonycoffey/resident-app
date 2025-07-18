@@ -15,8 +15,14 @@ interface CustomInputProps extends TextInputProps {
 }
 
 const Input = (props: CustomInputProps) => {
-  const { rightIcon, onRightIconPress, multiline, numberOfLines, style, ...rest } =
-    props;
+  const {
+    rightIcon,
+    onRightIconPress,
+    multiline,
+    numberOfLines,
+    style,
+    ...rest
+  } = props;
   const theme = useColorScheme() ?? 'light';
   const themeColors = Colors[theme];
 
@@ -62,7 +68,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     width: '100%',
-    paddingVertical: 10,
+    paddingVertical: 16,
+    fontSize: 16,
   },
   rightIcon: {
     position: 'absolute',

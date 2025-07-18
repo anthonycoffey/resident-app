@@ -1,11 +1,13 @@
 {
   "expo": {
-    "name": "resident-app",
-    "slug": "resident-app",
-    "version": "1.0.8",
+    "name": "AmeniLink",
+    "description": "AmeniLink Resident App",
+    "slug": "amenilink-resident",
+    "version": "1.0.9",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "residentapp",
+    "owner": "phoenix-crm",
+    "scheme": "amenilink-resident",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -14,7 +16,12 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.amenilink.resident",
+      "config": {},
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -34,7 +41,7 @@
         "@sentry/react-native/expo",
         {
           "url": "https://sentry.io/",
-          "project": "resident-app",
+          "project": "amenilink-resident",
           "organization": "24hr-car-unlock-2f6982a53"
         }
       ]
@@ -45,7 +52,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "716e8505-04b9-46f6-a434-ce87a8a0d492"
+        "projectId": "5faa307a-830f-4972-a30e-8a1f504a3264"
       }
     }
   }

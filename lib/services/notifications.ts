@@ -1,8 +1,9 @@
 import { doc, setDoc } from 'firebase/firestore';
 import * as Notifications from 'expo-notifications';
 import { db } from '../config/firebaseConfig';
+import { useAuth } from '../providers/AuthProvider';
 
-export const registerForPushNotificationsAsync = async (userId: string) => {
+export const registerForPushNotificationsAsync = async (userId: string, organizationId: string, propertyId: string) => {
   let token;
   try {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -18,8 +19,17 @@ export const registerForPushNotificationsAsync = async (userId: string) => {
     token = (await Notifications.getExpoPushTokenAsync()).data;
     console.log(token);
 
+    // /organizations/pNcRD7xrbvCaKNBWSsCV/properties/Rf9JElhXesRAaWB7JxNC/residents/aPprmEV5XXEIgxIVye0ZNP8ejU3L
     if (token) {
-      const userDocRef = doc(db, 'users', userId);
+      const userDocRef = doc(
+        db,
+        'organizations',
+        organizationId,
+        'properties',
+        propertyId,
+        'residents',
+        userId
+      );
       await setDoc(userDocRef, { expoPushToken: token }, { merge: true });
     }
   } catch (error) {

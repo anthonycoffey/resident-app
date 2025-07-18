@@ -47,15 +47,33 @@ export const NotificationsProvider = ({ children }: NotificationsProviderProps) 
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const notificationListener = useRef<Subscription>();
-  const responseListener = useRef<Subscription>();
+  const notificationListener = useRef<Notifications.EventSubscription | null>(null);
+  const responseListener = useRef<Notifications.EventSubscription | null>(null);
 
+  // fetchResidentProfile(user.uid, user.organizationId, user.propertyId);
   useEffect(() => {
-    if (user) {
+    if (
+      user &&
+      typeof user.organizationId === 'string' &&
+      typeof user.propertyId === 'string' &&
+      typeof user.uid === 'string'
+    ) {
       const q = query(
-        collection(db, 'users', user.uid, 'notifications'),
+        // collection(db, 'users', user.uid, 'notifications'),
+        collection(
+          db,
+          'organizations',
+          user.organizationId,
+          'properties',
+          user.propertyId,
+          'residents',
+          user.uid,
+          'notifications'
+        ),
         orderBy('date', 'desc')
       );
+
+      
 
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const newNotifications = snapshot.docs.map((doc) => ({

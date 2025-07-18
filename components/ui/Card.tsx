@@ -8,7 +8,7 @@ const Card = (props: ViewProps) => {
 
   return (
     <View
-      backgroundColorName="card"
+      backgroundColorName='card'
       style={[
         styles.card,
         theme === 'light' ? styles.shadowLight : styles.shadowDark,
@@ -21,7 +21,8 @@ const Card = (props: ViewProps) => {
 
 const styles = StyleSheet.create({
   card: {
-    margin: 10,
+    marginHorizontal: 10,
+    marginVertical: 5,
     borderRadius: 12,
     padding: 16,
   },

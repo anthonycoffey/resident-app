@@ -85,13 +85,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           email: firebaseUser.email,
           displayName: firebaseUser.displayName,
           claims: claims,
-          organizationId: claims.organizationId as string | undefined,
-          propertyId: claims.propertyId as string | undefined,
+          organizationId: claims.organizationId as string,
+          propertyId: claims.propertyId as string,
         };
         setUser(appUser);
 
         // Register for push notifications
-        registerForPushNotificationsAsync(firebaseUser.uid);
+        registerForPushNotificationsAsync(appUser.uid, appUser.organizationId, appUser.propertyId);
 
         if (appUser.organizationId && appUser.propertyId) {
           fetchResidentProfile(appUser.uid, appUser.organizationId, appUser.propertyId);

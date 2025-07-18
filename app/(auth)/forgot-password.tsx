@@ -29,11 +29,7 @@ const ForgotPasswordScreen = () => {
   return (
     <View style={styles.container}>
       <Image
-        source={
-          colorScheme === 'dark'
-            ? require('@/assets/images/property-manager-pro-light.png')
-            : require('@/assets/images/property-manager-pro.png')
-        }
+        source={require('@/assets/images/logo-no-container.png')}
         style={localStyles.logo}
       />
       <Card>
@@ -67,7 +63,7 @@ const localStyles = StyleSheet.create({
     height: 200,
     resizeMode: 'contain',
     alignSelf: 'center',
-    marginBottom: 24,
+    marginBottom: 0,
   },
   linkContainer: {
     flexDirection: 'row',

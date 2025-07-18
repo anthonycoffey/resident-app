@@ -93,7 +93,7 @@ const AiAssistantScreen = () => {
         style={{ margin: 10 }}
       />
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={{ flex: 1, paddingBottom: insets.bottom }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={insets.top + 60}
       >

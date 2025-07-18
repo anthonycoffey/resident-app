@@ -43,22 +43,19 @@ const db = getFirestore(app);
 const functions = getFunctions(app);
 const storage = getStorage(app);
 
-// if (__DEV__) {
-//   console.log('Connecting to Firebase Emulator...');
-//   // Note: The IP address must be 10.0.2.2 for Android emulators to connect to the host machine's localhost
-//   // For iOS, you can use 'localhost' or '127.0.0.1'
-//   // Since this is a managed Expo app, we'll stick to localhost and assume the user is running on iOS or web for emulator testing, or knows how to configure their network.
-//   const host = '127.0.0.1';
+if (__DEV__) {
+  console.log('Connecting to Firebase Emulator...');
+  const host = '127.0.0.1';
   
-//   try {
-//     connectAuthEmulator(auth, `http://${host}:9099`, { disableWarnings: true });
-//     connectFirestoreEmulator(db, host, 8080);
-//     connectFunctionsEmulator(functions, host, 5001);
-//     connectStorageEmulator(storage, host, 9199);
-//     console.log('Successfully connected to Firebase Emulator.');
-//   } catch (e) {
-//     console.error('Error connecting to Firebase Emulator:', e);
-//   }
-// }
+  try {
+    connectAuthEmulator(auth, `http://${host}:9099`, { disableWarnings: true });
+    connectFirestoreEmulator(db, host, 8080);
+    connectFunctionsEmulator(functions, host, 5001);
+    connectStorageEmulator(storage, host, 9199);
+    console.log('Successfully connected to Firebase Emulator.');
+  } catch (e) {
+    console.error('Error connecting to Firebase Emulator:', e);
+  }
+}
 
 export { app, auth, db, functions, storage };

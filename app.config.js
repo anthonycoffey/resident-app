@@ -11,7 +11,7 @@ module.exports = ({ config }) => {
       ],
     ],
     android: {
-      package: 'com.phoenix.resident',
+      package: 'com.amenilink.resident',
       ...config.android,
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON,
       config: {
@@ -21,6 +21,7 @@ module.exports = ({ config }) => {
       },
     },
     ios: {
+      bundleIdentifier: 'com.amenilink.resident',
       ...config.ios,
       googleServicesFile: process.env.GOOGLE_SERVICES_PLIST,
       config: {

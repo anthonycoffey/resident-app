@@ -55,7 +55,7 @@ const Button = ({
   const getBorderColor = () => {
     if (!isOutline) return 'transparent';
     if (isDestructive) return errorColor;
-    return secondaryColor;
+    return primaryColor;
   };
 
   const getTextColor = () => {
@@ -73,7 +73,7 @@ const Button = ({
     {
       backgroundColor: getBackgroundColor(),
       borderColor: getBorderColor(),
-      borderWidth: isOutline ? 1 : 0,
+      borderWidth: isOutline ? 2 : 0,
     },
     style,
     (disabled || loading) && styles.disabled,

@@ -1,66 +1,116 @@
 import React from 'react';
-import { Tabs } from 'expo-router';
+import { Drawer } from 'expo-router/drawer';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useThemeColor } from '@/components/Themed';
+import { useThemeColor, View } from '@/components/Themed';
 import NotificationBell from '@/components/ui/NotificationBell';
+import { DrawerToggleButton } from '@react-navigation/drawer';
+import {
+  DrawerContentScrollView,
+  DrawerItemList,
+  DrawerItem,
+} from '@react-navigation/drawer';
+import { useAuth } from '@/lib/providers/AuthProvider';
+
+function CustomDrawerContent(props: any) {
+  const { logout } = useAuth();
+  const destructiveColor = useThemeColor({}, 'error');
+
+  return (
+    <DrawerContentScrollView {...props}>
+      <DrawerItemList {...props} />
+      <View style={{ borderWidth: 0.5, borderColor: useThemeColor({}, 'divider'), marginVertical: 10 }} />
+      <DrawerItem
+        label="Logout"
+        labelStyle={{ color: destructiveColor }}
+        icon={({ color, size }) => (
+          <MaterialIcons name="logout" size={size} color={destructiveColor} />
+        )}
+        onPress={logout}
+      />
+    </DrawerContentScrollView>
+  );
+}
 
 export default function ResidentLayout() {
   const activeTintColor = useThemeColor({}, 'tint');
   return (
-    <Tabs
+    <Drawer
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
-        tabBarActiveTintColor: activeTintColor,
+        drawerActiveTintColor: activeTintColor,
         headerRight: () => <NotificationBell />,
-      }}>
-      <Tabs.Screen
-        name="index"
+        headerLeft: () => <DrawerToggleButton tintColor={activeTintColor} />,
+      }}
+    >
+      <Drawer.Screen
+        name='index'
         options={{
           title: 'Dashboard',
-          tabBarIcon: ({ color }) => <MaterialIcons size={28} name="dashboard" color={color} />,
+          drawerIcon: ({ color }) => (
+            <MaterialIcons size={28} name='dashboard' color={color} />
+          ),
         }}
       />
-      <Tabs.Screen
-        name="my-profile/index"
+      <Drawer.Screen
+        name='my-profile/index'
         options={{
           title: 'My Profile',
-          tabBarIcon: ({ color }) => <MaterialIcons size={28} name="person" color={color} />,
+          drawerIcon: ({ color }) => (
+            <MaterialIcons size={28} name='person' color={color} />
+          ),
         }}
       />
-      <Tabs.Screen
-        name="my-property/index"
+      <Drawer.Screen
+        name='my-property/index'
         options={{
           title: 'My Property',
-          tabBarIcon: ({ color }) => <MaterialIcons size={28} name="apartment" color={color} />,
+          drawerIcon: ({ color }) => (
+            <MaterialIcons size={28} name='apartment' color={color} />
+          ),
         }}
       />
-      <Tabs.Screen
-        name="service-request"
+      <Drawer.Screen
+        name='service-request'
         options={{
-          headerShown: false,
+          // headerShown: false,
           title: 'Service Request',
-          tabBarIcon: ({ color }) => <MaterialIcons size={28} name="build" color={color} />,
+          drawerIcon: ({ color }) => (
+            <MaterialIcons size={28} name='build' color={color} />
+          ),
         }}
       />
-      <Tabs.Screen
-        name="ai-assistant/index"
+      <Drawer.Screen
+        name='ai-assistant/index'
         options={{
           title: 'AI Assistant',
-          tabBarIcon: ({ color }) => <MaterialIcons size={28} name="smart-toy" color={color} />,
+          drawerIcon: ({ color }) => (
+            <MaterialIcons size={28} name='smart-toy' color={color} />
+          ),
         }}
       />
-      <Tabs.Screen
-        name="my-profile/vehicle-modal"
+      <Drawer.Screen
+        name='report-violation/index'
         options={{
-          href: null, // Hide this screen from the tab bar
+          title: 'Report Violation',
+          drawerIcon: ({ color }) => (
+            <MaterialIcons size={28} name='report-problem' color={color} />
+          ),
+        }}
+      />
+      {/* Hidden screens will not appear in the drawer */}
+      <Drawer.Screen
+        name='my-profile/vehicle-modal'
+        options={{
+          drawerItemStyle: { display: 'none' },
           title: 'Vehicle Details',
         }}
       />
-      <Tabs.Screen
-        name="job/[id]"
+      <Drawer.Screen
+        name='job/[id]'
         options={{
-          href: null, // Hide this screen from the tab bar
+          drawerItemStyle: { display: 'none' },
         }}
       />
-    </Tabs>
+    </Drawer>
   );
 }

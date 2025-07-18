@@ -240,12 +240,6 @@ const MyProfileScreen = () => {
         onPress={handleSaveProfile}
         disabled={saving}
       />
-      <Button
-        title="Logout"
-        onPress={logout}
-        variant="destructive"
-        style={{ marginTop: 10 }}
-      />
     </View>
   );
 

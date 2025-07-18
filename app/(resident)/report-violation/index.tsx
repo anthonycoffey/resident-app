@@ -21,6 +21,9 @@ const ReportViolationScreen = () => {
   const themeColors = Colors[theme];
 
   const [licensePlate, setLicensePlate] = useState('');
+  const [make, setMake] = useState('');
+  const [model, setModel] = useState('');
+  const [additionalInfo, setAdditionalInfo] = useState('');
   const [violationType, setViolationType] = useState<string | null>(null);
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -67,7 +70,7 @@ const ReportViolationScreen = () => {
   };
 
   const handleSubmit = async () => {
-    if (!licensePlate || !violationType || !image) {
+    if (!licensePlate || !violationType || !image || !make || !model) {
       Alert.alert('Missing Information', 'Please fill out all fields and select an image.');
       return;
     }
@@ -86,8 +89,11 @@ const ReportViolationScreen = () => {
         organizationId: user.claims.organizationId,
         propertyId: user.claims.propertyId,
         licensePlate,
+        make,
+        model,
         violationType,
         photoUrl,
+        additionalInfo,
       });
 
       Alert.alert('Success', 'Violation report submitted successfully.');
@@ -104,13 +110,35 @@ const ReportViolationScreen = () => {
   return (
     <ScrollView>
       <Card>
-        <Text variant="title" style={styles.title}>Report a Violation</Text>
         
         <Input
           placeholder="Enter License Plate"
           value={licensePlate}
           onChangeText={setLicensePlate}
           autoCapitalize="characters"
+        />
+
+        <Input
+          placeholder="Enter Vehicle Make"
+          value={make}
+          onChangeText={setMake}
+          autoCapitalize="words"
+        />
+
+        <Input
+          placeholder="Enter Vehicle Model"
+          value={model}
+          onChangeText={setModel}
+          autoCapitalize="words"
+        />
+
+        <Input
+          placeholder="Additional Info (Optional)"
+          value={additionalInfo}
+          onChangeText={setAdditionalInfo}
+          multiline
+          numberOfLines={4}
+          style={{ height: 100, textAlignVertical: 'top' }}
         />
 
         <Dropdown
@@ -127,7 +155,6 @@ const ReportViolationScreen = () => {
           }}
         />
 
-        <Text variant="subtitle" style={styles.subtitle}>Violation Photo</Text>
         <View style={styles.imageButtons}>
           <Button
             title="Take Photo"
@@ -160,14 +187,6 @@ const ReportViolationScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  title: {
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  subtitle: {
-    marginTop: 20,
-    marginBottom: 10,
-  },
   dropdown: {
     height: 50,
     borderWidth: 1,
@@ -179,6 +198,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: 20,
+    backgroundColor: 'transparent',
   },
   imageButton: {
     flex: 1,

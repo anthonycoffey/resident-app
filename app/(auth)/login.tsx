@@ -20,7 +20,7 @@ import Card from '@/components/ui/Card';
 import { View, Text } from '@/components/Themed';
 import { Link } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
-import { useColorScheme,  } from '@/components/useColorScheme';
+import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 
 const LoginScreen = () => {
@@ -30,7 +30,6 @@ const LoginScreen = () => {
   const [loading, setLoading] = useState(false);
   const { updateUser } = useAuth();
   const colorScheme = useColorScheme() ?? 'light';
-
 
   React.useEffect(() => {
     GoogleSignin.configure({
@@ -92,11 +91,7 @@ const LoginScreen = () => {
   return (
     <View style={styles.container}>
       <Image
-        source={
-          colorScheme === 'dark'
-            ? require('@/assets/images/property-manager-pro-light.png')
-            : require('@/assets/images/property-manager-pro.png')
-        }
+        source={require('@/assets/images/logo-no-container.png')}
         style={styles.logo}
       />
       <Card>
@@ -130,7 +125,6 @@ const LoginScreen = () => {
           <Button title='Sign In with Email' onPress={handleLogin} />
         )}
 
-
         <View
           style={{
             flexDirection: 'row',
@@ -141,9 +135,27 @@ const LoginScreen = () => {
             backgroundColor: 'transparent',
           }}
         >
-          <View style={{ flex: 1, height: 1, backgroundColor: colorScheme === 'dark' ? Colors.dark.divider : Colors.light.divider }} />
+          <View
+            style={{
+              flex: 1,
+              height: 1,
+              backgroundColor:
+                colorScheme === 'dark'
+                  ? Colors.dark.divider
+                  : Colors.light.divider,
+            }}
+          />
           <Text style={{ marginHorizontal: 8, color: '#888' }}>OR</Text>
-          <View style={{ flex: 1, height: 1, backgroundColor: colorScheme === 'dark' ? Colors.dark.divider : Colors.light.divider }} />
+          <View
+            style={{
+              flex: 1,
+              height: 1,
+              backgroundColor:
+                colorScheme === 'dark'
+                  ? Colors.dark.divider
+                  : Colors.light.divider,
+            }}
+          />
         </View>
 
         <View style={styles.socialContainer}>
@@ -197,7 +209,7 @@ const styles = StyleSheet.create({
     height: 200,
     resizeMode: 'contain',
     alignSelf: 'center',
-    marginBottom: 24,
+    marginBottom: 0,
   },
   socialContainer: {
     marginTop: 16,
