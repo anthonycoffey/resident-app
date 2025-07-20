@@ -1,7 +1,7 @@
-import ServiceRequestList from '@/components/ServiceRequestList';
+import CommunityBoard from '@/components/CommunityBoard';
 
 const DashboardScreen = () => {
-  return <ServiceRequestList />;
+  return <CommunityBoard />;
 };
 
 export default DashboardScreen;

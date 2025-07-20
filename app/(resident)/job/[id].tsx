@@ -7,8 +7,8 @@ import {
   Linking,
 } from 'react-native';
 import { Text, View } from '@/components/Themed';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Stack, useLocalSearchParams, useNavigation } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { getPhoenixJobDetails, Job } from '@/lib/services/phoenixService';
 import Card from '@/components/ui/Card';
@@ -16,7 +16,7 @@ import Avatar from '@/components/ui/Avatar';
 
 const JobDetailsScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
+  const navigation = useNavigation();
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,10 +50,10 @@ const JobDetailsScreen = () => {
           headerTitle: 'Service Request Details',
           headerLeft: () => (
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={() => navigation.goBack()}
               style={{ paddingHorizontal: 10 }}
             >
-              <Ionicons name='arrow-back' size={24} color='black' />
+              <MaterialIcons name='arrow-back' size={24} color='black' />
             </TouchableOpacity>
           ),
         }}
@@ -98,8 +98,8 @@ const JobDetailsScreen = () => {
                       }}
                       onPress={() => handleContact('sms')}
                     >
-                      <Ionicons
-                        name='chatbubble-ellipses-outline'
+                      <MaterialIcons
+                        name='chat-bubble-outline'
                         size={24}
                         color='#007AFF'
                       />
@@ -121,7 +121,7 @@ const JobDetailsScreen = () => {
                       }}
                       onPress={() => handleContact('tel')}
                     >
-                      <Ionicons name='call-outline' size={24} color='#007AFF' />
+                      <MaterialIcons name='call' size={24} color='#007AFF' />
                       <Text
                         style={{
                           marginLeft: 5,

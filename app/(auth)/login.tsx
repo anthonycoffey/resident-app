@@ -195,9 +195,13 @@ const LoginScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: 'transparent',
     flex: 1,
     justifyContent: 'center',
     padding: 16,
+    width: '100%',
+    maxWidth: 600,
+    alignSelf: 'center',
   },
   title: {
     fontSize: 24,

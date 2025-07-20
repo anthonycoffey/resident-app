@@ -11,9 +11,9 @@ import { db } from '@/lib/config/firebaseConfig';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '@/lib/providers/AuthProvider';
 import { Timestamp } from 'firebase/firestore';
-import Card from './ui/Card';
-import Chip from './ui/Chip';
-import Divider from './ui/Divider';
+import Card from '@/components/ui/Card';
+import Chip from '@/components/ui/Chip';
+import Divider from '@/components/ui/Divider';
 import { MaterialIcons } from '@expo/vector-icons';
 
 type ServiceStatus = 'Completed' | 'In Progress' | 'Pending' | 'submitted';
@@ -27,20 +27,18 @@ type ServiceRequest = {
   serviceLocation?: string;
 };
 
-const getStatusColorName = (
-  status: ServiceStatus
-): keyof typeof import('../constants/Colors').default['light'] => {
+const getStatusColorName = (status: ServiceStatus) => {
   switch (status) {
     case 'Completed':
-      return 'success';
+      return 'success' as const;
     case 'In Progress':
-      return 'warning';
+      return 'warning' as const;
     case 'Pending':
-      return 'error';
+      return 'error' as const;
     case 'submitted':
-      return 'primary';
+      return 'primary' as const;
     default:
-      return 'secondary';
+      return 'secondary' as const;
   }
 };
 
@@ -108,7 +106,7 @@ const ServiceRequestItem = ({ item }: { item: ServiceRequest }) => {
   );
 };
 
-const ServiceRequestList = () => {
+const ServiceRequestsScreen = () => {
   const { user } = useAuth();
   const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
   const primaryColor = useThemeColor({}, 'primary');
@@ -303,4 +301,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ServiceRequestList;
+export default ServiceRequestsScreen;

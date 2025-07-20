@@ -20,7 +20,9 @@
       "bundleIdentifier": "com.amenilink.resident",
       "config": {},
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "This app uses the camera to allow you to take photos for violation reports.",
+        "NSPhotoLibraryUsageDescription": "This app uses the photo library to allow you to select photos for violation reports."
       }
     },
     "android": {
@@ -28,6 +30,10 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE"
+      ],
       "edgeToEdgeEnabled": true
     },
     "web": {
@@ -37,6 +43,13 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you attach images to violation reports.",
+          "cameraPermission": "The app accesses your camera to let you take photos for violation reports."
+        }
+      ],
       [
         "@sentry/react-native/expo",
         {

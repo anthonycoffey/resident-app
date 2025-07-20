@@ -1,16 +1,25 @@
 import React from 'react';
 import { StyleSheet, StyleProp, ViewStyle } from 'react-native';
-import { View, Text } from '../Themed';
+import { View, Text, useThemeColor } from '../Themed';
+
+type ChipVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'error';
 
 interface ChipProps {
   label: string;
   style?: StyleProp<ViewStyle>;
+  variant?: ChipVariant;
 }
 
-const Chip: React.FC<ChipProps> = ({ label, style }) => {
+const Chip: React.FC<ChipProps> = ({ label, style, variant = 'primary' }) => {
+  const backgroundColor = useThemeColor({}, variant);
+  const textColor = useThemeColor(
+    { light: '#fff', dark: '#000' },
+    'text'
+  );
+
   return (
-    <View style={[styles.chip, style]} backgroundColorName="chip">
-      <Text style={styles.label}>{label}</Text>
+    <View style={[styles.chip, { backgroundColor }, style]}>
+      <Text style={[styles.label, { color: textColor }]}>{label}</Text>
     </View>
   );
 };

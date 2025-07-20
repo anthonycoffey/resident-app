@@ -1,10 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Linking,
-} from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, View, useThemeColor } from '@/components/Themed';
 import MessageList from '@/components/MessageList';
@@ -93,12 +88,18 @@ const AiAssistantScreen = () => {
         style={{ margin: 10 }}
       />
       <KeyboardAvoidingView
-        style={{ flex: 1, paddingBottom: insets.bottom }}
+        style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={insets.top + 60}
+        keyboardVerticalOffset={insets.top}
       >
         <Card style={{ flex: 1, backgroundColor: 'transparent' }}>
-          {error && <Text style={{ color: errorColor, textAlign: 'center', padding: 10 }}>{error}</Text>}
+          {error && (
+            <Text
+              style={{ color: errorColor, textAlign: 'center', padding: 10 }}
+            >
+              {error}
+            </Text>
+          )}
           <View style={{ flex: 1, backgroundColor: 'transparent' }}>
             <MessageList messages={messages} isLoading={isLoading} />
           </View>

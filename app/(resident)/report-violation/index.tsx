@@ -1,7 +1,13 @@
-import React, { useState } from 'react';
-import { StyleSheet, ScrollView, Alert, Image, useColorScheme } from 'react-native';
+import React, { use, useState } from 'react';
+import {
+  StyleSheet,
+  ScrollView,
+  Alert,
+  Image,
+  useColorScheme,
+} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
+import { useNavigation } from 'expo-router';
 
 import { View, Text } from '@/components/Themed';
 import Colors from '@/constants/Colors';
@@ -15,7 +21,7 @@ import { httpsCallable } from 'firebase/functions';
 import { Dropdown } from 'react-native-element-dropdown';
 
 const ReportViolationScreen = () => {
-  const router = useRouter();
+  const navigation = useNavigation();
   const { user } = useAuth();
   const theme = useColorScheme() ?? 'light';
   const themeColors = Colors[theme];
@@ -36,21 +42,27 @@ const ReportViolationScreen = () => {
   ];
 
   const handlePickImage = async (useCamera: boolean) => {
+    const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
+    const mediaLibraryStatus =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (
+      cameraStatus.status !== 'granted' ||
+      mediaLibraryStatus.status !== 'granted'
+    ) {
+      Alert.alert(
+        'Permission required',
+        'Sorry, we need camera and media library permissions to make this work!'
+      );
+      return;
+    }
+
     const action = useCamera
       ? ImagePicker.launchCameraAsync
       : ImagePicker.launchImageLibraryAsync;
 
-    const { status } = await (useCamera
-      ? ImagePicker.requestCameraPermissionsAsync()
-      : ImagePicker.requestMediaLibraryPermissionsAsync());
-      
-    if (status !== 'granted') {
-      Alert.alert('Permission required', 'Sorry, we need camera permissions to make this work!');
-      return;
-    }
-
     let result = await action({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.5,
@@ -64,14 +76,23 @@ const ReportViolationScreen = () => {
   const uploadImage = async (uri: string) => {
     const response = await fetch(uri);
     const blob = await response.blob();
-    const storageRef = ref(storage, `violations/${user?.uid}/${Date.now()}`);
+
+    const storageRef = ref(
+      storage,
+      `violations/${user?.claims.organizationId}/${
+        user?.claims.propertyId
+      }/${Date.now()}`
+    );
     await uploadBytes(storageRef, blob);
     return await getDownloadURL(storageRef);
   };
 
   const handleSubmit = async () => {
     if (!licensePlate || !violationType || !image || !make || !model) {
-      Alert.alert('Missing Information', 'Please fill out all fields and select an image.');
+      Alert.alert(
+        'Missing Information',
+        'Please fill out all fields and select an image.'
+      );
       return;
     }
 
@@ -83,8 +104,11 @@ const ReportViolationScreen = () => {
     setLoading(true);
     try {
       const photoUrl = await uploadImage(image);
-      const createViolationReport = httpsCallable(functions, 'createViolationReport');
-      
+      const createViolationReport = httpsCallable(
+        functions,
+        'createViolationReport'
+      );
+
       const result = await createViolationReport({
         organizationId: user.claims.organizationId,
         propertyId: user.claims.propertyId,
@@ -95,10 +119,10 @@ const ReportViolationScreen = () => {
         photoUrl,
         additionalInfo,
       });
+      console.log('Violation report created:', result);
 
       Alert.alert('Success', 'Violation report submitted successfully.');
-      router.back();
-
+      navigation.goBack();
     } catch (error) {
       console.error('Error submitting violation report:', error);
       Alert.alert('Error', 'There was a problem submitting your report.');
@@ -110,30 +134,29 @@ const ReportViolationScreen = () => {
   return (
     <ScrollView>
       <Card>
-        
         <Input
-          placeholder="Enter License Plate"
+          placeholder='Enter License Plate'
           value={licensePlate}
           onChangeText={setLicensePlate}
-          autoCapitalize="characters"
+          autoCapitalize='characters'
         />
 
         <Input
-          placeholder="Enter Vehicle Make"
+          placeholder='Enter Vehicle Make'
           value={make}
           onChangeText={setMake}
-          autoCapitalize="words"
+          autoCapitalize='words'
         />
 
         <Input
-          placeholder="Enter Vehicle Model"
+          placeholder='Enter Vehicle Model'
           value={model}
           onChangeText={setModel}
-          autoCapitalize="words"
+          autoCapitalize='words'
         />
 
         <Input
-          placeholder="Additional Info (Optional)"
+          placeholder='Additional Info (Optional)'
           value={additionalInfo}
           onChangeText={setAdditionalInfo}
           multiline
@@ -142,32 +165,38 @@ const ReportViolationScreen = () => {
         />
 
         <Dropdown
-          style={[styles.dropdown, { borderColor: themeColors.divider, backgroundColor: themeColors.input }]}
+          style={[
+            styles.dropdown,
+            {
+              borderColor: themeColors.divider,
+              backgroundColor: themeColors.input,
+            },
+          ]}
           placeholderStyle={{ color: themeColors.label }}
           selectedTextStyle={{ color: themeColors.text }}
           data={violationTypes}
-          labelField="label"
-          valueField="value"
-          placeholder="Select Violation Type"
+          labelField='label'
+          valueField='value'
+          placeholder='Select Violation Type'
           value={violationType}
-          onChange={item => {
+          onChange={(item) => {
             setViolationType(item.value);
           }}
         />
 
         <View style={styles.imageButtons}>
           <Button
-            title="Take Photo"
+            title='Take Photo'
             onPress={() => handlePickImage(true)}
-            icon="photo-camera"
-            variant="outline"
+            icon='photo-camera'
+            variant='outline'
             style={styles.imageButton}
           />
           <Button
-            title="Choose Photo"
+            title='Choose Photo'
             onPress={() => handlePickImage(false)}
-            icon="photo-library"
-            variant="outline"
+            icon='photo-library'
+            variant='outline'
             style={styles.imageButton}
           />
         </View>
@@ -175,7 +204,7 @@ const ReportViolationScreen = () => {
         {image && <Image source={{ uri: image }} style={styles.imagePreview} />}
 
         <Button
-          title="Submit Report"
+          title='Submit Report'
           onPress={handleSubmit}
           loading={loading}
           disabled={loading}

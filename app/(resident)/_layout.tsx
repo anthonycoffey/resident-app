@@ -1,6 +1,6 @@
 import React from 'react';
 import { Drawer } from 'expo-router/drawer';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Entypo, MaterialIcons } from '@expo/vector-icons';
 import { useThemeColor, View } from '@/components/Themed';
 import NotificationBell from '@/components/ui/NotificationBell';
 import { DrawerToggleButton } from '@react-navigation/drawer';
@@ -10,6 +10,7 @@ import {
   DrawerItem,
 } from '@react-navigation/drawer';
 import { useAuth } from '@/lib/providers/AuthProvider';
+import { KeyboardAvoidingView, Platform } from 'react-native';
 
 function CustomDrawerContent(props: any) {
   const { logout } = useAuth();
@@ -18,12 +19,18 @@ function CustomDrawerContent(props: any) {
   return (
     <DrawerContentScrollView {...props}>
       <DrawerItemList {...props} />
-      <View style={{ borderWidth: 0.5, borderColor: useThemeColor({}, 'divider'), marginVertical: 10 }} />
+      <View
+        style={{
+          borderWidth: 0.5,
+          borderColor: useThemeColor({}, 'divider'),
+          marginVertical: 10,
+        }}
+      />
       <DrawerItem
-        label="Logout"
+        label='Logout'
         labelStyle={{ color: destructiveColor }}
         icon={({ color, size }) => (
-          <MaterialIcons name="logout" size={size} color={destructiveColor} />
+          <MaterialIcons name='logout' size={size} color={destructiveColor} />
         )}
         onPress={logout}
       />
@@ -34,8 +41,12 @@ function CustomDrawerContent(props: any) {
 export default function ResidentLayout() {
   const activeTintColor = useThemeColor({}, 'tint');
   return (
-    <Drawer
-      drawerContent={(props) => <CustomDrawerContent {...props} />}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
+    >
+      <Drawer
+        drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         drawerActiveTintColor: activeTintColor,
         headerRight: () => <NotificationBell />,
@@ -72,28 +83,47 @@ export default function ResidentLayout() {
       <Drawer.Screen
         name='service-request'
         options={{
-          // headerShown: false,
-          title: 'Service Request',
+          title: 'Schedule Service',
           drawerIcon: ({ color }) => (
             <MaterialIcons size={28} name='build' color={color} />
           ),
         }}
       />
       <Drawer.Screen
-        name='ai-assistant/index'
+        name='service-requests'
         options={{
-          title: 'AI Assistant',
+          title: 'Service History',
           drawerIcon: ({ color }) => (
-            <MaterialIcons size={28} name='smart-toy' color={color} />
+            <Entypo size={28} name='back-in-time' color={color} />
           ),
         }}
       />
+
       <Drawer.Screen
         name='report-violation/index'
         options={{
           title: 'Report Violation',
           drawerIcon: ({ color }) => (
             <MaterialIcons size={28} name='report-problem' color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name='my-violations/index'
+        options={{
+          title: 'My Violations',
+          drawerIcon: ({ color }) => (
+            <MaterialIcons size={28} name='gavel' color={color} />
+          ),
+        }}
+      />
+
+      <Drawer.Screen
+        name='ai-assistant/index'
+        options={{
+          title: 'AI Assistant',
+          drawerIcon: ({ color }) => (
+            <MaterialIcons size={28} name='smart-toy' color={color} />
           ),
         }}
       />
@@ -112,5 +142,6 @@ export default function ResidentLayout() {
         }}
       />
     </Drawer>
+    </KeyboardAvoidingView>
   );
 }

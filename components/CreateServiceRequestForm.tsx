@@ -384,13 +384,22 @@ const CreateServiceRequestForm = ({
         {formatDistanceToNow(arrivalTime, { addSuffix: true })}
       </Text>
       {Platform.OS === 'ios' && showDateTimePicker && (
-        <DateTimePicker
-          value={arrivalTime}
-          mode='datetime'
-          display='default'
-          onChange={handleAppleDateTimeChange}
-          themeVariant={colorScheme}
-        />
+        <View
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            padding: 10,
+            // backgroundColor: 'transparent',
+          }}
+        >
+          <DateTimePicker
+            value={arrivalTime}
+            mode='datetime'
+            display='default'
+            onChange={handleAppleDateTimeChange}
+            themeVariant={colorScheme}
+          />
+        </View>
       )}
 
       <Text style={[styles.label, { color: labelColor }]}>
@@ -401,6 +410,7 @@ const CreateServiceRequestForm = ({
         <>
           <Button
             title='Search for Address'
+            icon='search'
             onPress={() => router.push('/service-request/address-search')}
           />
           {address && (
