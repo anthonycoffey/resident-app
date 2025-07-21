@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { Text, View } from '@/components/Themed';
+import { useProfile } from '@/lib/context/ProfileContext';
 
 type Vehicle = {
   make: string;
@@ -17,6 +18,8 @@ type Vehicle = {
 const VehicleModalScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { vehicles, addVehicle, updateVehicle } = useProfile();
+
   const [vehicle, setVehicle] = useState<Vehicle>({
     make: '',
     model: '',
@@ -25,13 +28,19 @@ const VehicleModalScreen = () => {
     plate: '',
   });
   const [isEditing, setIsEditing] = useState(false);
+  const [index, setIndex] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (params.vehicle) {
-      setIsEditing(true);
-      setVehicle(JSON.parse(params.vehicle as string));
+    if (params.index) {
+      const vehicleIndex = parseInt(params.index as string, 10);
+      if (!isNaN(vehicleIndex) && vehicles[vehicleIndex]) {
+        setIsEditing(true);
+        setIndex(vehicleIndex);
+        setVehicle(vehicles[vehicleIndex]);
+      }
     }
-  }, [params.vehicle]);
+  }, [params.index, vehicles]);
 
   const handleInputChange = (name: keyof Vehicle, value: string) => {
     setVehicle((prev) => ({
@@ -40,15 +49,24 @@ const VehicleModalScreen = () => {
     }));
   };
 
-  const handleSave = () => {
-    // Basic validation
+  const handleSave = async () => {
     if (!vehicle.make || !vehicle.model || !vehicle.year || !vehicle.color || !vehicle.plate) {
       Alert.alert('Error', 'All vehicle fields are required.');
       return;
     }
-    // TODO: This should call the main save function, not just update local state.
-    // For now, we navigate back and the profile screen will refetch.
-    router.push('/(resident)/my-profile');
+    setSaving(true);
+    try {
+      if (isEditing && index !== null) {
+        await updateVehicle(vehicle, index);
+      } else {
+        await addVehicle(vehicle);
+      }
+      router.push('/(resident)/my-profile');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An unknown error occurred.';
+      Alert.alert('Save Failed', message);
+      setSaving(false);
+    }
   };
 
   return (
@@ -80,8 +98,18 @@ const VehicleModalScreen = () => {
         value={vehicle.plate}
         onChangeText={(val) => handleInputChange('plate', val)}
       />
-      <Button title={isEditing ? 'Save Changes' : 'Add Vehicle'} onPress={handleSave} />
-      <Button title="Cancel" onPress={() => router.push('/(resident)/my-profile')} variant="outline" style={{ marginTop: 10 }} />
+      <Button 
+        title={saving ? 'Saving...' : (isEditing ? 'Save Changes' : 'Add Vehicle')} 
+        onPress={handleSave} 
+        disabled={saving}
+      />
+      <Button 
+        title="Cancel" 
+        onPress={() => router.push('/(resident)/my-profile')} 
+        variant="outline" 
+        style={{ marginTop: 10 }} 
+        disabled={saving}
+      />
 
       {/* Use a light status bar on iOS to account for the black space above the modal */}
       <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />

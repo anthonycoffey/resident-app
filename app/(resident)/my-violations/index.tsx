@@ -6,122 +6,153 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { useAuth } from '@/lib/providers/AuthProvider';
 import Card from '@/components/ui/Card';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import Button from '@/components/ui/Button';
 import { useThemeColor } from '@/components/Themed';
+import { acknowledgeViolation } from '@/lib/services/violationService';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/lib/config/firebaseConfig';
+import { useAuth } from '@/lib/providers/AuthProvider';
 
+// TODO: Replace with the actual violation type definition
 interface Violation {
   id: string;
-  violationType: string;
+  description: string;
   status: string;
+  organizationId: string;
   createdAt: {
-    seconds: number;
+    toDate: () => Date;
   };
 }
 
-const MyViolationsScreen = () => {
+const getMyViolations = httpsCallable(functions, 'getMyViolations');
+
+export default function MyViolationsScreen() {
   const { user } = useAuth();
   const [violations, setViolations] = useState<Violation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [page, setPage] = useState(0);
-  const [total, setTotal] = useState(0);
-  const rowsPerPage = 10;
+  const [acknowledging, setAcknowledging] = useState<string | null>(null);
 
-  const themeColors = {
-    text: useThemeColor({}, 'text'),
-    background: useThemeColor({}, 'background'),
-    card: useThemeColor({}, 'card'),
-  };
+  const backgroundColor = useThemeColor({}, 'background');
+  const textColor = useThemeColor({}, 'text');
 
-  const functions = getFunctions();
-  const getMyViolations = httpsCallable(functions, 'getMyViolations');
-
-  const fetchViolations = async (currentPage = 0) => {
-    if (!user || !user.propertyId) return;
+  const fetchViolations = useCallback(async () => {
+    if (!user) return;
     setLoading(true);
     try {
-      const result = await getMyViolations({
-        organizationId: user.organizationId,
-        propertyId: user.propertyId,
-        page: currentPage,
-        rowsPerPage,
-      });
-      const data = result.data as { violations: any[]; total: number };
-      setViolations(
-        currentPage === 0
-          ? data.violations
-          : [...violations, ...data.violations]
-      );
-      setTotal(data.total);
-      setPage(currentPage);
+      const result = await getMyViolations();
+      const data = result.data as Violation[];
+      setViolations(data);
     } catch (error) {
       console.error('Error fetching violations:', error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
-    fetchViolations(0);
-  }, [user]);
+    fetchViolations();
+  }, [fetchViolations]);
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    fetchViolations(0);
-  }, [user]);
+    await fetchViolations();
+    setRefreshing(false);
+  }, [fetchViolations]);
 
-  const loadMore = () => {
-    if (violations.length < total) {
-      fetchViolations(page + 1);
+  const handleAcknowledge = async (
+    violationId: string,
+    organizationId: string
+  ) => {
+    setAcknowledging(violationId);
+    try {
+      await acknowledgeViolation(violationId, organizationId);
+      // Optimistically update the UI
+      setViolations((prev) =>
+        prev.map((v) =>
+          v.id === violationId ? { ...v, status: 'acknowledged' } : v
+        )
+      );
+    } catch (error) {
+      // Handle error (e.g., show a toast message)
+    } finally {
+      setAcknowledging(null);
     }
   };
 
   const renderItem = ({ item }: { item: Violation }) => (
-    <Card style={{ marginBottom: 10, padding: 15 }}>
-      <Text style={{ color: themeColors.text, fontWeight: 'bold' }}>
-        {item.violationType}
+    <Card style={{ marginBottom: 16, padding: 16 }}>
+      <Text style={{ color: textColor, fontSize: 16, fontWeight: 'bold' }}>
+        Violation Reported
       </Text>
-      <Text style={{ color: themeColors.text }}>Status: {item.status}</Text>
-      <Text style={{ color: themeColors.text }}>
-        Date: {new Date(item.createdAt.seconds * 1000).toLocaleDateString()}
+      <Text style={{ color: textColor, marginTop: 8 }}>
+        {item.description}
       </Text>
+      <Text
+        style={{
+          color: textColor,
+          marginTop: 8,
+          fontStyle: 'italic',
+          textTransform: 'capitalize',
+        }}
+      >
+        Status: {item.status.replace(/_/g, ' ')}
+      </Text>
+      <Text style={{ color: textColor, marginTop: 8, fontSize: 12 }}>
+        Date: {item.createdAt.toDate().toLocaleDateString()}
+      </Text>
+      {item.status === 'pending_acknowledgement' && (
+        <Button
+          title="I'm Moving It"
+          onPress={() => handleAcknowledge(item.id, item.organizationId)}
+          style={{ marginTop: 16 }}
+          disabled={acknowledging === item.id}
+          loading={acknowledging === item.id}
+        />
+      )}
     </Card>
   );
 
-  return (
-    <View style={{ flex: 1, backgroundColor: themeColors.background }}>
-      <FlatList
-        data={violations}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: 10 }}
-        onEndReached={loadMore}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={
-          loading && !refreshing ? <ActivityIndicator /> : null
-        }
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={
-          !loading ? (
-            <Text
-              style={{
-                textAlign: 'center',
-                color: themeColors.text,
-                marginTop: 20,
-              }}
-            >
-              No violations found.
-            </Text>
-          ) : null
-        }
-      />
-    </View>
-  );
-};
+  if (loading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor,
+        }}
+      >
+        <ActivityIndicator size='large' />
+      </View>
+    );
+  }
 
-export default MyViolationsScreen;
+  return (
+    <FlatList
+      data={violations}
+      renderItem={renderItem}
+      keyExtractor={(item) => item.id}
+      contentContainerStyle={{ padding: 16 }}
+      style={{ backgroundColor }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+      ListEmptyComponent={
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginTop: 50,
+          }}
+        >
+          <Text style={{ color: textColor, fontSize: 18 }}>
+            You have no outstanding violations.
+          </Text>
+        </View>
+      }
+    />
+  );
+}

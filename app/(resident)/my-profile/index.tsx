@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -6,43 +6,27 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { View, Text, useThemeColor } from '@/components/Themed';
-import { Link, useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
-import { useAuth } from '@/lib/providers/AuthProvider';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/config/firebaseConfig';
+import { Link } from 'expo-router';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import Divider from '@/components/ui/Divider';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useProfile } from '@/lib/context/ProfileContext';
 
-// Define types based on the example component
-type Vehicle = {
-  make: string;
-  model: string;
-  year: number;
-  color: string;
-  plate: string;
-};
+const MyProfileScreenContent = () => {
+  const {
+    residentData,
+    vehicles,
+    loading,
+    error,
+    setResidentData,
+    deleteVehicle,
+  } = useProfile();
 
-type Resident = {
-  displayName: string;
-  email: string;
-  phone: string;
-  unitNumber: string;
-  vehicles: Vehicle[];
-};
-
-const MyProfileScreen = () => {
-  const { user, logout } = useAuth();
-  const router = useRouter();
-  const params = useLocalSearchParams();
-  const [residentData, setResidentData] = useState<Partial<Resident>>({});
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const textColor = useThemeColor({}, 'text');
   const labelColor = useThemeColor({}, 'label');
@@ -50,7 +34,7 @@ const MyProfileScreen = () => {
   const errorColor = useThemeColor({}, 'error');
   const dividerColor = useThemeColor({}, 'divider');
 
-  const formatPhoneNumberOnInput = useCallback((value: string): string => {
+  const formatPhoneNumberOnInput = (value: string): string => {
     if (!value) return value;
     const phoneNumber = value.replace(/[^\d]/g, '');
     const phoneNumberLength = phoneNumber.length;
@@ -62,93 +46,34 @@ const MyProfileScreen = () => {
       3,
       6
     )}-${phoneNumber.slice(6, 10)}`;
-  }, []);
+  };
 
-  const fetchResidentData = useCallback(async () => {
-    if (
-      !user?.uid ||
-      !user.claims?.organizationId ||
-      !user.claims?.propertyId
-    ) {
-      setError('User information incomplete. Cannot load profile.');
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    try {
-      const residentDocRef = doc(
-        db,
-        `organizations/${user.claims.organizationId}/properties/${user.claims.propertyId}/residents/${user.uid}`
-      );
-      const residentDocSnap = await getDoc(residentDocRef);
-      if (residentDocSnap.exists()) {
-        const data = residentDocSnap.data() as Resident;
-        setResidentData({
-          displayName: data.displayName || user.displayName || '',
-          email: data.email || user.email || '',
-          phone: formatPhoneNumberOnInput(data.phone || ''),
-          unitNumber: data.unitNumber || '',
-        });
-        setVehicles(data.vehicles || []);
-      } else {
-        setResidentData({
-          displayName: user.displayName || '',
-          email: user.email || '',
-        });
-        setVehicles([]);
-        setError('Profile not found, please complete your details.');
-      }
-    } catch (err) {
-      console.error('Error fetching resident data:', err);
-      setError('Failed to load profile data.');
-    } finally {
-      setLoading(false);
-    }
-  }, [user, formatPhoneNumberOnInput]);
-
-  // Fetch data when the screen comes into focus or when the user object changes.
-  useFocusEffect(
-    useCallback(() => {
-      fetchResidentData();
-    }, [fetchResidentData])
-  );
-
-  const handleInputChange = (name: keyof Resident, value: string) => {
+  const handleInputChange = (name: keyof typeof residentData, value: string) => {
     if (name === 'phone') {
-      setResidentData((prev) => ({
-        ...prev,
-        [name]: formatPhoneNumberOnInput(value),
-      }));
+      setResidentData({ ...residentData, [name]: formatPhoneNumberOnInput(value) });
     } else {
-      setResidentData((prev) => ({ ...prev, [name]: value }));
+      setResidentData({ ...residentData, [name]: value });
     }
   };
 
   const handleSaveProfile = async () => {
-    if (!user) {
-      setError('You must be logged in to save your profile.');
-      return;
-    }
     setSaving(true);
-    setError(null);
+    setSaveError(null);
     try {
       const functions = getFunctions();
       const updateResidentProfileCallable = httpsCallable(functions, 'updateResidentProfile');
       
+      // Vehicles are now saved from the context, so we only need to save resident data here.
       const payload = {
         ...residentData,
-        vehicles: vehicles.map((v) => ({ ...v, year: v.year || 0 })),
       };
 
       await updateResidentProfileCallable(payload);
-      console.log('Profile updated successfully!');
       Alert.alert('Success', 'Profile updated successfully!');
     } catch (err) {
       console.error('Error updating profile:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to update profile.';
-      setError(errorMessage);
+      setSaveError(errorMessage);
       Alert.alert('Error', errorMessage);
     } finally {
       setSaving(false);
@@ -164,10 +89,13 @@ const MyProfileScreen = () => {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => {
-            const updatedVehicles = vehicles.filter((_, index) => index !== indexToDelete);
-            setVehicles(updatedVehicles);
-            // Note: This only updates local state. The change needs to be saved.
+          onPress: async () => {
+            try {
+              await deleteVehicle(indexToDelete);
+            } catch (error) {
+              const message = error instanceof Error ? error.message : 'An unknown error occurred.';
+              Alert.alert('Delete Failed', message);
+            }
           },
         },
       ]
@@ -189,6 +117,7 @@ const MyProfileScreen = () => {
         <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>My Profile</Text>
       </View>
       {error && <Text style={{ color: errorColor, marginBottom: 10, textAlign: 'center' }}>{error}</Text>}
+      {saveError && <Text style={{ color: errorColor, marginBottom: 10, textAlign: 'center' }}>{saveError}</Text>}
       <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>Full Name</Text>
       <Input
         placeholder="Full Name"
@@ -257,7 +186,7 @@ const MyProfileScreen = () => {
                 <Text style={{ fontSize: 14, color: labelColor }}>{`Plate: ${item.plate}`}</Text>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15, backgroundColor: 'transparent' }}>
-                <Link href={{ pathname: "/my-profile/vehicle-modal", params: { vehicle: JSON.stringify(item), index: index.toString() } }} asChild>
+                <Link href={{ pathname: "/my-profile/vehicle-modal", params: { index: index.toString() } }} asChild>
                   <TouchableOpacity>
                     <MaterialIcons name="edit" size={24} color={primaryColor} />
                   </TouchableOpacity>
@@ -273,6 +202,16 @@ const MyProfileScreen = () => {
       </Card>
     </ScrollView>
   );
+};
+
+const MyProfileScreen = () => {
+  const { fetchResidentData } = useProfile();
+
+  useEffect(() => {
+    fetchResidentData();
+  }, [fetchResidentData]);
+
+  return <MyProfileScreenContent />;
 };
 
 export default MyProfileScreen;

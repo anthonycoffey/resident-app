@@ -17,15 +17,17 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
-    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/datetimepicker": "8.4.1",
+    "@react-native-firebase/app": "^22.4.0",
+    "@react-native-firebase/messaging": "^22.4.0",
     "@react-native-google-signin/google-signin": "^15.0.0",
     "@react-navigation/bottom-tabs": "^7.3.10",
-    "@react-navigation/drawer": "^7.5.3",
+    "@react-navigation/drawer": "^7.3.9",
     "@react-navigation/native": "^7.1.6",
-    "@sentry/react-native": "^6.16.1",
+    "@sentry/react-native": "~6.14.0",
     "date-fns": "^4.1.0",
-    "expo": "53.0.17",
+    "expo": "53.0.20",
     "expo-crypto": "~14.1.5",
     "expo-dev-client": "~5.2.4",
     "expo-font": "~13.3.2",
@@ -44,16 +46,16 @@
     "react-native": "0.79.5",
     "react-native-dropdown-picker": "^5.4.6",
     "react-native-element-dropdown": "^2.12.4",
+    "react-native-gesture-handler": "~2.24.0",
     "react-native-get-random-values": "^1.11.0",
     "react-native-google-places-autocomplete": "^2.5.7",
-    "react-native-maps": "^1.24.3",
+    "react-native-maps": "1.20.1",
     "react-native-multiple-select": "^0.5.12",
     "react-native-popover-view": "^6.1.0",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
-    "react-native-web": "~0.20.0",
-    "react-native-gesture-handler": "~2.24.0"
+    "react-native-web": "~0.20.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -63,5 +65,15 @@
     "react-test-renderer": "19.0.0",
     "typescript": "~5.8.3"
   },
-  "private": true
+  "private": true,
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": [
+          "react-native-element-dropdown"
+        ],
+        "listUnknownPackages": false
+      }
+    }
+  }
 }

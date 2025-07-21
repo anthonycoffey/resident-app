@@ -11,6 +11,7 @@ import {
 } from '@react-navigation/drawer';
 import { useAuth } from '@/lib/providers/AuthProvider';
 import { KeyboardAvoidingView, Platform } from 'react-native';
+import { ProfileProvider } from '@/lib/context/ProfileContext';
 
 function CustomDrawerContent(props: any) {
   const { logout } = useAuth();
@@ -41,6 +42,7 @@ function CustomDrawerContent(props: any) {
 export default function ResidentLayout() {
   const activeTintColor = useThemeColor({}, 'tint');
   return (
+    <ProfileProvider>
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}
@@ -109,11 +111,20 @@ export default function ResidentLayout() {
         }}
       />
       <Drawer.Screen
+        name='violation-reports/index'
+        options={{
+          title: 'Violation Reports',
+          drawerIcon: ({ color }) => (
+            <MaterialIcons size={28} name='gavel' color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
         name='my-violations/index'
         options={{
           title: 'My Violations',
           drawerIcon: ({ color }) => (
-            <MaterialIcons size={28} name='gavel' color={color} />
+            <MaterialIcons size={28} name='error' color={color} />
           ),
         }}
       />
@@ -141,7 +152,15 @@ export default function ResidentLayout() {
           drawerItemStyle: { display: 'none' },
         }}
       />
+      <Drawer.Screen
+        name='my-violations/[id]'
+        options={{
+          drawerItemStyle: { display: 'none' },
+          title: 'Violation Details',
+        }}
+      />
     </Drawer>
     </KeyboardAvoidingView>
+    </ProfileProvider>
   );
 }

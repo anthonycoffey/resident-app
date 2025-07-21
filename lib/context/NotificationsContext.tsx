@@ -1,19 +1,8 @@
-import React, { createContext, useState, useEffect, useContext, ReactNode, useRef } from 'react';
-import * as Notifications from 'expo-notifications';
+import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
+import messaging from '@react-native-firebase/messaging';
 import { useAuth } from '../providers/AuthProvider';
 import { db } from '../config/firebaseConfig';
 import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
-import { Subscription } from 'expo-notifications';
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
 
 interface Notification {
   id: string;
@@ -47,8 +36,38 @@ export const NotificationsProvider = ({ children }: NotificationsProviderProps) 
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const notificationListener = useRef<Notifications.EventSubscription | null>(null);
-  const responseListener = useRef<Notifications.EventSubscription | null>(null);
+
+  useEffect(() => {
+    // Handles foreground messages
+    const unsubscribe = messaging().onMessage(async remoteMessage => {
+      console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));
+      // You can trigger a local notification here or update the UI directly
+    });
+
+    // Handles notifications that opened the app from a background state
+    messaging().onNotificationOpenedApp(remoteMessage => {
+      console.log(
+        'Notification caused app to open from background state:',
+        remoteMessage.notification,
+      );
+      // Navigate to the correct screen based on remoteMessage.data
+    });
+
+    // Check if the app was opened from a quit state
+    messaging()
+      .getInitialNotification()
+      .then(remoteMessage => {
+        if (remoteMessage) {
+          console.log(
+            'Notification caused app to open from quit state:',
+            remoteMessage.notification,
+          );
+          // Navigate to the correct screen based on remoteMessage.data
+        }
+      });
+
+    return unsubscribe;
+  }, []);
 
   // fetchResidentProfile(user.uid, user.organizationId, user.propertyId);
   useEffect(() => {
@@ -83,14 +102,6 @@ export const NotificationsProvider = ({ children }: NotificationsProviderProps) 
         setNotifications(newNotifications);
         const unread = newNotifications.filter((n) => !n.data.read).length;
         setUnreadCount(unread);
-      });
-
-      notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-        // Handle notification received
-      });
-
-      responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-        // Handle notification response
       });
 
       return () => {
