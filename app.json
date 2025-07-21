@@ -59,6 +59,14 @@
           "project": "amenilink-resident",
           "organization": "24hr-car-unlock-2f6982a53"
         }
+      ],
+            [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
       ]
     ],
     "experiments": {
