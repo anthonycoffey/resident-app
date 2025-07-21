@@ -15,6 +15,10 @@
   "jest": {
     "preset": "jest-expo"
   },
+  "firebase.json": {
+    "react_native_firebase_messaging_ios_auto_register_for_remote_messages": true,
+    "ios_set_modular_headers": true
+  },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
     "@react-native-async-storage/async-storage": "2.1.2",
