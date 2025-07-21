@@ -18,7 +18,6 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.amenilink.resident",
-      "config": {},
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "This app uses the camera to allow you to take photos for violation reports.",
@@ -41,34 +40,6 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-    "plugins": [
-      "@react-native-firebase/app",
-      "@react-native-firebase/messaging",
-      "expo-router",
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "The app accesses your photos to let you attach images to violation reports.",
-          "cameraPermission": "The app accesses your camera to let you take photos for violation reports."
-        }
-      ],
-      [
-        "@sentry/react-native/expo",
-        {
-          "url": "https://sentry.io/",
-          "project": "amenilink-resident",
-          "organization": "24hr-car-unlock-2f6982a53"
-        }
-      ],
-            [
-        "expo-build-properties",
-        {
-          "ios": {
-            "useFrameworks": "static"
-          }
-        }
-      ]
-    ],
     "experiments": {
       "typedRoutes": true
     },
