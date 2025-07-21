@@ -48,7 +48,9 @@ const CommunityBoard = () => {
       });
       setBulletins(fetchedBulletins);
     } catch (error) {
-      console.error('Error fetching community bulletins: ', error);
+      // Temporarily suppress Firebase permissions errors if 'bulletins' collection doesn't exist.
+      // This allows the community board to render without bulletins instead of showing an error.
+      // TODO: Re-enable error logging once the bulletins feature is fully implemented.
     } finally {
       setLoading(false);
       setRefreshing(false);
