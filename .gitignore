@@ -46,8 +46,8 @@ google-services.json
 GoogleService-Info.plist
 
 # native directories
-android/
-ios/
+# android/
+# ios/
 
 # misc
 .vscode/
