@@ -1,16 +1,25 @@
 import { doc, setDoc, arrayUnion, getDoc } from 'firebase/firestore';
-import messaging from '@react-native-firebase/messaging';
+import messaging, {
+  AuthorizationStatus,
+  requestPermission,
+  getToken,
+} from '@react-native-firebase/messaging';
 import { db } from '../config/firebaseConfig';
 import { PermissionsAndroid, Platform } from 'react-native';
 
-export const registerForPushNotificationsAsync = async (userId: string, organizationId: string, propertyId: string) => {
+export const registerForPushNotificationsAsync = async (
+  userId: string,
+  organizationId: string,
+  propertyId: string
+) => {
   try {
+    const message = messaging();
     // Request permission for iOS
     if (Platform.OS === 'ios') {
-      const authStatus = await messaging().requestPermission();
+      const authStatus = await requestPermission(message);
       const enabled =
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+        authStatus === AuthorizationStatus.AUTHORIZED ||
+        authStatus === AuthorizationStatus.PROVISIONAL;
 
       if (!enabled) {
         console.log('Authorization status:', authStatus);
@@ -18,20 +27,21 @@ export const registerForPushNotificationsAsync = async (userId: string, organiza
         return;
       }
     } else if (Platform.OS === 'android') {
-        // Request permission for Android (API 33+)
-        const result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
-        if (result !== 'granted') {
-            alert('Failed to get permission for push notification!');
-            return;
-        }
+      // Request permission for Android (API 33+)
+      const result = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+      );
+      if (result !== 'granted') {
+        alert('Failed to get permission for push notification!');
+        return;
+      }
     }
 
-
     // Check if an FCM token already exists
-    const existingToken = await messaging().getToken();
+    const existingToken = await getToken(message);
     if (!existingToken) {
-        console.error('Failed to get FCM token.');
-        return;
+      console.error('Failed to get FCM token.');
+      return;
     }
 
     console.log('FCM Token:', existingToken);

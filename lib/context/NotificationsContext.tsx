@@ -6,6 +6,11 @@ import React, {
   ReactNode,
 } from 'react';
 import messaging from '@react-native-firebase/messaging';
+import {
+  getInitialNotification,
+  onMessage,
+  onNotificationOpenedApp,
+} from '@react-native-firebase/messaging';
 import { useAuth } from '../providers/AuthProvider';
 import { db } from '../config/firebaseConfig';
 import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
@@ -46,14 +51,15 @@ export const NotificationsProvider = ({
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
+    const message = messaging();
     // Handles foreground messages
-    const unsubscribe = messaging().onMessage(async (remoteMessage) => {
+    const unsubscribe = onMessage(message, async (remoteMessage) => {
       console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));
       // You can trigger a local notification here or update the UI directly
     });
 
     // Handles notifications that opened the app from a background state
-    messaging().onNotificationOpenedApp((remoteMessage) => {
+    onNotificationOpenedApp(message, (remoteMessage) => {
       console.log(
         'Notification caused app to open from background state:',
         remoteMessage.notification
@@ -62,8 +68,7 @@ export const NotificationsProvider = ({
     });
 
     // Check if the app was opened from a quit state
-    messaging()
-      .getInitialNotification()
+    getInitialNotification(message)
       .then((remoteMessage) => {
         if (remoteMessage) {
           console.log(
