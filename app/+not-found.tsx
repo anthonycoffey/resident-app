@@ -1,9 +1,16 @@
-import { Link, Stack } from 'expo-router';
+import { Link, Stack, usePathname } from 'expo-router';
+import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 
 import { Text, View } from '@/components/Themed';
 
 export default function NotFoundScreen() {
+  const pathname = usePathname();
+
+  useEffect(() => {
+    console.log(`Attempted to navigate to unknown path: ${pathname}`);
+  }, [pathname]);
+
   return (
     <>
       <Stack.Screen options={{ title: 'Oops!' }} />

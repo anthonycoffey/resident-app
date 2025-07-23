@@ -13,9 +13,18 @@ import {
 } from '@react-native-firebase/messaging';
 import { useAuth } from '../providers/AuthProvider';
 import { db } from '../config/firebaseConfig';
-import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  onSnapshot,
+  orderBy,
+  writeBatch,
+  getDocs,
+  doc,
+  updateDoc,
+} from 'firebase/firestore';
 
-interface Notification {
+export interface Notification {
   id: string;
   title: string;
   body: string;
@@ -26,13 +35,21 @@ interface Notification {
 interface NotificationsContextType {
   notifications: Notification[];
   unreadCount: number;
-  clearNotifications: () => void;
+  clearLocalNotifications: () => void;
+  markAllAsRead: () => Promise<void>;
+  markOneAsRead: (notificationId: string) => Promise<void>;
+  clearAll: () => Promise<void>;
+  refreshNotifications: () => Promise<void>;
 }
 
 const NotificationsContext = createContext<NotificationsContextType>({
   notifications: [],
   unreadCount: 0,
-  clearNotifications: () => {},
+  clearLocalNotifications: () => {},
+  markAllAsRead: async () => {},
+  markOneAsRead: async () => {},
+  clearAll: async () => {},
+  refreshNotifications: async () => {},
 });
 
 export const useNotifications = () => {
@@ -55,7 +72,20 @@ export const NotificationsProvider = ({
     // Handles foreground messages
     const unsubscribe = onMessage(message, async (remoteMessage) => {
       console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));
-      // You can trigger a local notification here or update the UI directly
+      if (remoteMessage.notification) {
+        const newNotification: Notification = {
+          id: remoteMessage.messageId || new Date().toISOString(),
+          title: remoteMessage.notification.title || 'New Notification',
+          body: remoteMessage.notification.body || '',
+          data: remoteMessage.data || {},
+          date: new Date().toISOString(),
+        };
+        setNotifications((prevNotifications) => [
+          newNotification,
+          ...prevNotifications,
+        ]);
+        setUnreadCount((prev) => prev + 1);
+      }
     });
 
     // Handles notifications that opened the app from a background state
@@ -121,7 +151,78 @@ export const NotificationsProvider = ({
     }
   }, [user]);
 
-  const clearNotifications = () => {
+  const getNotificationsCollection = () => {
+    if (
+      user &&
+      typeof user.organizationId === 'string' &&
+      typeof user.propertyId === 'string' &&
+      typeof user.uid === 'string'
+    ) {
+      return collection(
+        db,
+        'organizations',
+        user.organizationId,
+        'properties',
+        user.propertyId,
+        'residents',
+        user.uid,
+        'notifications'
+      );
+    }
+    return null;
+  };
+
+  const refreshNotifications = async () => {
+    const notificationsCollection = getNotificationsCollection();
+    if (!notificationsCollection) return;
+
+    const q = query(notificationsCollection, orderBy('date', 'desc'));
+    const snapshot = await getDocs(q);
+    const newNotifications = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Notification[];
+    setNotifications(newNotifications);
+    const unread = newNotifications.filter((n) => !n.data.read).length;
+    setUnreadCount(unread);
+  };
+
+  const markAllAsRead = async () => {
+    const notificationsCollection = getNotificationsCollection();
+    if (!notificationsCollection) return;
+
+    const batch = writeBatch(db);
+    const querySnapshot = await getDocs(notificationsCollection);
+    querySnapshot.forEach((document) => {
+      batch.update(document.ref, { 'data.read': true });
+    });
+    await batch.commit();
+    refreshNotifications();
+  };
+
+  const markOneAsRead = async (notificationId: string) => {
+    const notificationsCollection = getNotificationsCollection();
+    if (!notificationsCollection) return;
+
+    const notificationRef = doc(notificationsCollection, notificationId);
+    await updateDoc(notificationRef, { 'data.read': true });
+    refreshNotifications();
+  };
+
+  const clearAll = async () => {
+    const notificationsCollection = getNotificationsCollection();
+    if (!notificationsCollection) return;
+
+    const batch = writeBatch(db);
+    const querySnapshot = await getDocs(notificationsCollection);
+    querySnapshot.forEach((document) => {
+      batch.delete(document.ref);
+    });
+    await batch.commit();
+    refreshNotifications();
+  };
+
+  const clearLocalNotifications = () => {
     setNotifications([]);
     setUnreadCount(0);
   };
@@ -129,7 +230,11 @@ export const NotificationsProvider = ({
   const value = {
     notifications,
     unreadCount,
-    clearNotifications,
+    clearLocalNotifications,
+    markAllAsRead,
+    markOneAsRead,
+    clearAll,
+    refreshNotifications,
   };
 
   return (

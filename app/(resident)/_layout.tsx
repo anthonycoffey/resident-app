@@ -10,8 +10,9 @@ import {
   DrawerItem,
 } from '@react-navigation/drawer';
 import { useAuth } from '@/lib/providers/AuthProvider';
-import { KeyboardAvoidingView, Platform } from 'react-native';
+import { KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
 import { ProfileProvider } from '@/lib/context/ProfileContext';
+import { useRouter } from 'expo-router';
 
 function CustomDrawerContent(props: any) {
   const { logout } = useAuth();
@@ -41,6 +42,7 @@ function CustomDrawerContent(props: any) {
 
 export default function ResidentLayout() {
   const activeTintColor = useThemeColor({}, 'tint');
+  const router = useRouter();
   return (
     <ProfileProvider>
     <KeyboardAvoidingView
@@ -157,6 +159,18 @@ export default function ResidentLayout() {
         options={{
           drawerItemStyle: { display: 'none' },
           title: 'Violation Details',
+        }}
+      />
+      <Drawer.Screen
+        name='notifications'
+        options={{
+          drawerItemStyle: { display: 'none' },
+          title: 'Notifications',
+          headerRight: () => (
+            <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 15 }}>
+              <MaterialIcons name="arrow-back" size={24} color={activeTintColor} />
+            </TouchableOpacity>
+          ),
         }}
       />
     </Drawer>

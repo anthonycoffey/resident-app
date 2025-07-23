@@ -1,23 +1,45 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   StyleSheet,
   TouchableOpacity,
-  FlatList,
   useColorScheme,
-  View, // Use default view
+  View,
+  FlatList,
+  Button,
 } from 'react-native';
-import { Text, View as ThemedView } from '@/components/Themed'; // Import themed view separately
+import { Text, View as ThemedView } from '@/components/Themed';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNotifications } from '@/lib/context/NotificationsContext';
-import Popover from 'react-native-popover-view';
 import Colors from '@/constants/Colors';
+import { useRouter } from 'expo-router';
+import Popover from 'react-native-popover-view';
+import { Notification } from '@/lib/context/NotificationsContext';
 
 const NotificationBell = () => {
-  const { unreadCount, notifications } = useNotifications();
-  const [showPopover, setShowPopover] = useState(false);
-  const touchable = useRef<React.ElementRef<typeof TouchableOpacity>>(null);
+  const { notifications, unreadCount, markOneAsRead } = useNotifications();
+  const router = useRouter();
   const theme = useColorScheme() ?? 'light';
   const themeColors = Colors[theme];
+  const touchable = useRef<React.ElementRef<typeof TouchableOpacity>>(null);
+  const [showPopover, setShowPopover] = useState(false);
+
+  const unreadNotifications = useMemo(
+    () => notifications.filter((n) => !n.data?.read),
+    [notifications]
+  );
+
+  const handleItemPress = (item: Notification) => {
+    markOneAsRead(item.id);
+    if (item.data?.mobileLink) {
+      router.push(item.data.mobileLink);
+    }
+    setShowPopover(false);
+  };
+
+  const handleViewAllPress = () => {
+    setShowPopover(false);
+    router.push('/(resident)/notifications');
+  };
 
   return (
     <>
@@ -50,27 +72,33 @@ const NotificationBell = () => {
           borderRadius: 8,
         }}
       >
-        <FlatList
-          data={notifications}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View
-              style={[
-                styles.popoverItem,
-                { borderBottomColor: themeColors.divider },
-              ]}
-            >
-              <Text style={styles.popoverTitle} variant="subtitle">
-                {item.title}
+        <View style={{ width: 280, maxHeight: 400 }}>
+          <FlatList
+            data={unreadNotifications}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity onPress={() => handleItemPress(item)}>
+                <View
+                  style={[
+                    styles.popoverItem,
+                    { borderBottomColor: themeColors.divider },
+                  ]}
+                >
+                  <Text style={{...styles.popoverTitle, color: themeColors.text}}>{item.title}</Text>
+                  <Text style={{color: themeColors.text}}>{item.body}</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+            ListEmptyComponent={
+              <Text style={{ ...styles.popoverEmpty, color: themeColors.text }}>
+                No unread notifications
               </Text>
-              <Text>{item.body}</Text>
-            </View>
-          )}
-          ListEmptyComponent={
-            <Text style={styles.popoverEmpty}>No notifications</Text>
-          }
-          style={{ width: 250, maxHeight: 300 }}
-        />
+            }
+          />
+          <View style={styles.popoverFooter}>
+            <Button title="View all notifications" onPress={handleViewAllPress} />
+          </View>
+        </View>
       </Popover>
     </>
   );
@@ -96,14 +124,22 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   popoverItem: {
-    padding: 10,
+    padding: 12,
     borderBottomWidth: 1,
   },
   popoverTitle: {
     fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 4,
   },
   popoverEmpty: {
-    padding: 10,
+    padding: 12,
+    textAlign: 'center',
+  },
+  popoverFooter: {
+    padding: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#ccc',
   },
 });
 
