@@ -1,11 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  forwardRef,
+  useImperativeHandle,
+} from 'react';
 import {
-  View,
-  Text,
   FlatList,
   ActivityIndicator,
   RefreshControl,
   StyleSheet,
+  FlatListProps,
 } from 'react-native';
 import Card from '@/components/ui/Card';
 import { useThemeColor } from '@/components/Themed';
@@ -25,6 +30,7 @@ import { useAuth } from '@/lib/providers/AuthProvider';
 import { Violation } from '@/lib/types/violation';
 import Chip from '@/components/ui/Chip';
 import { formatStandardTime } from '@/lib/utils/dates';
+import { View, Text } from '@/components/Themed';
 
 const formatViolationType = (type: string) => {
   if (!type) return '';
@@ -51,9 +57,16 @@ const getStatusVariant = (status: string) => {
   }
 };
 
-export default function ViolationReportsScreen() {
-  const { user } = useAuth();
-  const [violations, setViolations] = useState<Violation[]>([]);
+export interface ViolationListRef {
+  refresh: () => void;
+}
+
+type ViolationListProps = Omit<FlatListProps<Violation>, 'data' | 'renderItem'>;
+
+const ViolationList = forwardRef<ViolationListRef, ViolationListProps>(
+  (props, ref) => {
+    const { user } = useAuth();
+    const [violations, setViolations] = useState<Violation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastVisible, setLastVisible] =
@@ -135,6 +148,12 @@ export default function ViolationReportsScreen() {
     fetchViolations();
   }, [user]);
 
+  useImperativeHandle(ref, () => ({
+    refresh: () => {
+      fetchViolations(true);
+    },
+  }));
+
   const onRefresh = () => fetchViolations(true);
 
   const loadMore = () => {
@@ -144,7 +163,7 @@ export default function ViolationReportsScreen() {
   };
 
   const renderItem = ({ item }: { item: Violation }) => (
-    <Card style={styles.card}>
+    <Card>
       <Text style={[styles.violationType, { color: textColor }]}>
         {formatViolationType(item.violationType)}
       </Text>
@@ -177,8 +196,6 @@ export default function ViolationReportsScreen() {
       data={violations}
       renderItem={renderItem}
       keyExtractor={(item) => item.id}
-      contentContainerStyle={{ padding: 10 }}
-      style={{ backgroundColor }}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
@@ -191,7 +208,7 @@ export default function ViolationReportsScreen() {
             flex: 1,
             justifyContent: 'center',
             alignItems: 'center',
-            marginTop: 50,
+            marginTop: 24,
           }}
         >
           <Text style={{ color: textColor, fontSize: 18 }}>
@@ -199,9 +216,13 @@ export default function ViolationReportsScreen() {
           </Text>
         </View>
       }
+      {...props}
     />
   );
 }
+);
+
+export default ViolationList;
 
 const styles = StyleSheet.create({
   card: {
@@ -215,6 +236,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   detailsContainer: {
+    backgroundColor: 'transparent',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

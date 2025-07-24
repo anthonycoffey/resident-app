@@ -1,7 +1,6 @@
-import React, { use, useState } from 'react';
+import React, { use, useState, useRef } from 'react';
 import {
   StyleSheet,
-  ScrollView,
   Alert,
   Image,
   useColorScheme,
@@ -19,8 +18,10 @@ import { functions, storage } from '@/lib/config/firebaseConfig';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
 import { Dropdown } from 'react-native-element-dropdown';
+import ViolationList, { ViolationListRef } from '@/components/ViolationList';
 
 const ReportViolationScreen = () => {
+  const violationListRef = useRef<ViolationListRef>(null);
   const navigation = useNavigation();
   const { user } = useAuth();
   const theme = useColorScheme() ?? 'light';
@@ -122,7 +123,13 @@ const ReportViolationScreen = () => {
       console.log('Violation report created:', result);
 
       Alert.alert('Success', 'Violation report submitted successfully.');
-      navigation.goBack();
+      setLicensePlate('');
+      setMake('');
+      setModel('');
+      setAdditionalInfo('');
+      setViolationType(null);
+      setImage(null);
+      violationListRef.current?.refresh();
     } catch (error) {
       console.error('Error submitting violation report:', error);
       Alert.alert('Error', 'There was a problem submitting your report.');
@@ -131,8 +138,20 @@ const ReportViolationScreen = () => {
     }
   };
 
-  return (
-    <ScrollView>
+  const renderHeader = () => (
+    <View>
+      <Text
+        style={{
+          fontSize: 18,
+          fontWeight: 'bold',
+          marginHorizontal: 10,
+          marginTop: 16,
+          marginBottom: 4,
+          color: themeColors.text,
+        }}
+      >
+        Report Violation
+      </Text>
       <Card>
         <Input
           placeholder='Enter License Plate'
@@ -204,14 +223,18 @@ const ReportViolationScreen = () => {
         {image && <Image source={{ uri: image }} style={styles.imagePreview} />}
 
         <Button
-          title='Submit Report'
+          title='Submit Violation'
           onPress={handleSubmit}
           loading={loading}
           disabled={loading}
           style={styles.submitButton}
         />
       </Card>
-    </ScrollView>
+    </View>
+  );
+
+  return (
+    <ViolationList ref={violationListRef} ListHeaderComponent={renderHeader} />
   );
 };
 

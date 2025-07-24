@@ -39,6 +39,17 @@ const VehicleModalScreen = () => {
         setIndex(vehicleIndex);
         setVehicle(vehicles[vehicleIndex]);
       }
+    } else {
+      // Reset form for adding a new vehicle
+      setIsEditing(false);
+      setIndex(null);
+      setVehicle({
+        make: '',
+        model: '',
+        year: 0,
+        color: '',
+        plate: '',
+      });
     }
   }, [params.index, vehicles]);
 
@@ -65,6 +76,7 @@ const VehicleModalScreen = () => {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An unknown error occurred.';
       Alert.alert('Save Failed', message);
+    } finally {
       setSaving(false);
     }
   };

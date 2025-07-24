@@ -11,6 +11,7 @@ import {
   onMessage,
   onNotificationOpenedApp,
 } from '@react-native-firebase/messaging';
+import { handleNotification } from '../utils/navigation';
 import { useAuth } from '../providers/AuthProvider';
 import { db } from '../config/firebaseConfig';
 import {
@@ -87,7 +88,7 @@ export const NotificationsProvider = ({
         'Notification caused app to open from background state:',
         remoteMessage.notification
       );
-      // Navigate to the correct screen based on remoteMessage.data
+      handleNotification(remoteMessage);
     });
 
     // Check if the app was opened from a quit state
@@ -97,7 +98,7 @@ export const NotificationsProvider = ({
           'Notification caused app to open from quit state:',
           remoteMessage.notification
         );
-        // Navigate to the correct screen based on remoteMessage.data
+        handleNotification(remoteMessage);
       }
     });
 

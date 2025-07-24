@@ -115,15 +115,6 @@ export default function ResidentLayout() {
             }}
           />
           <Drawer.Screen
-            name='violation-reports/index'
-            options={{
-              title: 'Violation Reports',
-              drawerIcon: ({ color }) => (
-                <MaterialIcons size={28} name='list' color={color} />
-              ),
-            }}
-          />
-          <Drawer.Screen
             name='my-violations/index'
             options={{
               title: 'My Violations',

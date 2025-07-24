@@ -7,7 +7,7 @@ import {
   Linking,
 } from 'react-native';
 import { Text, View } from '@/components/Themed';
-import { Stack, useLocalSearchParams, useNavigation } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { getPhoenixJobDetails, Job } from '@/lib/services/phoenixService';
@@ -16,7 +16,7 @@ import Avatar from '@/components/ui/Avatar';
 
 const JobDetailsScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const navigation = useNavigation();
+  const router = useRouter();
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +50,7 @@ const JobDetailsScreen = () => {
           headerTitle: 'Service Request Details',
           headerLeft: () => (
             <TouchableOpacity
-              onPress={() => navigation.goBack()}
+              onPress={() => router.push('/service-requests')}
               style={{ paddingHorizontal: 10 }}
             >
               <MaterialIcons name='arrow-back' size={24} color='black' />

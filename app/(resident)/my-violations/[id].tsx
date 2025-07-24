@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ActivityIndicator, ScrollView, Image, StyleSheet } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import {
+  ActivityIndicator,
+  ScrollView,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { useThemeColor, View, Text } from '@/components/Themed';
@@ -15,6 +22,7 @@ import Chip from '@/components/ui/Chip';
 
 export default function ViolationDetailScreen() {
   const { id } = useLocalSearchParams();
+  const router = useRouter();
   const { user } = useAuth();
   const [violation, setViolation] = useState<Violation | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,7 +31,6 @@ export default function ViolationDetailScreen() {
 
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
-  const cardColor = useThemeColor({}, 'card');
 
   const violationId = Array.isArray(id) ? id[0] : id;
 
@@ -98,9 +105,23 @@ export default function ViolationDetailScreen() {
   }
 
   return (
-    <ScrollView>
-      <Card>
-        <Image source={{ uri: violation.photoUrl }} style={styles.image} />
+    <>
+      <Stack.Screen
+        options={{
+          headerTitle: 'Violation Details',
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.push('/my-violations')}
+              style={{ marginLeft: 10 }}
+            >
+              <MaterialIcons name="arrow-back" size={28} color={textColor} />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <ScrollView>
+        <Card>
+          <Image source={{ uri: violation.photoUrl }} style={styles.image} />
         <View
           style={{
             flexDirection: 'row',
@@ -142,8 +163,9 @@ export default function ViolationDetailScreen() {
             style={{ marginTop: 20 }}
           />
         )}
-      </Card>
-    </ScrollView>
+        </Card>
+      </ScrollView>
+    </>
   );
 }
 
