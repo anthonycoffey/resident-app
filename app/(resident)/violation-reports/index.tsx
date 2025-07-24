@@ -7,13 +7,24 @@ import {
   RefreshControl,
   StyleSheet,
 } from 'react-native';
-import { useAuth } from '@/lib/providers/AuthProvider';
 import Card from '@/components/ui/Card';
-import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useThemeColor } from '@/components/Themed';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  orderBy,
+  limit,
+  startAfter,
+  QueryDocumentSnapshot,
+  DocumentData,
+} from 'firebase/firestore';
+import { db } from '@/lib/config/firebaseConfig';
+import { useAuth } from '@/lib/providers/AuthProvider';
+import { Violation } from '@/lib/types/violation';
 import Chip from '@/components/ui/Chip';
 import { formatStandardTime } from '@/lib/utils/dates';
-import { Violation } from '@/lib/types/violation';
 
 const formatViolationType = (type: string) => {
   if (!type) return '';
@@ -25,87 +36,120 @@ const formatViolationType = (type: string) => {
     );
 };
 
-const MyViolationsScreen = () => {
+const getStatusVariant = (status: string) => {
+  switch (status.toLowerCase()) {
+    case 'pending':
+      return 'warning';
+    case 'acknowledged':
+      return 'success';
+    case 'escalated':
+      return 'error';
+    case 'reported':
+      return 'primary';
+    default:
+      return 'primary';
+  }
+};
+
+export default function ViolationReportsScreen() {
   const { user } = useAuth();
   const [violations, setViolations] = useState<Violation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [page, setPage] = useState(0);
-  const [total, setTotal] = useState(0);
-  const rowsPerPage = 10;
+  const [lastVisible, setLastVisible] =
+    useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  const themeColors = {
-    text: useThemeColor({}, 'text'),
-    background: useThemeColor({}, 'background'),
-    card: useThemeColor({}, 'card'),
-  };
+  const backgroundColor = useThemeColor({}, 'background');
+  const textColor = useThemeColor({}, 'text');
 
-  const functions = getFunctions();
-  const getMyViolations = httpsCallable(functions, 'getMyViolations');
+  const fetchViolations = useCallback(
+    async (isRefresh = false) => {
+      if (!user || !user.claims?.organizationId || !user.claims?.propertyId) {
+        console.error('User data is incomplete to fetch violations.');
+        setLoading(false);
+        return;
+      }
 
-  const fetchViolations = async (currentPage = 0) => {
-    if (!user || !user.propertyId) return;
-    setLoading(true);
-    try {
-      const result = await getMyViolations({
-        organizationId: user.organizationId,
-        propertyId: user.propertyId,
-        page: currentPage,
-        rowsPerPage,
-      });
-      const data = result.data as { violations: any[]; total: number };
-      setViolations(
-        currentPage === 0
-          ? data.violations
-          : [...violations, ...data.violations]
-      );
-      setTotal(data.total);
-      setPage(currentPage);
-    } catch (error) {
-      console.error('Error fetching violations:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
+      if (isRefresh) {
+        setRefreshing(true);
+        setLastVisible(null); // Reset for refresh
+      } else if (!lastVisible) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      try {
+        const organizationId = user.claims.organizationId as string;
+        const propertyId = user.claims.propertyId as string;
+        const violationsCollectionRef = collection(
+          db,
+          'organizations',
+          organizationId,
+          'properties',
+          propertyId,
+          'violations'
+        );
+
+        let q = query(
+          violationsCollectionRef,
+          where('reporterId', '==', user.uid),
+          orderBy('createdAt', 'desc'),
+          limit(10)
+        );
+
+        if (lastVisible && !isRefresh) {
+          q = query(q, startAfter(lastVisible));
+        }
+
+        const querySnapshot = await getDocs(q);
+        const newViolations = querySnapshot.docs.map(
+          (doc) =>
+            ({
+              id: doc.id,
+              ...doc.data(),
+            } as Violation)
+        );
+
+        setLastVisible(querySnapshot.docs[querySnapshot.docs.length - 1]);
+        if (isRefresh) {
+          setViolations(newViolations);
+        } else {
+          setViolations((prev) =>
+            lastVisible ? [...prev, ...newViolations] : newViolations
+          );
+        }
+      } catch (error) {
+        console.error('Error fetching violations:', error);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+        setLoadingMore(false);
+      }
+    },
+    [user, lastVisible]
+  );
 
   useEffect(() => {
-    fetchViolations(0);
+    fetchViolations();
   }, [user]);
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchViolations(0);
-  }, [user]);
+  const onRefresh = () => fetchViolations(true);
 
   const loadMore = () => {
-    if (violations.length < total) {
-      fetchViolations(page + 1);
-    }
-  };
-
-  const getStatusVariant = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return 'warning';
-      case 'acknowledged':
-        return 'success';
-      case 'escalated':
-        return 'error';
-      case 'reported':
-        return 'primary';
-      default:
-        return 'primary';
+    if (!loadingMore && lastVisible) {
+      fetchViolations();
     }
   };
 
   const renderItem = ({ item }: { item: Violation }) => (
     <Card style={styles.card}>
-      <Text style={[styles.violationType, { color: themeColors.text }]}>
+      <Text style={[styles.violationType, { color: textColor }]}>
         {formatViolationType(item.violationType)}
       </Text>
       <View style={styles.detailsContainer}>
-        <Text style={{ color: themeColors.text }}>
+        <Text style={{ color: textColor }}>
           {formatStandardTime(item.createdAt)}
         </Text>
         <Chip label={item.status} variant={getStatusVariant(item.status)} />
@@ -113,38 +157,51 @@ const MyViolationsScreen = () => {
     </Card>
   );
 
+  if (loading && !refreshing) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor,
+        }}
+      >
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
   return (
-    <View style={{ flex: 1, backgroundColor: themeColors.background }}>
-      <FlatList
-        data={violations}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: 10 }}
-        onEndReached={loadMore}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={
-          loading && !refreshing ? <ActivityIndicator /> : null
-        }
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={
-          !loading ? (
-            <Text
-              style={{
-                textAlign: 'center',
-                color: themeColors.text,
-                marginTop: 20,
-              }}
-            >
-              No violations found.
-            </Text>
-          ) : null
-        }
-      />
-    </View>
+    <FlatList
+      data={violations}
+      renderItem={renderItem}
+      keyExtractor={(item) => item.id}
+      contentContainerStyle={{ padding: 10 }}
+      style={{ backgroundColor }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+      onEndReached={loadMore}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={loadingMore ? <ActivityIndicator /> : null}
+      ListEmptyComponent={
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginTop: 50,
+          }}
+        >
+          <Text style={{ color: textColor, fontSize: 18 }}>
+            You have not reported any violations.
+          </Text>
+        </View>
+      }
+    />
   );
-};
+}
 
 const styles = StyleSheet.create({
   card: {
@@ -163,5 +220,3 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
-
-export default MyViolationsScreen;

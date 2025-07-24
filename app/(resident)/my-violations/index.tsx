@@ -6,7 +6,9 @@ import {
   ActivityIndicator,
   RefreshControl,
   StyleSheet,
+  TouchableOpacity,
 } from 'react-native';
+import { router } from 'expo-router';
 import Card from '@/components/ui/Card';
 import { useThemeColor } from '@/components/Themed';
 import {
@@ -144,17 +146,21 @@ export default function MyViolationsScreen() {
   };
 
   const renderItem = ({ item }: { item: Violation }) => (
-    <Card style={styles.card}>
-      <Text style={[styles.violationType, { color: textColor }]}>
-        {formatViolationType(item.violationType)}
-      </Text>
-      <View style={styles.detailsContainer}>
-        <Text style={{ color: textColor }}>
-          {formatStandardTime(item.createdAt)}
+    <TouchableOpacity
+      onPress={() => router.push(`/my-violations/${item.id}`)}
+    >
+      <Card style={styles.card}>
+        <Text style={[styles.violationType, { color: textColor }]}>
+          {formatViolationType(item.violationType)}
         </Text>
-        <Chip label={item.status} variant={getStatusVariant(item.status)} />
-      </View>
-    </Card>
+        <View style={styles.detailsContainer}>
+          <Text style={{ color: textColor }}>
+            {formatStandardTime(item.createdAt)}
+          </Text>
+          <Chip label={item.status} variant={getStatusVariant(item.status)} />
+        </View>
+      </Card>
+    </TouchableOpacity>
   );
 
   if (loading && !refreshing) {

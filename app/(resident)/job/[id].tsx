@@ -76,20 +76,43 @@ const JobDetailsScreen = () => {
               }}
             >
               <Text
-                style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}
+                style={{
+                  fontSize: 18,
+                  fontWeight: 'bold',
+                  marginBottom: 10,
+                  backgroundColor: 'transparent',
+                }}
               >
                 Technician Information
               </Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: 'transparent',
+                }}
+              >
                 <Avatar
                   source={{ uri: job.assignedTechnician.avatar }}
                   size={60}
                 />
-                <View style={{ marginLeft: 15, flex: 1 }}>
+                <View
+                  style={{
+                    marginLeft: 15,
+                    flex: 1,
+                    backgroundColor: 'transparent',
+                  }}
+                >
                   <Text style={{ fontSize: 16, fontWeight: '600' }}>
                     {job.assignedTechnician.fullName}
                   </Text>
-                  <View style={{ flexDirection: 'row', marginTop: 8 }}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      marginTop: 8,
+                      backgroundColor: 'transparent',
+                    }}
+                  >
                     <TouchableOpacity
                       style={{
                         flexDirection: 'row',

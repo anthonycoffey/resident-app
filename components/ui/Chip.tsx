@@ -12,10 +12,7 @@ interface ChipProps {
 
 const Chip: React.FC<ChipProps> = ({ label, style, variant = 'primary' }) => {
   const backgroundColor = useThemeColor({}, variant);
-  const textColor = useThemeColor(
-    { light: '#fff', dark: '#000' },
-    'text'
-  );
+  const textColor = useThemeColor({ light: '#fff', dark: '#000' }, 'text');
 
   return (
     <View style={[styles.chip, { backgroundColor }, style]}>
@@ -32,6 +29,7 @@ const styles = StyleSheet.create({
     margin: 4,
     alignItems: 'center',
     justifyContent: 'center',
+    alignSelf: 'flex-end',
   },
   label: {
     fontSize: 12,

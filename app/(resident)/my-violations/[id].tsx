@@ -1,16 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  ScrollView,
-  Image,
-  StyleSheet,
-} from 'react-native';
+import { ActivityIndicator, ScrollView, Image, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { useThemeColor } from '@/components/Themed';
+import { useThemeColor, View, Text } from '@/components/Themed';
 import {
   getViolationDetails,
   acknowledgeViolation,
@@ -18,6 +11,7 @@ import {
 import { useAuth } from '@/lib/providers/AuthProvider';
 import { formatRelativeTime, formatStandardTime } from '@/lib/utils/dates';
 import { Violation } from '@/lib/types/violation';
+import Chip from '@/components/ui/Chip';
 
 export default function ViolationDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -103,61 +97,51 @@ export default function ViolationDetailScreen() {
     );
   }
 
-  console.log('Violation details:', violation.createdAt);
-
   return (
-    <ScrollView
-      style={{ backgroundColor }}
-      contentContainerStyle={styles.scrollContent}
-    >
-      <Card style={{ backgroundColor: cardColor, width: '100%' }}>
+    <ScrollView>
+      <Card>
         <Image source={{ uri: violation.photoUrl }} style={styles.image} />
-        <View style={styles.content}>
-          <Text style={[styles.title, { color: textColor }]}>
-            {violation.violationType.replace('_', ' ')}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 8,
+            backgroundColor: 'transparent',
+          }}
+        >
+          <Text style={[styles.title, { color: textColor, marginRight: 8 }]}>
+            {violation.violationType.replace(/_/g, ' ')}
           </Text>
-          <Text style={[styles.label, { color: textColor }]}>
-            License Plate:
-          </Text>
-          <Text style={[styles.value, { color: textColor }]}>
-            {violation.licensePlate}
-          </Text>
-
-          <Text style={[styles.label, { color: textColor }]}>Status:</Text>
-          <Text
-            style={[
-              styles.value,
-              { color: textColor, textTransform: 'capitalize' },
-            ]}
-          >
-            {violation.status.replace(/_/g, ' ')}
-          </Text>
-
-          <Text style={[styles.label, { color: textColor }]}>
-            Date Reported:
-          </Text>
-          <Text style={[styles.value, { color: textColor }]}>
-            {formatStandardTime(violation.createdAt)}
-          </Text>
-          <Text
-            style={[
-              styles.value,
-              { color: textColor, fontSize: 12, marginTop: 2 },
-            ]}
-          >
-            ({formatRelativeTime(violation.createdAt)})
-          </Text>
-
-          {violation.status === 'pending' && (
-            <Button
-              title="I'm Moving It!"
-              onPress={handleAcknowledge}
-              loading={acknowledging}
-              disabled={acknowledging}
-              style={{ marginTop: 20 }}
-            />
-          )}
+          <Chip label={violation.status.replace(/_/g, ' ')} />
         </View>
+        <Text style={[styles.label, { color: textColor }]}>License Plate:</Text>
+        <Text style={[styles.value, { color: textColor }]}>
+          {violation.licensePlate}
+        </Text>
+
+        <Text style={[styles.label, { color: textColor }]}>Reported:</Text>
+        <Text style={[styles.value, { color: textColor }]}>
+          {formatStandardTime(violation.createdAt)}
+        </Text>
+        <Text
+          style={[
+            styles.value,
+            { color: textColor, fontSize: 14, marginTop: 2 },
+          ]}
+        >
+          ({formatRelativeTime(violation.createdAt)})
+        </Text>
+
+        {violation.status === 'pending' && (
+          <Button
+            title="I'm Moving It!"
+            onPress={handleAcknowledge}
+            loading={acknowledging}
+            disabled={acknowledging}
+            style={{ marginTop: 20 }}
+          />
+        )}
       </Card>
     </ScrollView>
   );
@@ -174,26 +158,20 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
+    marginBottom: 8,
     height: 250,
     resizeMode: 'cover',
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-  },
-  content: {
-    padding: 16,
   },
   title: {
-    fontSize: 24,
+    textTransform: 'capitalize',
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 16,
   },
   label: {
     fontSize: 16,
     fontWeight: '600',
-    marginTop: 12,
   },
   value: {
     fontSize: 16,
-    marginTop: 4,
   },
 });
