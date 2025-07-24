@@ -58,6 +58,8 @@ export default {
     divider: palette.grey200,
     readOnlyBackground: palette.grey100,
     
+    textMuted: palette.grey400,
+    
     // Tabs
     tabIconDefault: palette.grey300,
     tabIconSelected: palette.blue500,
@@ -85,6 +87,8 @@ export default {
     input: palette.grey800,
     divider: palette.grey600,
     readOnlyBackground: palette.grey700,
+    
+    textMuted: palette.grey500,
     
     // Tabs
     tabIconDefault: palette.grey500,

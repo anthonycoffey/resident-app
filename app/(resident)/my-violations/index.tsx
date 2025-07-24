@@ -5,116 +5,159 @@ import {
   FlatList,
   ActivityIndicator,
   RefreshControl,
+  StyleSheet,
 } from 'react-native';
 import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
 import { useThemeColor } from '@/components/Themed';
-import { acknowledgeViolation } from '@/lib/services/violationService';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/config/firebaseConfig';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  orderBy,
+  limit,
+  startAfter,
+  QueryDocumentSnapshot,
+  DocumentData,
+} from 'firebase/firestore';
+import { db } from '@/lib/config/firebaseConfig';
 import { useAuth } from '@/lib/providers/AuthProvider';
+import { Violation } from '@/lib/types/violation';
+import Chip from '@/components/ui/Chip';
+import { formatStandardTime } from '@/lib/utils/dates';
 
-// TODO: Replace with the actual violation type definition
-interface Violation {
-  id: string;
-  description: string;
-  status: string;
-  organizationId: string;
-  createdAt: {
-    toDate: () => Date;
-  };
-}
+const formatViolationType = (type: string) => {
+  if (!type) return '';
+  return type
+    .replace(/_/g, ' ')
+    .replace(
+      /\w\S*/g,
+      (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+    );
+};
 
-const getMyViolations = httpsCallable(functions, 'getMyViolations');
+const getStatusVariant = (status: string) => {
+  switch (status.toLowerCase()) {
+    case 'pending':
+      return 'warning';
+    case 'acknowledged':
+      return 'success';
+    case 'escalated':
+      return 'error';
+    case 'reported':
+      return 'primary';
+    default:
+      return 'primary';
+  }
+};
 
 export default function MyViolationsScreen() {
   const { user } = useAuth();
   const [violations, setViolations] = useState<Violation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [acknowledging, setAcknowledging] = useState<string | null>(null);
+  const [lastVisible, setLastVisible] =
+    useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
 
-  const fetchViolations = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const result = await getMyViolations();
-      const data = result.data as Violation[];
-      setViolations(data);
-    } catch (error) {
-      console.error('Error fetching violations:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
+  const fetchViolations = useCallback(
+    async (isRefresh = false) => {
+      if (!user || !user.claims?.organizationId || !user.claims?.propertyId) {
+        console.error('User data is incomplete to fetch violations.');
+        setLoading(false);
+        return;
+      }
+
+      if (isRefresh) {
+        setRefreshing(true);
+        setLastVisible(null); // Reset for refresh
+      } else if (!lastVisible) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      try {
+        const organizationId = user.claims.organizationId as string;
+        const propertyId = user.claims.propertyId as string;
+        const violationsCollectionRef = collection(
+          db,
+          'organizations',
+          organizationId,
+          'properties',
+          propertyId,
+          'violations'
+        );
+
+        let q = query(
+          violationsCollectionRef,
+          where('residentId', '==', user.uid),
+          orderBy('createdAt', 'desc'),
+          limit(10)
+        );
+
+        if (lastVisible && !isRefresh) {
+          q = query(q, startAfter(lastVisible));
+        }
+
+        const querySnapshot = await getDocs(q);
+        const newViolations = querySnapshot.docs.map(
+          (doc) =>
+            ({
+              id: doc.id,
+              ...doc.data(),
+            } as Violation)
+        );
+
+        setLastVisible(querySnapshot.docs[querySnapshot.docs.length - 1]);
+        if (isRefresh) {
+          setViolations(newViolations);
+        } else {
+          setViolations((prev) =>
+            lastVisible ? [...prev, ...newViolations] : newViolations
+          );
+        }
+      } catch (error) {
+        console.error('Error fetching violations:', error);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+        setLoadingMore(false);
+      }
+    },
+    [user, lastVisible]
+  );
 
   useEffect(() => {
     fetchViolations();
-  }, [fetchViolations]);
+  }, [user]);
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchViolations();
-    setRefreshing(false);
-  }, [fetchViolations]);
+  const onRefresh = () => fetchViolations(true);
 
-  const handleAcknowledge = async (
-    violationId: string,
-    organizationId: string
-  ) => {
-    setAcknowledging(violationId);
-    try {
-      await acknowledgeViolation(violationId, organizationId);
-      // Optimistically update the UI
-      setViolations((prev) =>
-        prev.map((v) =>
-          v.id === violationId ? { ...v, status: 'acknowledged' } : v
-        )
-      );
-    } catch (error) {
-      // Handle error (e.g., show a toast message)
-    } finally {
-      setAcknowledging(null);
+  const loadMore = () => {
+    if (!loadingMore && lastVisible) {
+      fetchViolations();
     }
   };
 
   const renderItem = ({ item }: { item: Violation }) => (
-    <Card style={{ marginBottom: 16, padding: 16 }}>
-      <Text style={{ color: textColor, fontSize: 16, fontWeight: 'bold' }}>
-        Violation Reported
+    <Card style={styles.card}>
+      <Text style={[styles.violationType, { color: textColor }]}>
+        {formatViolationType(item.violationType)}
       </Text>
-      <Text style={{ color: textColor, marginTop: 8 }}>
-        {item.description}
-      </Text>
-      <Text
-        style={{
-          color: textColor,
-          marginTop: 8,
-          fontStyle: 'italic',
-          textTransform: 'capitalize',
-        }}
-      >
-        Status: {item.status.replace(/_/g, ' ')}
-      </Text>
-      <Text style={{ color: textColor, marginTop: 8, fontSize: 12 }}>
-        Date: {item.createdAt.toDate().toLocaleDateString()}
-      </Text>
-      {item.status === 'pending_acknowledgement' && (
-        <Button
-          title="I'm Moving It"
-          onPress={() => handleAcknowledge(item.id, item.organizationId)}
-          style={{ marginTop: 16 }}
-          disabled={acknowledging === item.id}
-          loading={acknowledging === item.id}
-        />
-      )}
+      <View style={styles.detailsContainer}>
+        <Text style={{ color: textColor }}>
+          {formatStandardTime(item.createdAt)}
+        </Text>
+        <Chip label={item.status} variant={getStatusVariant(item.status)} />
+      </View>
     </Card>
   );
 
-  if (loading) {
+  if (loading && !refreshing) {
     return (
       <View
         style={{
@@ -124,7 +167,7 @@ export default function MyViolationsScreen() {
           backgroundColor,
         }}
       >
-        <ActivityIndicator size='large' />
+        <ActivityIndicator size="large" />
       </View>
     );
   }
@@ -134,11 +177,14 @@ export default function MyViolationsScreen() {
       data={violations}
       renderItem={renderItem}
       keyExtractor={(item) => item.id}
-      contentContainerStyle={{ padding: 16 }}
+      contentContainerStyle={{ padding: 10 }}
       style={{ backgroundColor }}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
+      onEndReached={loadMore}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={loadingMore ? <ActivityIndicator /> : null}
       ListEmptyComponent={
         <View
           style={{
@@ -156,3 +202,21 @@ export default function MyViolationsScreen() {
     />
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    marginBottom: 10,
+    padding: 15,
+    borderRadius: 10,
+  },
+  violationType: {
+    fontWeight: 'bold',
+    marginBottom: 10,
+    fontSize: 16,
+  },
+  detailsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+});

@@ -5,20 +5,25 @@ import {
   FlatList,
   ActivityIndicator,
   RefreshControl,
+  StyleSheet,
 } from 'react-native';
 import { useAuth } from '@/lib/providers/AuthProvider';
 import Card from '@/components/ui/Card';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useThemeColor } from '@/components/Themed';
+import Chip from '@/components/ui/Chip';
+import { formatStandardTime } from '@/lib/utils/dates';
+import { Violation } from '@/lib/types/violation';
 
-interface Violation {
-  id: string;
-  violationType: string;
-  status: string;
-  createdAt: {
-    seconds: number;
-  };
-}
+const formatViolationType = (type: string) => {
+  if (!type) return '';
+  return type
+    .replace(/_/g, ' ')
+    .replace(
+      /\w\S*/g,
+      (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+    );
+};
 
 const MyViolationsScreen = () => {
   const { user } = useAuth();
@@ -79,15 +84,32 @@ const MyViolationsScreen = () => {
     }
   };
 
+  const getStatusVariant = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'warning';
+      case 'acknowledged':
+        return 'success';
+      case 'escalated':
+        return 'error';
+      case 'reported':
+        return 'primary';
+      default:
+        return 'primary';
+    }
+  };
+
   const renderItem = ({ item }: { item: Violation }) => (
-    <Card style={{ marginBottom: 10, padding: 15 }}>
-      <Text style={{ color: themeColors.text, fontWeight: 'bold' }}>
-        {item.violationType}
+    <Card style={styles.card}>
+      <Text style={[styles.violationType, { color: themeColors.text }]}>
+        {formatViolationType(item.violationType)}
       </Text>
-      <Text style={{ color: themeColors.text }}>Status: {item.status}</Text>
-      <Text style={{ color: themeColors.text }}>
-        Date: {new Date(item.createdAt.seconds * 1000).toLocaleDateString()}
-      </Text>
+      <View style={styles.detailsContainer}>
+        <Text style={{ color: themeColors.text }}>
+          {formatStandardTime(item.createdAt)}
+        </Text>
+        <Chip label={item.status} variant={getStatusVariant(item.status)} />
+      </View>
     </Card>
   );
 
@@ -123,5 +145,23 @@ const MyViolationsScreen = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  card: {
+    marginBottom: 10,
+    padding: 15,
+    borderRadius: 10,
+  },
+  violationType: {
+    fontWeight: 'bold',
+    marginBottom: 10,
+    fontSize: 16,
+  },
+  detailsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+});
 
 export default MyViolationsScreen;

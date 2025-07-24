@@ -1,44 +1,61 @@
-import { functions } from '@/lib/config/firebaseConfig';
-import { httpsCallable } from 'firebase/functions';
-
-const acknowledgeViolationFunction = httpsCallable(
-  functions,
-  'acknowledgeViolation'
-);
+import { db } from '@/lib/config/firebaseConfig';
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
 
 export const acknowledgeViolation = async (
   violationId: string,
-  organizationId: string
+  organizationId: string,
+  propertyId: string
 ) => {
   try {
-    const result = await acknowledgeViolationFunction({
-      violationId,
+    const violationRef = doc(
+      db,
+      'organizations',
       organizationId,
+      'properties',
+      propertyId,
+      'violations',
+      violationId
+    );
+    await updateDoc(violationRef, {
+      status: 'acknowledged',
+      acknowledgedAt: serverTimestamp(),
     });
-    return result.data;
+    return { success: true };
   } catch (error) {
     console.error('Error acknowledging violation:', error);
     throw new Error('Failed to acknowledge violation.');
   }
 };
 
-const getViolationDetailsFunction = httpsCallable(
-  functions,
-  'getViolationDetails'
-);
-
 export const getViolationDetails = async (
   violationId: string,
-  organizationId: string
+  organizationId: string,
+  propertyId: string
 ) => {
   try {
-    const result = await getViolationDetailsFunction({
-      violationId,
+    const violationDocRef = doc(
+      db,
+      'organizations',
       organizationId,
-    });
-    return result.data;
+      'properties',
+      propertyId,
+      'violations',
+      violationId
+    );
+    const violationDocSnap = await getDoc(violationDocRef);
+
+    if (!violationDocSnap.exists()) {
+      throw new Error('Violation not found.');
+    }
+
+    return violationDocSnap.data();
   } catch (error) {
-    console.error('Error getting violation details:', error);
+    console.error('Error getting violation details from Firestore:', error);
     throw new Error('Failed to get violation details.');
   }
 };

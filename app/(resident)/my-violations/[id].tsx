@@ -16,25 +16,8 @@ import {
   acknowledgeViolation,
 } from '@/lib/services/violationService';
 import { useAuth } from '@/lib/providers/AuthProvider';
-
-// Based on the documentation provided
-interface Violation {
-  id: string;
-  licensePlate: string;
-  violationType: string;
-  photoUrl: string;
-  reporterId: string;
-  residentId: string | null;
-  propertyId: string;
-  organizationId: string;
-  status: 'pending_acknowledgement' | 'acknowledged' | 'escalated_to_manager' | 'reported';
-  createdAt: {
-    toDate: () => Date;
-  };
-  acknowledgedAt?: {
-    toDate: () => Date;
-  };
-}
+import { formatRelativeTime, formatStandardTime } from '@/lib/utils/dates';
+import { Violation } from '@/lib/types/violation';
 
 export default function ViolationDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -51,8 +34,8 @@ export default function ViolationDetailScreen() {
   const violationId = Array.isArray(id) ? id[0] : id;
 
   const fetchViolation = useCallback(async () => {
-    if (!violationId || !user?.organizationId) {
-      setError('Violation ID or Organization ID is missing.');
+    if (!violationId || !user?.organizationId || !user?.propertyId) {
+      setError('Required information is missing to fetch violation details.');
       setLoading(false);
       return;
     }
@@ -61,7 +44,8 @@ export default function ViolationDetailScreen() {
     try {
       const result = (await getViolationDetails(
         violationId,
-        user.organizationId
+        user.organizationId,
+        user.propertyId
       )) as Violation;
       setViolation({ ...result, id: violationId });
     } catch (err) {
@@ -70,7 +54,7 @@ export default function ViolationDetailScreen() {
     } finally {
       setLoading(false);
     }
-  }, [violationId, user?.organizationId]);
+  }, [violationId, user?.organizationId, user?.propertyId]);
 
   useEffect(() => {
     fetchViolation();
@@ -80,7 +64,11 @@ export default function ViolationDetailScreen() {
     if (!violation) return;
     setAcknowledging(true);
     try {
-      await acknowledgeViolation(violation.id, violation.organizationId);
+      await acknowledgeViolation(
+        violation.id,
+        violation.organizationId,
+        violation.propertyId
+      );
       setViolation((prev) =>
         prev ? { ...prev, status: 'acknowledged' } : null
       );
@@ -115,30 +103,54 @@ export default function ViolationDetailScreen() {
     );
   }
 
+  console.log('Violation details:', violation.createdAt);
+
   return (
-    <ScrollView style={{ backgroundColor }} contentContainerStyle={styles.scrollContent}>
+    <ScrollView
+      style={{ backgroundColor }}
+      contentContainerStyle={styles.scrollContent}
+    >
       <Card style={{ backgroundColor: cardColor, width: '100%' }}>
         <Image source={{ uri: violation.photoUrl }} style={styles.image} />
         <View style={styles.content}>
           <Text style={[styles.title, { color: textColor }]}>
-            {violation.violationType}
+            {violation.violationType.replace('_', ' ')}
           </Text>
-          <Text style={[styles.label, { color: textColor }]}>License Plate:</Text>
-          <Text style={[styles.value, { color: textColor }]}>{violation.licensePlate}</Text>
+          <Text style={[styles.label, { color: textColor }]}>
+            License Plate:
+          </Text>
+          <Text style={[styles.value, { color: textColor }]}>
+            {violation.licensePlate}
+          </Text>
 
           <Text style={[styles.label, { color: textColor }]}>Status:</Text>
-          <Text style={[styles.value, { color: textColor, textTransform: 'capitalize' }]}>
+          <Text
+            style={[
+              styles.value,
+              { color: textColor, textTransform: 'capitalize' },
+            ]}
+          >
             {violation.status.replace(/_/g, ' ')}
           </Text>
 
-          <Text style={[styles.label, { color: textColor }]}>Date Reported:</Text>
+          <Text style={[styles.label, { color: textColor }]}>
+            Date Reported:
+          </Text>
           <Text style={[styles.value, { color: textColor }]}>
-            {violation.createdAt.toDate().toLocaleString()}
+            {formatStandardTime(violation.createdAt)}
+          </Text>
+          <Text
+            style={[
+              styles.value,
+              { color: textColor, fontSize: 12, marginTop: 2 },
+            ]}
+          >
+            ({formatRelativeTime(violation.createdAt)})
           </Text>
 
-          {violation.status === 'pending_acknowledgement' && (
+          {violation.status === 'pending' && (
             <Button
-              title="I'm Moving It"
+              title="I'm Moving It!"
               onPress={handleAcknowledge}
               loading={acknowledging}
               disabled={acknowledging}

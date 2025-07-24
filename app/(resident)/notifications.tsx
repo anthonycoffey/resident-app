@@ -13,8 +13,8 @@ import { useNotifications } from '@/lib/context/NotificationsContext';
 import { Notification } from '@/lib/context/NotificationsContext';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
-import { formatDateTime } from '@/lib/utils/dates';
-import { useRouter } from 'expo-router';
+import { formatRelativeTime } from '@/lib/utils/dates';
+import { useRouter, Href } from 'expo-router';
 
 export default function NotificationsScreen() {
   const {
@@ -44,34 +44,36 @@ export default function NotificationsScreen() {
 
   const handleNotificationPress = (item: Notification) => {
     markOneAsRead(item.id);
-    if (item.data?.mobileLink) {
-      router.push(item.data.mobileLink);
+    if (item.mobileLink) {
+      router.push(item.mobileLink as Href);
     }
   };
 
   const renderItem = ({ item }: { item: Notification }) => {
-    const isRead = item.data?.read;
+    const isRead = item.read;
+    const themeColors = Colors[colorScheme];
     return (
       <TouchableOpacity onPress={() => handleNotificationPress(item)}>
         <View
           style={[
             styles.notificationItem,
-            { backgroundColor: Colors[colorScheme].card },
+            {
+              backgroundColor: themeColors.card,
+              borderBottomColor: themeColors.divider,
+            },
             isRead && styles.readItem,
           ]}
         >
-          <Text
-            style={[
-              styles.notificationTitle,
-              { color: Colors[colorScheme].text },
-            ]}
-          >
-            {item.title}
-          </Text>
-          <Text style={{ color: Colors[colorScheme].text }}>{item.body}</Text>
-          <Text style={styles.notificationDate}>
-            {formatDateTime(item.date) || 'Invalid Date'}
-          </Text>
+          <View style={styles.notificationContent}>
+            <Text style={[styles.notificationTitle, { color: themeColors.text }]}>
+              {item.title}
+            </Text>
+            <Text style={{ color: themeColors.text }}>{item.body}</Text>
+            <Text style={[styles.notificationDate, { color: themeColors.textMuted }]}>
+              {formatRelativeTime(item.createdAt)}
+            </Text>
+          </View>
+          {!isRead && <View style={[styles.unreadDot, { backgroundColor: themeColors.primary }]} />}
         </View>
       </TouchableOpacity>
     );
@@ -109,7 +111,7 @@ export default function NotificationsScreen() {
           </Text>
         }
       />
-      <View style={styles.footer}>
+      <View style={[styles.footer, { borderColor: Colors[colorScheme].divider }]}>
         <Button
           title="Clear All Notifications"
           onPress={handleClearAll}
@@ -130,24 +132,36 @@ const styles = StyleSheet.create({
   footer: {
     padding: 10,
     borderTopWidth: 1,
-    borderColor: '#ccc',
   },
   notificationItem: {
     padding: 15,
-    borderRadius: 8,
-    marginVertical: 5,
     marginHorizontal: 10,
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  notificationContent: {
+    flex: 1,
   },
   readItem: {
-    opacity: 0.6,
+    // You can add specific styles for read items if needed, e.g., different background
   },
   notificationTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    fontWeight: '300',
+    fontSize: 14,
+    marginBottom: 2,
   },
   notificationDate: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 5,
+    fontSize: 10,
+    marginTop: 4,
+  },
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginLeft: 10,
   },
 });

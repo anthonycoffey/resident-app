@@ -22,14 +22,20 @@ import {
   getDocs,
   doc,
   updateDoc,
+  Timestamp,
 } from 'firebase/firestore';
 
 export interface Notification {
   id: string;
   title: string;
   body: string;
-  data: any;
-  date: string;
+  read: boolean;
+  status: string;
+  createdAt: Timestamp;
+  sentAt: Timestamp;
+  link?: string;
+  mobileLink?: string;
+  data?: any;
 }
 
 interface NotificationsContextType {
@@ -72,20 +78,7 @@ export const NotificationsProvider = ({
     // Handles foreground messages
     const unsubscribe = onMessage(message, async (remoteMessage) => {
       console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));
-      if (remoteMessage.notification) {
-        const newNotification: Notification = {
-          id: remoteMessage.messageId || new Date().toISOString(),
-          title: remoteMessage.notification.title || 'New Notification',
-          body: remoteMessage.notification.body || '',
-          data: remoteMessage.data || {},
-          date: new Date().toISOString(),
-        };
-        setNotifications((prevNotifications) => [
-          newNotification,
-          ...prevNotifications,
-        ]);
-        setUnreadCount((prev) => prev + 1);
-      }
+      // The onSnapshot listener will handle the UI update
     });
 
     // Handles notifications that opened the app from a background state
@@ -98,16 +91,15 @@ export const NotificationsProvider = ({
     });
 
     // Check if the app was opened from a quit state
-    getInitialNotification(message)
-      .then((remoteMessage) => {
-        if (remoteMessage) {
-          console.log(
-            'Notification caused app to open from quit state:',
-            remoteMessage.notification
-          );
-          // Navigate to the correct screen based on remoteMessage.data
-        }
-      });
+    getInitialNotification(message).then((remoteMessage) => {
+      if (remoteMessage) {
+        console.log(
+          'Notification caused app to open from quit state:',
+          remoteMessage.notification
+        );
+        // Navigate to the correct screen based on remoteMessage.data
+      }
+    });
 
     return unsubscribe;
   }, []);
@@ -121,7 +113,6 @@ export const NotificationsProvider = ({
       typeof user.uid === 'string'
     ) {
       const q = query(
-        // collection(db, 'users', user.uid, 'notifications'),
         collection(
           db,
           'organizations',
@@ -132,16 +123,20 @@ export const NotificationsProvider = ({
           user.uid,
           'notifications'
         ),
-        orderBy('date', 'desc')
+        orderBy('createdAt', 'desc')
       );
 
       const unsubscribe = onSnapshot(q, (snapshot) => {
-        const newNotifications = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Notification[];
+        const newNotifications = snapshot.docs.map(
+          (doc) =>
+            ({
+              id: doc.id,
+              ...doc.data(),
+            } as Notification)
+        );
+
         setNotifications(newNotifications);
-        const unread = newNotifications.filter((n) => !n.data.read).length;
+        const unread = newNotifications.filter((n) => !n.read).length;
         setUnreadCount(unread);
       });
 
@@ -173,17 +168,28 @@ export const NotificationsProvider = ({
   };
 
   const refreshNotifications = async () => {
+    // This function is kept for manual refresh if needed, but is no longer called automatically.
     const notificationsCollection = getNotificationsCollection();
     if (!notificationsCollection) return;
 
-    const q = query(notificationsCollection, orderBy('date', 'desc'));
+    const q = query(notificationsCollection);
     const snapshot = await getDocs(q);
-    const newNotifications = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Notification[];
+    const newNotifications = snapshot.docs
+      .map(
+        (doc) =>
+          ({
+            id: doc.id,
+            ...doc.data(),
+          } as Notification)
+      )
+      .sort((a, b) => {
+        if (a.createdAt && b.createdAt) {
+          return b.createdAt.toMillis() - a.createdAt.toMillis();
+        }
+        return 0;
+      });
     setNotifications(newNotifications);
-    const unread = newNotifications.filter((n) => !n.data.read).length;
+    const unread = newNotifications.filter((n) => !n.read).length;
     setUnreadCount(unread);
   };
 
@@ -194,10 +200,10 @@ export const NotificationsProvider = ({
     const batch = writeBatch(db);
     const querySnapshot = await getDocs(notificationsCollection);
     querySnapshot.forEach((document) => {
-      batch.update(document.ref, { 'data.read': true });
+      batch.update(document.ref, { read: true });
     });
+    // onSnapshot will handle the update automatically
     await batch.commit();
-    refreshNotifications();
   };
 
   const markOneAsRead = async (notificationId: string) => {
@@ -205,8 +211,8 @@ export const NotificationsProvider = ({
     if (!notificationsCollection) return;
 
     const notificationRef = doc(notificationsCollection, notificationId);
-    await updateDoc(notificationRef, { 'data.read': true });
-    refreshNotifications();
+    // onSnapshot will handle the update automatically
+    await updateDoc(notificationRef, { read: true });
   };
 
   const clearAll = async () => {
@@ -218,8 +224,8 @@ export const NotificationsProvider = ({
     querySnapshot.forEach((document) => {
       batch.delete(document.ref);
     });
+    // onSnapshot will handle the update automatically
     await batch.commit();
-    refreshNotifications();
   };
 
   const clearLocalNotifications = () => {
