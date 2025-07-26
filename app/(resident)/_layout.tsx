@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 
 function CustomDrawerContent(props: any) {
   const { logout } = useAuth();
+  const router = useRouter();
   const destructiveColor = useThemeColor({}, 'error');
 
   return (
@@ -25,16 +26,28 @@ function CustomDrawerContent(props: any) {
         style={{
           borderWidth: 0.5,
           borderColor: useThemeColor({}, 'divider'),
-          marginVertical: 10,
+          marginVertical: 20,
         }}
       />
       <DrawerItem
         label='Logout'
         labelStyle={{ color: destructiveColor }}
-        icon={({ color, size }) => (
+        icon={({ size }) => (
           <MaterialIcons name='logout' size={size} color={destructiveColor} />
         )}
         onPress={logout}
+      />
+      <DrawerItem
+        label='Delete Account'
+        labelStyle={{ color: destructiveColor }}
+        icon={({ size }) => (
+          <MaterialIcons
+            name='delete-forever'
+            size={size}
+            color={destructiveColor}
+          />
+        )}
+        onPress={() => router.push('/(resident)/delete-account')}
       />
     </DrawerContentScrollView>
   );
@@ -134,6 +147,13 @@ export default function ResidentLayout() {
             }}
           />
           {/* Hidden screens will not appear in the drawer */}
+          <Drawer.Screen
+            name='delete-account/index'
+            options={{
+              drawerItemStyle: { display: 'none' },
+              title: 'Delete Account',
+            }}
+          />
           <Drawer.Screen
             name='my-profile/vehicle-modal'
             options={{

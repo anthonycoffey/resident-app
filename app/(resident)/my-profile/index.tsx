@@ -8,6 +8,12 @@ import {
 import { View, Text, useThemeColor } from '@/components/Themed';
 import { Link } from 'expo-router';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import {
+  getAuth,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
+} from 'firebase/auth';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
@@ -27,6 +33,10 @@ const MyProfileScreenContent = () => {
 
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const textColor = useThemeColor({}, 'text');
   const labelColor = useThemeColor({}, 'label');
@@ -77,6 +87,37 @@ const MyProfileScreenContent = () => {
       Alert.alert('Error', errorMessage);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!oldPassword || !newPassword) {
+      Alert.alert('Error', 'Both current and new passwords are required.');
+      return;
+    }
+
+    setIsChangingPassword(true);
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (!user || !user.email) {
+      Alert.alert('Error', 'Could not find user information.');
+      setIsChangingPassword(false);
+      return;
+    }
+
+    try {
+      const credential = EmailAuthProvider.credential(user.email, oldPassword);
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, newPassword);
+      Alert.alert('Success', 'Your password has been updated successfully.');
+      setOldPassword('');
+      setNewPassword('');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An unknown error occurred.';
+      Alert.alert('Error', message);
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -169,6 +210,37 @@ const MyProfileScreenContent = () => {
         onPress={handleSaveProfile}
         disabled={saving}
       />
+      <Divider style={{ marginVertical: 20 }} />
+      <View style={{ backgroundColor: 'transparent' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15, backgroundColor: 'transparent' }}>
+          <MaterialIcons name="lock" size={24} color={textColor} />
+          <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>Change Password</Text>
+        </View>
+        <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>Current Password</Text>
+        <Input
+          placeholder="Current Password"
+          value={oldPassword}
+          onChangeText={setOldPassword}
+          secureTextEntry
+        />
+        <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>New Password</Text>
+        <Input
+          placeholder="New Password"
+          value={newPassword}
+          onChangeText={setNewPassword}
+          secureTextEntry={!isPasswordVisible}
+          rightIcon={
+            <MaterialIcons name={isPasswordVisible ? 'visibility-off' : 'visibility'} size={24} color={textColor} />
+          }
+          onRightIconPress={() => setIsPasswordVisible(!isPasswordVisible)}
+        />
+        <Button
+          title={isChangingPassword ? 'Changing...' : 'Change Password'}
+          onPress={handleChangePassword}
+          disabled={isChangingPassword}
+          style={{ marginTop: 10 }}
+        />
+      </View>
     </View>
   );
 

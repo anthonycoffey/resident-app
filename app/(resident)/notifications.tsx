@@ -90,7 +90,7 @@ export default function NotificationsScreen() {
         <Button
           title="Mark All as Read"
           onPress={markAllAsRead}
-          icon="done-all"
+          icon="mark-email-read"
         />
       </View>
       <FlatList
@@ -116,6 +116,7 @@ export default function NotificationsScreen() {
           title="Clear All Notifications"
           onPress={handleClearAll}
           variant="destructive"
+          icon="delete-forever"
         />
       </View>
     </SafeAreaView>

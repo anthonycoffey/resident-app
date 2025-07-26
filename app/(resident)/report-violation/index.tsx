@@ -4,7 +4,9 @@ import {
   Alert,
   Image,
   useColorScheme,
+  ScrollView,
 } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from 'expo-router';
 
@@ -138,21 +140,14 @@ const ReportViolationScreen = () => {
     }
   };
 
-  const renderHeader = () => (
-    <View>
-      <Text
-        style={{
-          fontSize: 18,
-          fontWeight: 'bold',
-          marginHorizontal: 10,
-          marginTop: 16,
-          marginBottom: 4,
-          color: themeColors.text,
-        }}
-      >
-        Report Violation
-      </Text>
+  return (
+    <ScrollView style={{ flex: 1 }}>
       <Card>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15, backgroundColor: 'transparent' }}>
+          <MaterialIcons name="report" size={24} color={themeColors.text} />
+          <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>Report Violation</Text>
+        </View>
+        <Text style={styles.label}>License Plate</Text>
         <Input
           placeholder='Enter License Plate'
           value={licensePlate}
@@ -160,6 +155,7 @@ const ReportViolationScreen = () => {
           autoCapitalize='characters'
         />
 
+        {/* <Text style={styles.label}>Vehicle Make</Text>
         <Input
           placeholder='Enter Vehicle Make'
           value={make}
@@ -167,6 +163,7 @@ const ReportViolationScreen = () => {
           autoCapitalize='words'
         />
 
+        <Text style={styles.label}>Vehicle Model</Text>
         <Input
           placeholder='Enter Vehicle Model'
           value={model}
@@ -174,6 +171,7 @@ const ReportViolationScreen = () => {
           autoCapitalize='words'
         />
 
+        <Text style={styles.label}>Additional Info (Optional)</Text>
         <Input
           placeholder='Additional Info (Optional)'
           value={additionalInfo}
@@ -181,8 +179,9 @@ const ReportViolationScreen = () => {
           multiline
           numberOfLines={4}
           style={{ height: 100, textAlignVertical: 'top' }}
-        />
+        /> */}
 
+        <Text style={styles.label}>Violation Type</Text>
         <Dropdown
           style={[
             styles.dropdown,
@@ -230,15 +229,33 @@ const ReportViolationScreen = () => {
           style={styles.submitButton}
         />
       </Card>
-    </View>
-  );
 
-  return (
-    <ViolationList ref={violationListRef} ListHeaderComponent={renderHeader} />
+      <Card>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15, backgroundColor: 'transparent' }}>
+          <MaterialIcons name="history" size={24} color={themeColors.text} />
+          <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>My Reported Violations</Text>
+        </View>
+        <ViolationList
+          ref={violationListRef}
+          scrollEnabled={false}
+          ListEmptyComponent={
+            <Text style={{ textAlign: 'center', marginVertical: 20, color: themeColors.label }}>
+              You have not reported any violations.
+            </Text>
+          }
+        />
+      </Card>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+  label: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 5,
+    marginTop: 15,
+  },
   dropdown: {
     height: 50,
     borderWidth: 1,

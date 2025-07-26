@@ -67,159 +67,159 @@ const ViolationList = forwardRef<ViolationListRef, ViolationListProps>(
   (props, ref) => {
     const { user } = useAuth();
     const [violations, setViolations] = useState<Violation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [lastVisible, setLastVisible] =
-    useState<QueryDocumentSnapshot<DocumentData> | null>(null);
-  const [loadingMore, setLoadingMore] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [lastVisible, setLastVisible] =
+      useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+    const [loadingMore, setLoadingMore] = useState(false);
 
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
+    const backgroundColor = useThemeColor({}, 'background');
+    const textColor = useThemeColor({}, 'text');
 
-  const fetchViolations = useCallback(
-    async (isRefresh = false) => {
-      if (!user || !user.claims?.organizationId || !user.claims?.propertyId) {
-        console.error('User data is incomplete to fetch violations.');
-        setLoading(false);
-        return;
-      }
-
-      if (isRefresh) {
-        setRefreshing(true);
-        setLastVisible(null); // Reset for refresh
-      } else if (!lastVisible) {
-        setLoading(true);
-      } else {
-        setLoadingMore(true);
-      }
-
-      try {
-        const organizationId = user.claims.organizationId as string;
-        const propertyId = user.claims.propertyId as string;
-        const violationsCollectionRef = collection(
-          db,
-          'organizations',
-          organizationId,
-          'properties',
-          propertyId,
-          'violations'
-        );
-
-        let q = query(
-          violationsCollectionRef,
-          where('reporterId', '==', user.uid),
-          orderBy('createdAt', 'desc'),
-          limit(10)
-        );
-
-        if (lastVisible && !isRefresh) {
-          q = query(q, startAfter(lastVisible));
+    const fetchViolations = useCallback(
+      async (isRefresh = false) => {
+        if (!user || !user.claims?.organizationId || !user.claims?.propertyId) {
+          console.error('User data is incomplete to fetch violations.');
+          setLoading(false);
+          return;
         }
 
-        const querySnapshot = await getDocs(q);
-        const newViolations = querySnapshot.docs.map(
-          (doc) =>
-            ({
-              id: doc.id,
-              ...doc.data(),
-            } as Violation)
-        );
-
-        setLastVisible(querySnapshot.docs[querySnapshot.docs.length - 1]);
         if (isRefresh) {
-          setViolations(newViolations);
+          setRefreshing(true);
+          setLastVisible(null); // Reset for refresh
+        } else if (!lastVisible) {
+          setLoading(true);
         } else {
-          setViolations((prev) =>
-            lastVisible ? [...prev, ...newViolations] : newViolations
-          );
+          setLoadingMore(true);
         }
-      } catch (error) {
-        console.error('Error fetching violations:', error);
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-        setLoadingMore(false);
-      }
-    },
-    [user, lastVisible]
-  );
 
-  useEffect(() => {
-    fetchViolations();
-  }, [user]);
+        try {
+          const organizationId = user.claims.organizationId as string;
+          const propertyId = user.claims.propertyId as string;
+          const violationsCollectionRef = collection(
+            db,
+            'organizations',
+            organizationId,
+            'properties',
+            propertyId,
+            'violations'
+          );
 
-  useImperativeHandle(ref, () => ({
-    refresh: () => {
-      fetchViolations(true);
-    },
-  }));
+          let q = query(
+            violationsCollectionRef,
+            where('reporterId', '==', user.uid),
+            orderBy('createdAt', 'desc'),
+            limit(10)
+          );
 
-  const onRefresh = () => fetchViolations(true);
+          if (lastVisible && !isRefresh) {
+            q = query(q, startAfter(lastVisible));
+          }
 
-  const loadMore = () => {
-    if (!loadingMore && lastVisible) {
-      fetchViolations();
-    }
-  };
+          const querySnapshot = await getDocs(q);
+          const newViolations = querySnapshot.docs.map(
+            (doc) =>
+              ({
+                id: doc.id,
+                ...doc.data(),
+              } as Violation)
+          );
 
-  const renderItem = ({ item }: { item: Violation }) => (
-    <Card>
-      <Text style={[styles.violationType, { color: textColor }]}>
-        {formatViolationType(item.violationType)}
-      </Text>
-      <View style={styles.detailsContainer}>
-        <Text style={{ color: textColor }}>
-          {formatStandardTime(item.createdAt)}
-        </Text>
-        <Chip label={item.status} variant={getStatusVariant(item.status)} />
-      </View>
-    </Card>
-  );
-
-  if (loading && !refreshing) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor,
-        }}
-      >
-        <ActivityIndicator size="large" />
-      </View>
+          setLastVisible(querySnapshot.docs[querySnapshot.docs.length - 1]);
+          if (isRefresh) {
+            setViolations(newViolations);
+          } else {
+            setViolations((prev) =>
+              lastVisible ? [...prev, ...newViolations] : newViolations
+            );
+          }
+        } catch (error) {
+          console.error('Error fetching violations:', error);
+        } finally {
+          setLoading(false);
+          setRefreshing(false);
+          setLoadingMore(false);
+        }
+      },
+      [user, lastVisible]
     );
-  }
 
-  return (
-    <FlatList
-      data={violations}
-      renderItem={renderItem}
-      keyExtractor={(item) => item.id}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+    useEffect(() => {
+      fetchViolations();
+    }, [user]);
+
+    useImperativeHandle(ref, () => ({
+      refresh: () => {
+        fetchViolations(true);
+      },
+    }));
+
+    const onRefresh = () => fetchViolations(true);
+
+    const loadMore = () => {
+      if (!loadingMore && lastVisible) {
+        fetchViolations();
       }
-      onEndReached={loadMore}
-      onEndReachedThreshold={0.5}
-      ListFooterComponent={loadingMore ? <ActivityIndicator /> : null}
-      ListEmptyComponent={
+    };
+
+    const renderItem = ({ item }: { item: Violation }) => (
+      <Card>
+        <Text style={[styles.violationType, { color: textColor }]} >
+          {formatViolationType(item.violationType)}
+        </Text>
+        <View style={styles.detailsContainer}>
+          <Text style={{ color: textColor }} >
+            {formatStandardTime(item.createdAt)}
+          </Text>
+          <Chip label={item.status} variant={getStatusVariant(item.status)} />
+        </View>
+      </Card>
+    );
+
+    if (loading && !refreshing) {
+      return (
         <View
           style={{
             flex: 1,
             justifyContent: 'center',
             alignItems: 'center',
-            marginTop: 24,
+            backgroundColor,
           }}
         >
-          <Text style={{ color: textColor, fontSize: 18 }}>
-            You have not reported any violations.
-          </Text>
+          <ActivityIndicator size="large" />
         </View>
-      }
-      {...props}
-    />
-  );
-}
+      );
+    }
+
+    return (
+      <FlatList
+        data={violations}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={loadingMore ? <ActivityIndicator /> : null}
+        ListEmptyComponent={
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginTop: 24,
+            }}
+          >
+            <Text style={{ color: textColor, fontSize: 18 }} >
+              You have not reported any violations.
+            </Text>
+          </View>
+        }
+        {...props}
+      />
+    );
+  }
 );
 
 export default ViolationList;

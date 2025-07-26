@@ -14,6 +14,7 @@ import { useThemeColor, View, Text } from '@/components/Themed';
 import {
   getViolationDetails,
   acknowledgeViolation,
+  claimViolation,
 } from '@/lib/services/violationService';
 import { useAuth } from '@/lib/providers/AuthProvider';
 import { formatRelativeTime, formatStandardTime } from '@/lib/utils/dates';
@@ -51,7 +52,7 @@ export default function ViolationDetailScreen() {
       setViolation({ ...result, id: violationId });
     } catch (err) {
       setError('Failed to fetch violation details.');
-      console.error(err);
+      console.error({err});
     } finally {
       setLoading(false);
     }
@@ -154,7 +155,26 @@ export default function ViolationDetailScreen() {
           ({formatRelativeTime(violation.createdAt)})
         </Text>
 
-        {violation.status === 'pending' && (
+        {(violation.status === 'pending' || violation.status === 'reported') &&
+          !violation.residentId && (
+          <Button
+            title="Claim Unregistered Vehicle"
+            onPress={async () => {
+              if (user?.uid) {
+                await claimViolation(
+                  violation.id,
+                  user.uid,
+                  user.organizationId!,
+                  user.propertyId!
+                );
+                fetchViolation();
+              }
+            }}
+            style={{ marginTop: 20 }}
+          />
+        )}
+
+        {violation.status === 'pending' && violation.residentId && (
           <Button
             title="I'm Moving It!"
             onPress={handleAcknowledge}

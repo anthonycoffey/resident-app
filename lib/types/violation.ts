@@ -12,7 +12,8 @@ export interface Violation {
     | 'pending'
     | 'acknowledged'
     | 'escalated'
-    | 'reported';
+    | 'reported'
+    | 'claimed';
   createdAt: {
     toDate: () => Date;
   };

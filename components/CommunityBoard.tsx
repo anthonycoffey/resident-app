@@ -9,44 +9,38 @@ import { View, Text, useThemeColor } from '@/components/Themed';
 import { db } from '@/lib/config/firebaseConfig';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { useAuth } from '@/lib/providers/AuthProvider';
-import CommunityBulletinCard, {
-  CommunityBulletin,
-} from './ui/CommunityBulletinCard';
+import NotificationCard from './ui/NotificationCard';
+import { Notification } from '@/lib/types/notification';
 
 const CommunityBoard = () => {
   const { user } = useAuth();
-  const [bulletins, setBulletins] = useState<CommunityBulletin[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const primaryColor = useThemeColor({}, 'primary');
 
-  const fetchBulletins = async () => {
-    if (!user?.claims?.organizationId) {
+  const fetchNotifications = async () => {
+    if (!user?.organizationId || !user?.propertyId) {
       setLoading(false);
       return;
     }
 
     try {
-      const orgId = user.claims.organizationId;
-      const bulletinsCollectionPath = `organizations/${orgId}/bulletins`;
+      const { organizationId, propertyId } = user;
+      const notificationsCollectionPath = `organizations/${organizationId}/properties/${propertyId}/notifications`;
       const q = query(
-        collection(db, bulletinsCollectionPath),
+        collection(db, notificationsCollectionPath),
         orderBy('createdAt', 'desc')
       );
       const querySnapshot = await getDocs(q);
-      const fetchedBulletins = querySnapshot.docs.map((doc) => {
+      const fetchedNotifications = querySnapshot.docs.map((doc) => {
         const data = doc.data();
         return {
           id: doc.id,
-          type: data.type,
-          title: data.title,
-          message: data.message,
-          imageUrl: data.imageUrl,
-          licensePlate: data.licensePlate,
-          status: data.status,
-        } as CommunityBulletin;
+          ...data,
+        } as Notification;
       });
-      setBulletins(fetchedBulletins);
+      setNotifications(fetchedNotifications);
     } catch (error) {
       // Temporarily suppress Firebase permissions errors if 'bulletins' collection doesn't exist.
       // This allows the community board to render without bulletins instead of showing an error.
@@ -58,28 +52,28 @@ const CommunityBoard = () => {
   };
 
   useEffect(() => {
-    fetchBulletins();
+    fetchNotifications();
   }, [user]);
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchBulletins();
+    fetchNotifications();
   };
 
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={primaryColor} />
+        <ActivityIndicator size='large' color={primaryColor} />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      {bulletins.length > 0 ? (
+      {notifications.length > 0 ? (
         <FlatList
-          data={bulletins}
-          renderItem={({ item }) => <CommunityBulletinCard bulletin={item} />}
+          data={notifications}
+          renderItem={({ item }) => <NotificationCard notification={item} />}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           refreshControl={
@@ -89,7 +83,7 @@ const CommunityBoard = () => {
       ) : (
         <View style={styles.centered}>
           <Text style={styles.noBulletinsText}>
-            No community bulletins at this time.
+            No community notifications at this time.
           </Text>
         </View>
       )}
@@ -112,7 +106,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   listContent: {
-    paddingVertical: 10,
+    paddingHorizontal: 8,
   },
 });
 
