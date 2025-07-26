@@ -1,23 +1,22 @@
-// Based on the documentation provided
+import { Timestamp } from "firebase/firestore";
+
+export type ViolationStatus =
+  | 'pending'
+  | 'acknowledged'
+  | 'escalated'
+  | 'reported'
+  | 'claimed';
+
 export interface Violation {
   id: string;
-  licensePlate: string;
-  violationType: string;
-  photoUrl: string;
   reporterId: string;
-  residentId: string | null;
+  residentId?: string;
   propertyId: string;
   organizationId: string;
-  status:
-    | 'pending'
-    | 'acknowledged'
-    | 'escalated'
-    | 'reported'
-    | 'claimed';
-  createdAt: {
-    toDate: () => Date;
-  };
-  acknowledgedAt?: {
-    toDate: () => Date;
-  };
+  licensePlate: string;
+  status: ViolationStatus;
+  violationType: string;
+  createdAt: Timestamp | { _seconds: number; _nanoseconds: number };
+  claimedAt: Timestamp | { _seconds: number; _nanoseconds: number };
+  photoUrl: string;
 }
