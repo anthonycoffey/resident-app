@@ -9,11 +9,13 @@ import {
 import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
+  OAuthProvider,
   signInWithCredential,
 } from 'firebase/auth';
 import { auth } from '@/lib/config/firebaseConfig';
 import { useAuth } from '@/lib/providers/AuthProvider';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import appleAuth from '@invertase/react-native-apple-authentication';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
@@ -78,6 +80,49 @@ const LoginScreen = () => {
       }
     } catch (error: any) {
       Alert.alert('Google Login Error', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAppleLogin = async () => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      // Start the Apple sign-in request
+      const appleAuthRequestResponse = await appleAuth.performRequest({
+        requestedOperation: appleAuth.Operation.LOGIN,
+        requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
+      });
+
+      // Ensure we have an identity token
+      if (!appleAuthRequestResponse.identityToken) {
+        throw new Error('Apple Sign-In failed: no identity token returned.');
+      }
+
+      // Create a Firebase credential from the response
+      const { identityToken, nonce } = appleAuthRequestResponse;
+      const appleProvider = new OAuthProvider('apple.com');
+      const credential = appleProvider.credential({
+        idToken: identityToken!,
+        rawNonce: nonce,
+      });
+
+      // Sign-in the user with the credential
+      const userCredential = await signInWithCredential(auth, credential);
+
+      // Force a refresh of the user's ID token to get custom claims
+      if (userCredential.user) {
+        await userCredential.user.getIdToken(true);
+        await updateUser(userCredential.user);
+      }
+    } catch (error: any) {
+      if (error.code === '1001') {
+        // This error code means the user canceled the sign-in flow
+        console.log('Apple Sign-In canceled by user.');
+      } else {
+        Alert.alert('Apple Login Error', error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -166,6 +211,21 @@ const LoginScreen = () => {
             style={[styles.socialButton, { borderColor: '#db4437' }]}
             textStyle={styles.googleText}
           />
+          <Button
+            title='Sign In with Apple'
+            onPress={handleAppleLogin}
+            variant='outline'
+            style={[
+              styles.socialButton,
+              {
+                borderColor: colorScheme === 'dark' ? '#FFFFFF' : '#000000',
+              },
+            ]}
+            textStyle={[
+              styles.appleText,
+              { color: colorScheme === 'dark' ? '#FFFFFF' : '#000000' },
+            ]}
+          />
           {/* <Button
             title='Sign In with Microsoft'
             onPress={handleMicrosoftLogin}
@@ -225,6 +285,9 @@ const styles = StyleSheet.create({
   },
   googleText: {
     color: '#db4437',
+  },
+  appleText: {
+    color: '#000000',
   },
   microsoftText: {
     color: '#0078D4',

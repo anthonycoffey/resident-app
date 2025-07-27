@@ -4,6 +4,7 @@ import {
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
+  SafeAreaView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { View, Text, useThemeColor } from '@/components/Themed';
@@ -171,7 +172,7 @@ const ServiceRequestsScreen = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {serviceRequests.length > 0 ? (
         <>
           <FlatList
@@ -242,7 +243,7 @@ const ServiceRequestsScreen = () => {
           You have no recent service requests.
         </Text>
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 

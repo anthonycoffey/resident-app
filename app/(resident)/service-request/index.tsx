@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView } from 'react-native';
+import { SafeAreaView, ScrollView } from 'react-native';
 import { Text, View, useThemeColor } from '@/components/Themed';
 import Card from '@/components/ui/Card';
 import CreateServiceRequestForm from '@/components/CreateServiceRequestForm';
@@ -16,18 +16,20 @@ const ServiceRequestScreen = () => {
   };
 
   return (
-    <ScrollView style={{ flex: 1 }}>
-      <Card>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, backgroundColor: 'transparent' }}>
-          <MaterialIcons name="build" size={24} color={iconColor} />
-          <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>Service Request Form</Text>
-        </View>
-        <CreateServiceRequestForm
-          onServiceRequestSubmitted={handleServiceRequestSubmitted}
-          address={address}
-        />
-      </Card>
-    </ScrollView>
+    <SafeAreaView style={{ flex: 1 }}>
+      <ScrollView style={{ flex: 1 }}>
+        <Card>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, backgroundColor: 'transparent' }}>
+            <MaterialIcons name="build" size={24} color={iconColor} />
+            <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>Service Request Form</Text>
+          </View>
+          <CreateServiceRequestForm
+            onServiceRequestSubmitted={handleServiceRequestSubmitted}
+            address={address}
+          />
+        </Card>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
