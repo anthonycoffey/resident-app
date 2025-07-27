@@ -52,4 +52,4 @@ GoogleService-Info.plist
 
 # misc
 .vscode/
-.env.local
+# .env.local
