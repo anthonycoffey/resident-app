@@ -91,7 +91,7 @@ const ReportViolationScreen = () => {
   };
 
   const handleSubmit = async () => {
-    if (!licensePlate || !violationType || !image || !make || !model) {
+    if (!licensePlate || !violationType || !image) {
       Alert.alert(
         'Missing Information',
         'Please fill out all fields and select an image.'
