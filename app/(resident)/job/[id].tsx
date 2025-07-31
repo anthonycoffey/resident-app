@@ -46,7 +46,7 @@ const JobDetailsScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f0f2f5' }}>
+    <SafeAreaView>
       <Stack.Screen
         options={{
           headerTitle: 'Service Request Details',
@@ -60,7 +60,7 @@ const JobDetailsScreen = () => {
           ),
         }}
       />
-      <ScrollView contentContainerStyle={{ padding: 15 }}>
+      <ScrollView>
         {loading && <ActivityIndicator size='large' color='#0000ff' />}
         {error && (
           <Text style={{ color: 'red', textAlign: 'center', marginTop: 20 }}>
@@ -69,14 +69,7 @@ const JobDetailsScreen = () => {
         )}
         {job && (
           <>
-            <Card
-              style={{
-                marginBottom: 15,
-                padding: 15,
-                borderRadius: 10,
-                backgroundColor: 'white',
-              }}
-            >
+            <Card>
               <Text
                 style={{
                   fontSize: 18,
@@ -96,21 +89,21 @@ const JobDetailsScreen = () => {
               >
                 {job.assignedTechnician.avatar ? (
                   <Avatar
-                  source={{ uri: job.assignedTechnician.avatar }}
-                  size={60}
+                    source={{ uri: job.assignedTechnician.avatar }}
+                    size={60}
                   />
                 ) : (
                   <View
-                  style={{
-                    width: 60,
-                    height: 60,
-                    borderRadius: 30,
-                    backgroundColor: '#e0e0e0',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
+                    style={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: 30,
+                      backgroundColor: '#e0e0e0',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
                   >
-                  <MaterialIcons name="person" size={36} color="#757575" />
+                    <MaterialIcons name='person' size={36} color='#757575' />
                   </View>
                 )}
                 <View
@@ -177,28 +170,19 @@ const JobDetailsScreen = () => {
               </View>
             </Card>
 
-            <Card
-              style={{
-                marginBottom: 15,
-                padding: 15,
-                borderRadius: 10,
-                backgroundColor: 'white',
-              }}
-            >
-              <Text
-                style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}
-              >
+            <Card>
+              <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
                 Service Location
               </Text>
               <Text>{job.Address.fullAddress}</Text>
 
               <MapView
-                provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
+                provider={
+                  Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined
+                }
                 style={{
                   width: '100%',
-                  height: 200,
-                  marginTop: 10,
-                  borderRadius: 8,
+                  height: 400,
                 }}
                 initialRegion={{
                   latitude: job.Address.lat,
@@ -244,14 +228,7 @@ const JobDetailsScreen = () => {
               </MapView>
             </Card>
 
-            <Card
-              style={{
-                marginBottom: 15,
-                padding: 15,
-                borderRadius: 10,
-                backgroundColor: 'white',
-              }}
-            >
+            <Card>
               <Text
                 style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}
               >
@@ -264,14 +241,7 @@ const JobDetailsScreen = () => {
               </Text>
             </Card>
 
-            <Card
-              style={{
-                marginBottom: 15,
-                padding: 15,
-                borderRadius: 10,
-                backgroundColor: 'white',
-              }}
-            >
+            <Card>
               <Text
                 style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}
               >
