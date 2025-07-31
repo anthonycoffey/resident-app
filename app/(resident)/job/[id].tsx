@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  SafeAreaView,
   ActivityIndicator,
-  ScrollView,
-  TouchableOpacity,
   Linking,
   Platform,
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -22,21 +23,36 @@ const JobDetailsScreen = () => {
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchJob = useCallback(() => {
+    if (!id) return Promise.resolve();
+    return getPhoenixJobDetails(id)
+      .then((data) => {
+        setJob(data);
+        setError(null);
+      })
+      .catch((err) => {
+        setError('Failed to load job details.');
+        console.error(err);
+        // Re-throw to be caught by callers
+        throw err;
+      });
+  }, [id]);
 
   useEffect(() => {
-    if (id) {
-      getPhoenixJobDetails(id)
-        .then((data) => {
-          setJob(data);
-          setLoading(false);
-        })
-        .catch((err) => {
-          setError('Failed to load job details.');
-          setLoading(false);
-          console.error(err);
-        });
-    }
-  }, [id]);
+    setLoading(true);
+    fetchJob().finally(() => {
+      setLoading(false);
+    });
+  }, [fetchJob]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchJob().finally(() => {
+      setRefreshing(false);
+    });
+  }, [fetchJob]);
 
   const handleContact = (type: 'sms' | 'tel') => {
     const number = job?.proxy?.ProxyNumber?.number;
@@ -60,8 +76,12 @@ const JobDetailsScreen = () => {
           ),
         }}
       />
-      <ScrollView>
-        {loading && <ActivityIndicator size='large' color='#0000ff' />}
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        {loading && !refreshing && <ActivityIndicator size='large' color='#0000ff' />}
         {error && (
           <Text style={{ color: 'red', textAlign: 'center', marginTop: 20 }}>
             {error}
