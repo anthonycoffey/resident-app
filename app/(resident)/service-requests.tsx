@@ -5,11 +5,18 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   SafeAreaView,
+  RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { View, Text, useThemeColor } from '@/components/Themed';
 import { db } from '@/lib/config/firebaseConfig';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  orderBy,
+} from 'firebase/firestore';
 import { useAuth } from '@/lib/providers/AuthProvider';
 import { Timestamp } from 'firebase/firestore';
 import Card from '@/components/ui/Card';
@@ -114,27 +121,33 @@ const ServiceRequestsScreen = () => {
   const labelColor = useThemeColor({}, 'label');
   const disabledColor = useThemeColor({}, 'divider');
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(0);
   const rowsPerPage = 5;
 
-  useEffect(() => {
-    const fetchServiceRequests = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
+  const fetchServiceRequests = () => {
+    if (!user) {
+      setLoading(false);
+      return () => {};
+    }
 
-      try {
-        const orgId = user.claims?.organizationId;
-        if (!orgId) {
-          throw new Error('User does not have an organizationId claim.');
-        }
-        const servicesCollectionPath = `organizations/${orgId}/services`;
-        const q = query(
-          collection(db, servicesCollectionPath),
-          where('residentId', '==', user.uid)
-        );
-        const querySnapshot = await getDocs(q);
+    const orgId = user.claims?.organizationId;
+    if (!orgId) {
+      console.error('User does not have an organizationId claim.');
+      setLoading(false);
+      return () => {};
+    }
+
+    const servicesCollectionPath = `organizations/${orgId}/services`;
+    const q = query(
+      collection(db, servicesCollectionPath),
+      where('residentId', '==', user.uid),
+      orderBy('submittedAt', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (querySnapshot) => {
         const requests = querySnapshot.docs.map((doc) => {
           const data = doc.data();
           return {
@@ -147,15 +160,28 @@ const ServiceRequestsScreen = () => {
           } as ServiceRequest;
         });
         setServiceRequests(requests);
-      } catch (error) {
-        console.error('Error fetching service requests: ', error);
-      } finally {
         setLoading(false);
+        setRefreshing(false);
+      },
+      (error) => {
+        console.error('Error fetching service requests: ', error);
+        setLoading(false);
+        setRefreshing(false);
       }
-    };
+    );
 
-    fetchServiceRequests();
+    return unsubscribe;
+  };
+
+  useEffect(() => {
+    const unsubscribe = fetchServiceRequests();
+    return () => unsubscribe();
   }, [user]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchServiceRequests();
+  };
 
   if (loading) {
     return (
@@ -180,6 +206,14 @@ const ServiceRequestsScreen = () => {
             renderItem={({ item }) => <ServiceRequestItem item={item} />}
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ flexGrow: 1 }}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={[primaryColor]}
+                tintColor={primaryColor}
+              />
+            }
             ListFooterComponent={
               <View
                 style={[

@@ -5,7 +5,7 @@ import React, {
   useContext,
   ReactNode,
 } from 'react';
-import messaging from '@react-native-firebase/messaging';
+import messaging, {getMessaging} from '@react-native-firebase/messaging';
 import {
   getInitialNotification,
   onMessage,
@@ -75,7 +75,7 @@ export const NotificationsProvider = ({
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    const message = messaging();
+    const message = getMessaging();
     // Handles foreground messages
     const unsubscribe = onMessage(message, async (remoteMessage) => {
       console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));

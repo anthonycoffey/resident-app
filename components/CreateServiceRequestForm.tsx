@@ -253,7 +253,7 @@ const CreateServiceRequestForm = ({
         organizationId: user.organizationId,
         propertyId: user.propertyId,
         residentNotes: residentNotes.trim(),
-        arrivalTime: arrivalTime.toISOString(),
+        serviceDateTime: arrivalTime.toISOString(),
         phone: phone.trim(),
         smsConsent,
         serviceLocationAddress: serviceLocationObject,

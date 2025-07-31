@@ -1,6 +1,10 @@
 import 'react-native-get-random-values';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -24,7 +28,10 @@ Sentry.init({
   // Configure Session Replay
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1,
-  integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+  integrations: [
+    Sentry.mobileReplayIntegration(),
+    Sentry.feedbackIntegration(),
+  ],
 
   // uncomment the line below to enable Spotlight (https://spotlightjs.com)
   // spotlight: __DEV__,
@@ -87,7 +94,8 @@ function RootLayoutNav() {
     }
 
     const roles = user.claims.roles || [];
-    let route: `/(resident)` | `/(service-provider)` | `/(auth)/login` = '/(auth)/login';
+    let route: `/(resident)` | `/(service-provider)` | `/(auth)/login` =
+      '/(auth)/login';
 
     if (roles.includes('resident') || roles.includes('admin')) {
       route = '/(resident)';
@@ -104,13 +112,13 @@ function RootLayoutNav() {
         style={{ flex: 1 }}
       >
         <Stack>
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen name="(resident)" options={{ headerShown: false }} />
+          <Stack.Screen name='(auth)' options={{ headerShown: false }} />
+          <Stack.Screen name='(resident)' options={{ headerShown: false }} />
           <Stack.Screen
-            name="(service-provider)"
+            name='(service-provider)'
             options={{ headerShown: false }}
           />
-          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+          <Stack.Screen name='modal' options={{ presentation: 'modal' }} />
         </Stack>
       </KeyboardAvoidingView>
     </ThemeProvider>

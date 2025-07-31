@@ -24,6 +24,13 @@ export interface Job {
       number: string;
     };
   };
+  notes: string;
+  JobLineItems: {
+    Service: {
+      name: string;
+      description: string;
+    };
+  }[];
   // Add other job properties as needed
   serviceSummary: string;
   serviceType: string;

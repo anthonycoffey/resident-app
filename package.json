@@ -52,6 +52,7 @@
     "react-native-get-random-values": "^1.11.0",
     "react-native-google-places-autocomplete": "^2.5.7",
     "react-native-maps": "^1.24.3",
+    "react-native-maps-directions": "^1.9.0",
     "react-native-multiple-select": "^0.5.12",
     "react-native-popover-view": "^6.1.0",
     "react-native-reanimated": "~3.17.4",

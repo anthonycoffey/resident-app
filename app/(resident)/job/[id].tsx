@@ -10,6 +10,7 @@ import { Text, View } from '@/components/Themed';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapViewDirections from 'react-native-maps-directions';
 import { getPhoenixJobDetails, Job } from '@/lib/services/phoenixService';
 import Card from '@/components/ui/Card';
 import Avatar from '@/components/ui/Avatar';
@@ -203,6 +204,22 @@ const JobDetailsScreen = () => {
                       pinColor='blue'
                     />
                   )}
+                {job.assignedTechnician.latitude &&
+                  job.assignedTechnician.longitude && (
+                    <MapViewDirections
+                      origin={{
+                        latitude: job.Address.lat,
+                        longitude: job.Address.lng,
+                      }}
+                      destination={{
+                        latitude: job.assignedTechnician.latitude,
+                        longitude: job.assignedTechnician.longitude,
+                      }}
+                      apikey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY!}
+                      strokeWidth={3}
+                      strokeColor='hotpink'
+                    />
+                  )}
               </MapView>
             </Card>
 
@@ -239,18 +256,15 @@ const JobDetailsScreen = () => {
               >
                 Service Details
               </Text>
-              <Text>
-                <Text style={{ fontWeight: 'bold' }}>Service Type:</Text>{' '}
-                {job.serviceType}
-              </Text>
-              <Text>
-                <Text style={{ fontWeight: 'bold' }}>Summary:</Text>{' '}
-                {job.serviceSummary}
-              </Text>
-              {job.customerNotes && (
+              {job.JobLineItems.map((item, index) => (
+                <Text key={index}>
+                  <Text style={{ fontWeight: 'bold' }}>Service:</Text>{' '}
+                  {item.Service.name}
+                </Text>
+              ))}
+              {job.notes && (
                 <Text>
-                  <Text style={{ fontWeight: 'bold' }}>Notes:</Text>{' '}
-                  {job.customerNotes}
+                  <Text style={{ fontWeight: 'bold' }}>Notes:</Text> {job.notes}
                 </Text>
               )}
             </Card>

@@ -163,17 +163,17 @@ const ViolationList = forwardRef<ViolationListRef, ViolationListProps>(
     };
 
     const renderItem = ({ item }: { item: Violation }) => (
-      <Card>
-        <Text style={[styles.violationType, { color: textColor }]} >
+      <View style={[styles.card, { backgroundColor }]}>
+        <Text style={[styles.violationType, { color: textColor }]}>
           {formatViolationType(item.violationType)}
         </Text>
         <View style={styles.detailsContainer}>
-          <Text style={{ color: textColor }} >
+          <Text style={{ color: textColor }}>
             {formatStandardTime(item.createdAt)}
           </Text>
           <Chip label={item.status} variant={getStatusVariant(item.status)} />
         </View>
-      </Card>
+      </View>
     );
 
     if (loading && !refreshing) {
@@ -186,7 +186,7 @@ const ViolationList = forwardRef<ViolationListRef, ViolationListProps>(
             backgroundColor,
           }}
         >
-          <ActivityIndicator size="large" />
+          <ActivityIndicator size='large' />
         </View>
       );
     }
@@ -211,7 +211,7 @@ const ViolationList = forwardRef<ViolationListRef, ViolationListProps>(
               marginTop: 24,
             }}
           >
-            <Text style={{ color: textColor, fontSize: 18 }} >
+            <Text style={{ color: textColor, fontSize: 18 }}>
               You have not reported any violations.
             </Text>
           </View>
@@ -227,12 +227,12 @@ export default ViolationList;
 const styles = StyleSheet.create({
   card: {
     marginBottom: 10,
-    padding: 15,
-    borderRadius: 10,
+    padding: 10,
+    borderRadius: 8,
   },
   violationType: {
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 5,
     fontSize: 16,
   },
   detailsContainer: {

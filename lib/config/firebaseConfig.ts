@@ -8,7 +8,6 @@ import {
 import {
   getFirestore,
   connectFirestoreEmulator,
-  enableMultiTabIndexedDbPersistence,
 } from 'firebase/firestore';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
@@ -34,10 +33,10 @@ const firebaseConfig = {
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-
 const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(ReactNativeAsyncStorage),
 });
+console.log('test')
 
 const db = getFirestore(app);
 const functions = getFunctions(app);
