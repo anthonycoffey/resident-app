@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Linking,
+  Platform,
 } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -93,10 +94,25 @@ const JobDetailsScreen = () => {
                   backgroundColor: 'transparent',
                 }}
               >
-                <Avatar
+                {job.assignedTechnician.avatar ? (
+                  <Avatar
                   source={{ uri: job.assignedTechnician.avatar }}
                   size={60}
-                />
+                  />
+                ) : (
+                  <View
+                  style={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: 30,
+                    backgroundColor: '#e0e0e0',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  >
+                  <MaterialIcons name="person" size={36} color="#757575" />
+                  </View>
+                )}
                 <View
                   style={{
                     marginLeft: 15,
@@ -177,8 +193,13 @@ const JobDetailsScreen = () => {
               <Text>{job.Address.fullAddress}</Text>
 
               <MapView
-                provider={PROVIDER_GOOGLE}
-                style={{ height: 200, marginTop: 10, borderRadius: 8 }}
+                provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
+                style={{
+                  width: '100%',
+                  height: 200,
+                  marginTop: 10,
+                  borderRadius: 8,
+                }}
                 initialRegion={{
                   latitude: job.Address.lat,
                   longitude: job.Address.lng,
@@ -257,10 +278,7 @@ const JobDetailsScreen = () => {
                 Service Details
               </Text>
               {job.JobLineItems.map((item, index) => (
-                <Text key={index}>
-                  <Text style={{ fontWeight: 'bold' }}>Service:</Text>{' '}
-                  {item.Service.name}
-                </Text>
+                <Text key={index}>{item.Service.name.trim()}</Text>
               ))}
               {job.notes && (
                 <Text>
