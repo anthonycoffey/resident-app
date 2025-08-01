@@ -187,15 +187,7 @@ const MyProfileScreenContent = () => {
             value={residentData.unitNumber || ''}
             editable={false}
           />
-          <Button
-            title={saving ? 'Saving...' : 'Save Profile'}
-            style={{ marginTop: 20 }}
-            onPress={handleSaveProfile}
-            disabled={saving}
-          />
-        </Card>
-
-        <Card>
+          <Divider style={{ marginVertical: 20 }} />
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15, backgroundColor: 'transparent' }}>
             <MaterialIcons name="directions-car" size={24} color={textColor} />
             <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>Vehicle Information</Text>
@@ -232,8 +224,13 @@ const MyProfileScreenContent = () => {
               />
             </Link>
           )}
+          <Button
+            title={saving ? 'Saving...' : 'Save Profile'}
+            style={{ marginTop: 20 }}
+            onPress={handleSaveProfile}
+            disabled={saving}
+          />
         </Card>
-
         <Card>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15, backgroundColor: 'transparent' }}>
             <MaterialIcons name="lock" size={24} color={textColor} />

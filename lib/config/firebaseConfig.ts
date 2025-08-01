@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
+import { Platform } from 'react-native';
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
@@ -44,7 +45,7 @@ const storage = getStorage(app);
 
 if (__DEV__) {
   console.log('Connecting to Firebase Emulator...');
-  const host = '127.0.0.1';
+  const host = Platform.OS === 'android' ? '10.0.2.2' : '127.0.0.1';
   
   try {
     connectAuthEmulator(auth, `http://${host}:9099`, { disableWarnings: true });

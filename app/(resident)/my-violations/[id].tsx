@@ -5,6 +5,7 @@ import {
   Image,
   StyleSheet,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -49,6 +50,17 @@ export default function ViolationDetailScreen() {
         user.organizationId,
         user.propertyId
       )) as Violation;
+
+      if (
+        Platform.OS === 'android' &&
+        result.photoUrl.includes('localhost')
+      ) {
+        result.photoUrl = result.photoUrl.replace(
+          'localhost',
+          '10.0.2.2'
+        );
+      }
+      
       setViolation({ ...result, id: violationId });
     } catch (err) {
       setError('Failed to fetch violation details.');
@@ -122,7 +134,15 @@ export default function ViolationDetailScreen() {
       />
       <ScrollView>
         <Card>
-          <Image source={{ uri: violation.photoUrl }} style={styles.image} />
+          <Image
+            key={violation.id}
+            source={{ uri: violation.photoUrl }}
+            style={styles.image}
+            resizeMethod="resize"
+            onError={(e) =>
+              console.log('Failed to load image:', e.nativeEvent.error)
+            }
+          />
         <View
           style={{
             flexDirection: 'row',

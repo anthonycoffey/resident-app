@@ -63,14 +63,19 @@ const NotificationCard = ({ notification }: NotificationCardProps) => {
     }
   };
 
+  const isTappable = !!notification.violationId;
+
   return (
-    <TouchableOpacity onPress={handlePress}>
-      <View
-        backgroundColorName='card'
-        style={[
-          styles.card,
-          theme === 'light' ? styles.shadowLight : styles.shadowDark,
-        ]}
+    <View
+      backgroundColorName='card'
+      style={[
+        styles.card,
+        theme === 'light' ? styles.shadowLight : styles.shadowDark,
+      ]}
+    >
+      <TouchableOpacity
+        onPress={isTappable ? handlePress : undefined}
+        activeOpacity={isTappable ? 0.7 : 1.0}
       >
         <View style={styles.header}>
           <Text style={styles.title}>{notification.title}</Text>
@@ -81,19 +86,19 @@ const NotificationCard = ({ notification }: NotificationCardProps) => {
             {formatRelativeTime(notification.createdAt)}
           </Text>
         </View>
-        {notification.vehicle &&
-          !isClaimed &&
-          violation &&
-          (violation.status === 'pending' ||
-            violation.status === 'reported') && (
-          <Button
-            title='Claim Unregistered Vehicle'
-            onPress={handleClaim}
-            style={{ margin: 10 }}
-          />
-        )}
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+      {notification.vehicle &&
+        !isClaimed &&
+        violation &&
+        (violation.status === 'pending' ||
+          violation.status === 'reported') && (
+        <Button
+          title='Claim Unregistered Vehicle'
+          onPress={handleClaim}
+          style={{ margin: 10 }}
+        />
+      )}
+    </View>
   );
 };
 
