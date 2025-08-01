@@ -38,7 +38,15 @@ export default function ViolationDetailScreen() {
 
   const fetchViolation = useCallback(async () => {
     if (!violationId || !user?.organizationId || !user?.propertyId) {
-      setError('Required information is missing to fetch violation details.');
+      // This check is now primarily a safeguard, as the useEffect should prevent this.
+      const errorMsg =
+        'Required information is missing to fetch violation details.';
+      console.error(errorMsg, {
+        violationId,
+        organizationId: user?.organizationId,
+        propertyId: user?.propertyId,
+      });
+      setError(errorMsg);
       setLoading(false);
       return;
     }
@@ -55,24 +63,23 @@ export default function ViolationDetailScreen() {
         Platform.OS === 'android' &&
         result.photoUrl.includes('localhost')
       ) {
-        result.photoUrl = result.photoUrl.replace(
-          'localhost',
-          '10.0.2.2'
-        );
+        result.photoUrl = result.photoUrl.replace('localhost', '10.0.2.2');
       }
-      
+
       setViolation({ ...result, id: violationId });
     } catch (err) {
       setError('Failed to fetch violation details.');
-      console.error({err});
+      console.error({ err });
     } finally {
       setLoading(false);
     }
-  }, [violationId, user?.organizationId, user?.propertyId]);
+  }, [violationId, user]);
 
   useEffect(() => {
-    fetchViolation();
-  }, [fetchViolation]);
+    if (violationId && user?.organizationId && user?.propertyId) {
+      fetchViolation();
+    }
+  }, [violationId, user?.organizationId, user?.propertyId, fetchViolation]);
 
   const handleAcknowledge = async () => {
     if (!violation) return;
