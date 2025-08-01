@@ -227,6 +227,8 @@ const CreateServiceRequestForm = ({
         console.log('Fetched services:', { services });
         setPhoenixServices(services);
       } catch (err) {
+        const reason = err instanceof Error ? err.message : String(err);
+        console.log(`Service fetch failed. Reason: ${reason}`);
         console.error('Failed to load service types:', err);
         setServicesError('Failed to load service types.');
       } finally {
