@@ -7,12 +7,15 @@ import ChatInput from '@/components/ChatInput';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 type ChatMessage = {
   id: string;
   role: 'user' | 'assistant' | 'system_notification';
   content: string;
   timestamp: Date;
+  isReported?: boolean;
 };
 
 const AiAssistantScreen = () => {
@@ -79,6 +82,61 @@ const AiAssistantScreen = () => {
     }
   };
 
+  const handleReportMessage = async (messageId: string) => {
+    const messageToReport = messages.find((m) => m.id === messageId);
+    if (!messageToReport) return;
+
+    Alert.alert(
+      'Report Message',
+      'Are you sure you want to report this message as offensive?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Report',
+          onPress: async () => {
+            try {
+              const auth = getAuth();
+              const user = auth.currentUser;
+
+              if (!user) {
+                throw new Error('You must be logged in to report a message.');
+              }
+
+              const idTokenResult = await user.getIdTokenResult();
+              const firestore = getFirestore();
+              await addDoc(collection(firestore, 'reportedMessages'), {
+                messageId: messageToReport.id,
+                messageContent: messageToReport.content,
+                reporterId: user.uid,
+                reportedAt: serverTimestamp(),
+                reporterClaims: {
+                  organizationId: idTokenResult.claims.organizationId,
+                  roles: idTokenResult.claims.roles,
+                },
+              });
+
+              setMessages((prevMessages) =>
+                prevMessages.map((m) =>
+                  m.id === messageId ? { ...m, isReported: true } : m
+                )
+              );
+
+              Alert.alert('Report Submitted', 'Thank you for your feedback.');
+            } catch (err) {
+              const errorMessage =
+                err instanceof Error
+                  ? err.message
+                  : 'An unknown error occurred.';
+              setError(errorMessage);
+              console.error('Error reporting message:', err);
+            }
+          },
+          style: 'destructive',
+        },
+      ]
+    );
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <Button
@@ -101,7 +159,11 @@ const AiAssistantScreen = () => {
             </Text>
           )}
           <View style={{ flex: 1, backgroundColor: 'transparent' }}>
-            <MessageList messages={messages} isLoading={isLoading} />
+            <MessageList
+              messages={messages}
+              isLoading={isLoading}
+              onReportMessage={handleReportMessage}
+            />
           </View>
           <ChatInput
             ref={chatInputRef}

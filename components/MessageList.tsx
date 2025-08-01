@@ -1,20 +1,22 @@
 import React from 'react';
-import { ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { View, Text, useThemeColor } from '@/components/Themed';
-
+import { Feather } from '@expo/vector-icons';
 type ChatMessage = {
   id: string;
   role: 'user' | 'assistant' | 'system_notification';
   content: string;
   timestamp: Date;
+  isReported?: boolean;
 };
 
 type MessageListProps = {
   messages: ChatMessage[];
   isLoading: boolean;
+  onReportMessage: (messageId: string) => void;
 };
 
-const MessageList = ({ messages, isLoading }: MessageListProps) => {
+const MessageList = ({ messages, isLoading, onReportMessage }: MessageListProps) => {
   const userMessageBg = useThemeColor({}, 'primary');
   const assistantMessageBg = useThemeColor({}, 'secondary');
   const systemMessageBg = useThemeColor({}, 'error');
@@ -47,6 +49,19 @@ const MessageList = ({ messages, isLoading }: MessageListProps) => {
           ]}
         >
           <Text style={[styles.messageText, { color: getTextColor(message.role) }]}>{message.content}</Text>
+          {message.role === 'assistant' && (
+            <TouchableOpacity
+              onPress={() => onReportMessage(message.id)}
+              disabled={message.isReported}
+              style={styles.reportButton}
+            >
+              <Feather
+                name="flag"
+                size={16}
+                color={message.isReported ? 'gray' : '#fff'}
+              />
+            </TouchableOpacity>
+          )}
         </View>
       ))}
       {isLoading && (
@@ -68,6 +83,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 10,
     maxWidth: '80%',
+    position: 'relative',
+  },
+  reportButton: {
+    position: 'absolute',
+    bottom: 5,
+    right: 5,
+    padding: 5,
   },
   userMessage: {
     alignSelf: 'flex-end',
