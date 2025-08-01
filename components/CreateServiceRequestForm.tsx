@@ -91,9 +91,27 @@ const CreateServiceRequestForm = ({
   const [servicesLoading, setServicesLoading] = useState(true);
   const [servicesError, setServicesError] = useState<string | null>(null);
 
+  const handlePhoneChange = (text: string) => {
+    const cleaned = text.replace(/\D/g, '');
+    const match = cleaned.match(/^(\d{0,3})(\d{0,3})(\d{0,4})$/);
+    if (match) {
+      let formatted = '';
+      if (match[1]) {
+        formatted += match[1];
+      }
+      if (match[2]) {
+        formatted += `-${match[2]}`;
+      }
+      if (match[3]) {
+        formatted += `-${match[3]}`;
+      }
+      setPhone(formatted);
+    }
+  };
+
   useEffect(() => {
     if (residentProfile?.phone) {
-      setPhone(residentProfile.phone);
+      handlePhoneChange(residentProfile.phone);
     }
   }, [residentProfile]);
 
@@ -357,8 +375,9 @@ const CreateServiceRequestForm = ({
       <Input
         placeholder='Your contact phone number'
         value={phone}
-        onChangeText={setPhone}
+        onChangeText={handlePhoneChange}
         keyboardType='phone-pad'
+        maxLength={12}
       />
 
       <Text style={[styles.label, { color: labelColor }]}>
