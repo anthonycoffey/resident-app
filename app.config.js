@@ -19,7 +19,7 @@ module.exports = ({ config }) => {
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON,
       config: {
         googleMaps: {
-          apiKey: process.env.GOOGLE_MAPS_API_KEY,
+          apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
         },
       },
     },
@@ -31,7 +31,7 @@ module.exports = ({ config }) => {
       ...config.ios,
       googleServicesFile: process.env.GOOGLE_SERVICES_PLIST,
       config: {
-        googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
+        googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
       },
     },
   };
