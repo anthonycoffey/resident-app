@@ -1,7 +1,7 @@
 {
   "name": "amenilink-resident",
   "main": "expo-router/entry",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "scripts": {
     "start": "expo start",
     "start:android": "npx expo start --dev-client --android",

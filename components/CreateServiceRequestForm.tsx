@@ -410,7 +410,7 @@ const CreateServiceRequestForm = ({
             flex: 1,
             alignItems: 'center',
             padding: 10,
-            // backgroundColor: 'transparent',
+            backgroundColor: 'transparent',
           }}
         >
           <DateTimePicker
@@ -469,7 +469,7 @@ const CreateServiceRequestForm = ({
           Request service at a different address?
         </Text>
         <Switch
-          trackColor={{ false: '#767577', true: primaryColor }}
+          trackColor={{ false: dividerColor, true: primaryColor }}
           thumbColor={useThemeColor({}, 'text')}
           onValueChange={(value) => {
             setIsOffPremise(value);
@@ -489,6 +489,10 @@ const CreateServiceRequestForm = ({
           backgroundColor: inputBackgroundColor,
           borderColor: dividerColor,
           borderWidth: 1,
+        }}
+        dropDownContainerStyle={{
+          backgroundColor: inputBackgroundColor,
+          borderColor: dividerColor,
         }}
         textStyle={{ color: textColor }}
         placeholderStyle={{ color: labelColor }}
@@ -518,6 +522,10 @@ const CreateServiceRequestForm = ({
         modalProps={{
           animationType: 'fade',
         }}
+        modalTitleStyle={{ color: textColor }}
+        modalContentContainerStyle={{
+          backgroundColor: inputBackgroundColor,
+        }}
       />
 
       {residentProfile &&
@@ -534,6 +542,10 @@ const CreateServiceRequestForm = ({
                 borderColor: dividerColor,
                 borderWidth: 1,
               }}
+              dropDownContainerStyle={{
+                backgroundColor: inputBackgroundColor,
+                borderColor: dividerColor,
+              }}
               textStyle={{ color: textColor }}
               placeholderStyle={{ color: labelColor }}
               open={openVehicles}
@@ -548,6 +560,10 @@ const CreateServiceRequestForm = ({
               listMode='MODAL'
               modalProps={{
                 animationType: 'fade',
+              }}
+              modalTitleStyle={{ color: textColor }}
+              modalContentContainerStyle={{
+                backgroundColor: inputBackgroundColor,
               }}
             />
           </>
@@ -627,39 +643,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     flex: 1,
   },
-  input: {
-    height: 40,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    width: '100%',
-  },
   switchContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 15,
-  },
-  dropdown: {
-    height: 50,
-    borderColor: 'gray',
-    borderWidth: 0.5,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-  },
-  placeholderStyle: {
-    fontSize: 16,
-  },
-  selectedTextStyle: {
-    fontSize: 16,
-  },
-  iconStyle: {
-    width: 20,
-    height: 20,
-  },
-  inputSearchStyle: {
-    height: 40,
-    fontSize: 16,
   },
 });
 

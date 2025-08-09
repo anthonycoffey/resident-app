@@ -40,14 +40,18 @@ const formatViolationType = (type: string) => {
 
 const getStatusVariant = (status: string) => {
   switch (status.toLowerCase()) {
-    case 'pending':
-      return 'warning';
-    case 'acknowledged':
-      return 'success';
-    case 'escalated':
-      return 'error';
     case 'reported':
       return 'primary';
+    case 'claimed':
+      return 'secondary';
+    case 'acknowledged':
+      return 'success';
+    case 'resolved':
+      return 'success';
+    case 'pending_tow':
+      return 'warning';
+    case 'towed':
+      return 'error';
     default:
       return 'primary';
   }

@@ -1,11 +1,12 @@
 import { Timestamp } from "firebase/firestore";
 
 export type ViolationStatus =
-  | 'pending'
-  | 'acknowledged'
-  | 'escalated'
   | 'reported'
-  | 'claimed';
+  | 'claimed'
+  | 'acknowledged'
+  | 'resolved'
+  | 'pending_tow'
+  | 'towed';
 
 export interface Violation {
   id: string;

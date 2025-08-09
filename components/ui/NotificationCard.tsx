@@ -90,8 +90,7 @@ const NotificationCard = ({ notification }: NotificationCardProps) => {
       {notification.vehicle &&
         !isClaimed &&
         violation &&
-        (violation.status === 'pending' ||
-          violation.status === 'reported') && (
+        violation.status === 'reported' && (
         <Button
           title='Claim Unregistered Vehicle'
           onPress={handleClaim}

@@ -22,6 +22,25 @@ import { formatRelativeTime, formatStandardTime } from '@/lib/utils/dates';
 import { Violation } from '@/lib/types/violation';
 import Chip from '@/components/ui/Chip';
 
+const getStatusVariant = (status: string) => {
+  switch (status.toLowerCase()) {
+    case 'reported':
+      return 'primary';
+    case 'claimed':
+      return 'secondary';
+    case 'acknowledged':
+      return 'success';
+    case 'resolved':
+      return 'success';
+    case 'pending_tow':
+      return 'warning';
+    case 'towed':
+      return 'error';
+    default:
+      return 'primary';
+  }
+};
+
 export default function ViolationDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
@@ -59,10 +78,7 @@ export default function ViolationDetailScreen() {
         user.propertyId
       )) as Violation;
 
-      if (
-        Platform.OS === 'android' &&
-        result.photoUrl.includes('localhost')
-      ) {
+      if (Platform.OS === 'android' && result.photoUrl.includes('localhost')) {
         result.photoUrl = result.photoUrl.replace('localhost', '10.0.2.2');
       }
 
@@ -134,7 +150,7 @@ export default function ViolationDetailScreen() {
               onPress={() => router.push('/my-violations')}
               style={{ marginLeft: 10 }}
             >
-              <MaterialIcons name="arrow-back" size={28} color={textColor} />
+              <MaterialIcons name='arrow-back' size={28} color={textColor} />
             </TouchableOpacity>
           ),
         }}
@@ -145,71 +161,75 @@ export default function ViolationDetailScreen() {
             key={violation.id}
             source={{ uri: violation.photoUrl }}
             style={styles.image}
-            resizeMethod="resize"
+            resizeMethod='resize'
             onError={(e) =>
               console.log('Failed to load image:', e.nativeEvent.error)
             }
           />
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: 8,
-            backgroundColor: 'transparent',
-          }}
-        >
-          <Text style={[styles.title, { color: textColor, marginRight: 8 }]}>
-            {violation.violationType.replace(/_/g, ' ')}
-          </Text>
-          <Chip label={violation.status.replace(/_/g, ' ')} />
-        </View>
-        <Text style={[styles.label, { color: textColor }]}>License Plate:</Text>
-        <Text style={[styles.value, { color: textColor }]}>
-          {violation.licensePlate}
-        </Text>
-
-        <Text style={[styles.label, { color: textColor }]}>Reported:</Text>
-        <Text style={[styles.value, { color: textColor }]}>
-          {formatStandardTime(violation.createdAt)}
-        </Text>
-        <Text
-          style={[
-            styles.value,
-            { color: textColor, fontSize: 14, marginTop: 2 },
-          ]}
-        >
-          ({formatRelativeTime(violation.createdAt)})
-        </Text>
-
-        {(violation.status === 'pending' || violation.status === 'reported') &&
-          !violation.residentId && (
-          <Button
-            title="Claim Unregistered Vehicle"
-            onPress={async () => {
-              if (user?.uid) {
-                await claimViolation(
-                  violation.id,
-                  user.uid,
-                  user.organizationId!,
-                  user.propertyId!
-                );
-                fetchViolation();
-              }
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 8,
+              backgroundColor: 'transparent',
             }}
-            style={{ marginTop: 20 }}
-          />
-        )}
+          >
+            <Text style={[styles.title, { color: textColor, marginRight: 8 }]}>
+              {violation.violationType.replace(/_/g, ' ')}
+            </Text>
+            <Chip
+              label={violation.status.replace(/_/g, ' ')}
+              variant={getStatusVariant(violation.status)}
+            />
+          </View>
+          <Text style={[styles.label, { color: textColor }]}>
+            License Plate:
+          </Text>
+          <Text style={[styles.value, { color: textColor }]}>
+            {violation.licensePlate}
+          </Text>
 
-        {violation.status === 'pending' && violation.residentId && (
-          <Button
-            title="I'm Moving It!"
-            onPress={handleAcknowledge}
-            loading={acknowledging}
-            disabled={acknowledging}
-            style={{ marginTop: 20 }}
-          />
-        )}
+          <Text style={[styles.label, { color: textColor }]}>Reported:</Text>
+          <Text style={[styles.value, { color: textColor }]}>
+            {formatStandardTime(violation.createdAt)}
+          </Text>
+          <Text
+            style={[
+              styles.value,
+              { color: textColor, fontSize: 14, marginTop: 2 },
+            ]}
+          >
+            ({formatRelativeTime(violation.createdAt)})
+          </Text>
+
+          {violation.status === 'reported' && !violation.residentId && (
+            <Button
+              title='Claim Unregistered Vehicle'
+              onPress={async () => {
+                if (user?.uid) {
+                  await claimViolation(
+                    violation.id,
+                    user.uid,
+                    user.organizationId!,
+                    user.propertyId!
+                  );
+                  fetchViolation();
+                }
+              }}
+              style={{ marginTop: 20 }}
+            />
+          )}
+
+          {violation.status === 'reported' && violation.residentId && (
+            <Button
+              title="I'm Moving It!"
+              onPress={handleAcknowledge}
+              loading={acknowledging}
+              disabled={acknowledging}
+              style={{ marginTop: 20 }}
+            />
+          )}
         </Card>
       </ScrollView>
     </>
