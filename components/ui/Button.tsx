@@ -10,7 +10,7 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, useThemeColor, View } from '../Themed';
 
-type ButtonVariant = 'filled' | 'outline' | 'destructive' | 'ghost';
+type ButtonVariant = 'filled' | 'outline' | 'text';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps {
@@ -23,6 +23,7 @@ interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   icon?: keyof typeof MaterialIcons.glyphMap;
+  destructive?: boolean;
 }
 
 const Button = ({
@@ -35,49 +36,49 @@ const Button = ({
   disabled = false,
   loading = false,
   icon,
+  destructive = false,
 }: ButtonProps) => {
   const primaryColor = useThemeColor({}, 'primary');
   const secondaryColor = useThemeColor({}, 'secondary');
   const errorColor = useThemeColor({}, 'error');
-  const cardColor = useThemeColor({}, 'card');
-  const textColorLight = useThemeColor({ light: '#fff', dark: '#000' }, 'text');
+  const whiteColor = useThemeColor({}, 'white');
 
-  const isOutline = variant === 'outline';
-  const isDestructive = variant === 'destructive';
-  const isGhost = variant === 'ghost';
-
-  const getBackgroundColor = () => {
-    if (isOutline || isGhost) return 'transparent';
-    if (isDestructive) return errorColor;
-    return primaryColor;
+  const variantStyles = {
+    filled: {
+      backgroundColor: destructive ? errorColor : primaryColor,
+      borderColor: 'transparent',
+      borderWidth: 0,
+      textColor: whiteColor,
+    },
+    outline: {
+      backgroundColor: 'transparent',
+      borderColor: destructive ? errorColor : primaryColor,
+      borderWidth: 2,
+      textColor: destructive ? errorColor : primaryColor,
+    },
+    text: {
+      backgroundColor: 'transparent',
+      borderColor: 'transparent',
+      borderWidth: 0,
+      textColor: destructive ? errorColor : secondaryColor,
+    },
   };
 
-  const getBorderColor = () => {
-    if (!isOutline) return 'transparent';
-    if (isDestructive) return errorColor;
-    return primaryColor;
-  };
-
-  const getTextColor = () => {
-    if (isGhost) return secondaryColor;
-    if (isOutline) {
-      return isDestructive ? errorColor : primaryColor;
-    }
-    // Filled buttons have light text on dark bg and vice-versa
-    return textColorLight;
-  };
+  const selectedVariant = variantStyles[variant];
 
   const buttonStyles = [
     styles.button,
     styles[size],
     {
-      backgroundColor: getBackgroundColor(),
-      borderColor: getBorderColor(),
-      borderWidth: isOutline ? 2 : 0,
+      backgroundColor: selectedVariant.backgroundColor,
+      borderColor: selectedVariant.borderColor,
+      borderWidth: selectedVariant.borderWidth,
     },
     style,
     (disabled || loading) && styles.disabled,
   ];
+
+  const currentTextColor = selectedVariant.textColor;
 
   const iconSize = size === 'lg' ? 24 : size === 'md' ? 20 : 16;
 
@@ -88,18 +89,18 @@ const Button = ({
       disabled={disabled || loading}
     >
       {loading ? (
-        <ActivityIndicator color={getTextColor()} />
+        <ActivityIndicator color={currentTextColor} />
       ) : (
         <View style={styles.contentContainer}>
           {icon && (
             <MaterialIcons
               name={icon}
               size={iconSize}
-              color={getTextColor()}
+              color={currentTextColor}
               style={styles.icon}
             />
           )}
-          <Text style={[styles.text, { color: getTextColor() }, textStyle]}>
+          <Text style={[styles.text, { color: currentTextColor }, textStyle]}>
             {title}
           </Text>
         </View>

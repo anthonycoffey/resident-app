@@ -8,7 +8,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import { Text, View } from '@/components/Themed';
+import { Text, View, useThemeColor } from '@/components/Themed';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -20,6 +20,13 @@ import Avatar from '@/components/ui/Avatar';
 const JobDetailsScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const primaryColor = useThemeColor({}, 'primary');
+  const tintColor = useThemeColor({}, 'tint');
+  const errorColor = useThemeColor({}, 'error');
+  const successColor = useThemeColor({}, 'success');
+  const chipColor = useThemeColor({}, 'chip');
+  const textMutedColor = useThemeColor({}, 'textMuted');
+  const white = useThemeColor({}, 'white');
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +78,7 @@ const JobDetailsScreen = () => {
               onPress={() => router.push('/service-requests')}
               style={{ paddingHorizontal: 10 }}
             >
-              <MaterialIcons name='arrow-back' size={24} color='black' />
+              <MaterialIcons name='arrow-back' size={24} color={tintColor} />
             </TouchableOpacity>
           ),
         }}
@@ -81,9 +88,9 @@ const JobDetailsScreen = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {loading && !refreshing && <ActivityIndicator size='large' color='#0000ff' />}
+        {loading && !refreshing && <ActivityIndicator size='large' color={primaryColor} />}
         {error && (
-          <Text style={{ color: 'red', textAlign: 'center', marginTop: 20 }}>
+          <Text style={{ color: errorColor, textAlign: 'center', marginTop: 20 }}>
             {error}
           </Text>
         )}
@@ -113,19 +120,19 @@ const JobDetailsScreen = () => {
                     size={60}
                   />
                 ) : (
-                  <View
-                    style={{
-                      width: 60,
-                      height: 60,
-                      borderRadius: 30,
-                      backgroundColor: '#e0e0e0',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <MaterialIcons name='person' size={36} color='#757575' />
-                  </View>
-                )}
+                    <View
+                      style={{
+                        width: 60,
+                        height: 60,
+                        borderRadius: 30,
+                        backgroundColor: chipColor,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <MaterialIcons name='person' size={36} color={textMutedColor} />
+                    </View>
+                  )}
                 <View
                   style={{
                     marginLeft: 15,
@@ -154,12 +161,12 @@ const JobDetailsScreen = () => {
                       <MaterialIcons
                         name='chat-bubble-outline'
                         size={24}
-                        color='#007AFF'
+                        color={primaryColor}
                       />
                       <Text
                         style={{
                           marginLeft: 5,
-                          color: '#007AFF',
+                          color: primaryColor,
                           fontSize: 14,
                         }}
                       >
@@ -174,11 +181,11 @@ const JobDetailsScreen = () => {
                       }}
                       onPress={() => handleContact('tel')}
                     >
-                      <MaterialIcons name='call' size={24} color='#007AFF' />
+                      <MaterialIcons name='call' size={24} color={primaryColor} />
                       <Text
                         style={{
                           marginLeft: 5,
-                          color: '#007AFF',
+                          color: primaryColor,
                           fontSize: 14,
                         }}
                       >
@@ -197,9 +204,10 @@ const JobDetailsScreen = () => {
               <Text>{job.Address.fullAddress}</Text>
 
               <MapView
-                provider={
-                  Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined
-                }
+                // provider={
+                  // Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined
+                // }
+                provider={PROVIDER_GOOGLE}
                 style={{
                   width: '100%',
                   height: 400,
@@ -210,6 +218,10 @@ const JobDetailsScreen = () => {
                   latitudeDelta: 0.0922,
                   longitudeDelta: 0.0421,
                 }}
+                scrollEnabled={false}
+                zoomEnabled={false}
+                pitchEnabled={false}
+                rotateEnabled={false}
               >
                 <Marker
                   coordinate={{
@@ -226,8 +238,31 @@ const JobDetailsScreen = () => {
                         longitude: job.assignedTechnician.longitude,
                       }}
                       title='Technician'
-                      pinColor='blue'
-                    />
+                    >
+                      {job.assignedTechnician.avatar ? (
+                        <Avatar
+                          source={{ uri: job.assignedTechnician.avatar }}
+                          size={40}
+                        />
+                      ) : (
+                        <View
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 20,
+                            backgroundColor: primaryColor,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <MaterialIcons
+                            name='person'
+                            size={24}
+                            color={white}
+                          />
+                        </View>
+                      )}
+                    </Marker>
                   )}
                 {job.assignedTechnician.latitude &&
                   job.assignedTechnician.longitude && (
@@ -242,7 +277,7 @@ const JobDetailsScreen = () => {
                       }}
                       apikey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY!}
                       strokeWidth={3}
-                      strokeColor='hotpink'
+                      strokeColor={primaryColor}
                     />
                   )}
               </MapView>
@@ -255,7 +290,7 @@ const JobDetailsScreen = () => {
                 Job Status
               </Text>
               <Text
-                style={{ fontSize: 16, fontWeight: 'bold', color: '#4CAF50' }}
+                style={{ fontSize: 16, fontWeight: 'bold', color: successColor }}
               >
                 {job.status.replace('_', ' ').toUpperCase()}
               </Text>

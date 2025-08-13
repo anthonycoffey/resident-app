@@ -68,44 +68,41 @@ const CommunityBoard = () => {
     );
   }
 
-  return (
-    <View style={styles.container}>
-      {notifications.length > 0 ? (
-        <FlatList
-          data={notifications}
-          renderItem={({ item }) => <NotificationCard notification={item} />}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        />
-      ) : (
-        <View style={styles.centered}>
-          <Text style={styles.noBulletinsText}>
-            No community notifications at this time.
-          </Text>
-        </View>
-      )}
+  const renderEmptyList = () => (
+    <View style={styles.centered}>
+      <Text style={styles.noBulletinsText}>
+        No community notifications at this time.
+      </Text>
     </View>
+  );
+
+  return (
+    <FlatList
+      data={notifications}
+      renderItem={({ item }) => <NotificationCard notification={item} />}
+      keyExtractor={(item) => item.id}
+      ListEmptyComponent={renderEmptyList}
+      contentContainerStyle={styles.listContent}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 16,
   },
   noBulletinsText: {
     textAlign: 'center',
-    marginTop: 20,
     fontSize: 16,
   },
   listContent: {
+    flexGrow: 1,
     paddingHorizontal: 8,
   },
 });

@@ -37,6 +37,8 @@ const LoginScreen = () => {
     GoogleSignin.configure({
       webClientId:
         '76291599872-bhbovp08rl51dlsniukp4uq2eatj11lu.apps.googleusercontent.com',
+      iosClientId:
+        '76291599872-5a2gdbrelle7h8f99qdkeh33t59jlf67.apps.googleusercontent.com',
       offlineAccess: false,
     });
   }, []);

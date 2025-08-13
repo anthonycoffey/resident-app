@@ -59,11 +59,22 @@ const MyProfileScreenContent = () => {
     )}-${phoneNumber.slice(6, 10)}`;
   };
 
-  const handleInputChange = (name: keyof typeof residentData, value: string) => {
+  const handleInputChange = (
+    name: keyof Omit<typeof residentData, 'address'> | keyof NonNullable<(typeof residentData)['address']>,
+    value: string
+  ) => {
     if (name === 'phone') {
-      setResidentData({ ...residentData, [name]: formatPhoneNumberOnInput(value) });
+      setResidentData({ ...residentData, phone: formatPhoneNumberOnInput(value) });
+    } else if (['street', 'city', 'state', 'zip', 'unit'].includes(name as string)) {
+      setResidentData((prev) => ({
+        ...prev,
+        address: {
+          ...(prev.address || { street: '', city: '', state: '', zip: '' }),
+          [name]: value,
+        },
+      }));
     } else {
-      setResidentData({ ...residentData, [name]: value });
+      setResidentData({ ...residentData, [name as keyof typeof residentData]: value });
     }
   };
 
@@ -181,11 +192,36 @@ const MyProfileScreenContent = () => {
             onChangeText={(val: string) => handleInputChange('phone', val)}
             keyboardType="phone-pad"
           />
-          <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>Unit Number</Text>
+          <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>Street</Text>
           <Input
-            placeholder="Unit Number"
-            value={residentData.unitNumber || ''}
-            editable={false}
+            placeholder="Street"
+            value={residentData.address?.street || ''}
+            onChangeText={(val: string) => handleInputChange('street', val)}
+          />
+          <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>City</Text>
+          <Input
+            placeholder="City"
+            value={residentData.address?.city || ''}
+            onChangeText={(val: string) => handleInputChange('city', val)}
+          />
+          <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>State</Text>
+          <Input
+            placeholder="State"
+            value={residentData.address?.state || ''}
+            onChangeText={(val: string) => handleInputChange('state', val)}
+          />
+          <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>Zip Code</Text>
+          <Input
+            placeholder="Zip Code"
+            value={residentData.address?.zip || ''}
+            onChangeText={(val: string) => handleInputChange('zip', val)}
+            keyboardType="numeric"
+          />
+          <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>Unit (Optional)</Text>
+          <Input
+            placeholder="Unit"
+            value={residentData.address?.unit || ''}
+            onChangeText={(val: string) => handleInputChange('unit', val)}
           />
           <Divider style={{ marginVertical: 20 }} />
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15, backgroundColor: 'transparent' }}>

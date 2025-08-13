@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Platform,
 } from 'react-native';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import Card from '@/components/ui/Card';
@@ -48,7 +49,13 @@ export default function ViolationDetailScreen() {
   const [violation, setViolation] = useState<Violation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [acknowledging, setAcknowledging] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalContent, setModalContent] = useState({
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
@@ -99,7 +106,7 @@ export default function ViolationDetailScreen() {
 
   const handleAcknowledge = async () => {
     if (!violation) return;
-    setAcknowledging(true);
+    setActionLoading(true);
     try {
       await acknowledgeViolation(
         violation.id,
@@ -109,10 +116,58 @@ export default function ViolationDetailScreen() {
       setViolation((prev) =>
         prev ? { ...prev, status: 'acknowledged' } : null
       );
+      setModalVisible(false);
     } catch (err) {
       // Optionally show an error message to the user
     } finally {
-      setAcknowledging(false);
+      setActionLoading(false);
+    }
+  };
+
+  const handleClaim = async () => {
+    if (!violation || !user?.uid) return;
+    setActionLoading(true);
+    try {
+      await claimViolation(
+        violation.id,
+        user.uid,
+        user.organizationId!,
+        user.propertyId!
+      );
+      fetchViolation();
+      setModalVisible(false);
+    } catch (err) {
+      // Optionally show an error message to the user
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const openAcknowledgeModal = () => {
+    setModalContent({
+      title: 'Acknowledge Violation',
+      message:
+        "By acknowledging this violation, you are confirming that you will move your vehicle. Failure to resolve the issue may result in your vehicle being towed at your expense.",
+      onConfirm: handleAcknowledge,
+    });
+    setModalVisible(true);
+  };
+
+  const openClaimModal = () => {
+    setModalContent({
+      title: 'Claim Vehicle',
+      message:
+        "Are you sure you want to claim this vehicle? This will associate the violation with your account. Please be aware that unresolved violations can lead to further action, including towing.",
+      onConfirm: handleClaim,
+    });
+    setModalVisible(true);
+  };
+
+  const handleBackPress = () => {
+    if (violation?.residentId === user?.uid) {
+      router.push('/my-violations');
+    } else {
+      router.push('/');
     }
   };
 
@@ -147,7 +202,7 @@ export default function ViolationDetailScreen() {
           headerTitle: 'Violation Details',
           headerLeft: () => (
             <TouchableOpacity
-              onPress={() => router.push('/my-violations')}
+              onPress={handleBackPress}
               style={{ marginLeft: 10 }}
             >
               <MaterialIcons name='arrow-back' size={28} color={textColor} />
@@ -206,17 +261,7 @@ export default function ViolationDetailScreen() {
           {violation.status === 'reported' && !violation.residentId && (
             <Button
               title='Claim Unregistered Vehicle'
-              onPress={async () => {
-                if (user?.uid) {
-                  await claimViolation(
-                    violation.id,
-                    user.uid,
-                    user.organizationId!,
-                    user.propertyId!
-                  );
-                  fetchViolation();
-                }
-              }}
+              onPress={openClaimModal}
               style={{ marginTop: 20 }}
             />
           )}
@@ -224,14 +269,20 @@ export default function ViolationDetailScreen() {
           {violation.status === 'reported' && violation.residentId && (
             <Button
               title="I'm Moving It!"
-              onPress={handleAcknowledge}
-              loading={acknowledging}
-              disabled={acknowledging}
+              onPress={openAcknowledgeModal}
               style={{ marginTop: 20 }}
             />
           )}
         </Card>
       </ScrollView>
+      <ConfirmationModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onConfirm={modalContent.onConfirm}
+        title={modalContent.title}
+        message={modalContent.message}
+        loading={actionLoading}
+      />
     </>
   );
 }

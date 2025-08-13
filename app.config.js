@@ -4,12 +4,20 @@ module.exports = ({ config }) => {
     plugins: [
       '@react-native-firebase/app',
       '@react-native-firebase/messaging',
+      ['@react-native-google-signin/google-signin'],
       [
         'expo-build-properties',
         {
           ios: {
             useFrameworks: 'static',
           },
+        },
+      ],
+      [
+        'react-native-maps',
+        {
+          iosGoogleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
+          androidGoogleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
         },
       ],
     ],

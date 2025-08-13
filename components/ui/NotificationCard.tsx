@@ -1,17 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, useThemeColor } from '@/components/Themed';
 import { StyleSheet, useColorScheme, TouchableOpacity } from 'react-native';
 import { Notification } from '@/lib/types/notification';
 import { formatRelativeTime } from '@/lib/utils/dates';
 import Colors from '@/constants/Colors';
-import Button from './Button';
-import {
-  claimViolation,
-  getViolationDetails,
-} from '@/lib/services/violationService';
-import { useAuth } from '@/lib/providers/AuthProvider';
 import { useRouter } from 'expo-router';
-import { Violation } from '@/lib/types/violation';
+import { MaterialIcons } from '@expo/vector-icons';
 
 type NotificationCardProps = {
   notification: Notification;
@@ -20,42 +14,8 @@ type NotificationCardProps = {
 const NotificationCard = ({ notification }: NotificationCardProps) => {
   const mutedColor = useThemeColor({}, 'textMuted');
   const theme = useColorScheme() ?? 'light';
-  const { user } = useAuth();
   const router = useRouter();
-  const [violation, setViolation] = useState<Violation | null>(null);
-  const [isClaimed, setIsClaimed] = useState(false);
-
-  useEffect(() => {
-    const fetchViolation = async () => {
-      if (notification.violationId && user?.organizationId && user.propertyId) {
-        const violationData = (await getViolationDetails(
-          notification.violationId,
-          user.organizationId,
-          user.propertyId
-        )) as Violation;
-        if (violationData) {
-          setViolation(violationData);
-          if (violationData.residentId) {
-            setIsClaimed(true);
-          }
-        }
-      }
-    };
-
-    fetchViolation();
-  }, [notification.violationId, user?.organizationId, user?.propertyId]);
-
-  const handleClaim = async () => {
-    if (notification.violationId && user?.uid) {
-      await claimViolation(
-        notification.violationId,
-        user.uid,
-        user.organizationId!,
-        user.propertyId!
-      );
-      setIsClaimed(true);
-    }
-  };
+  const textColor = useThemeColor({}, 'text');
 
   const handlePress = () => {
     if (notification.violationId) {
@@ -79,6 +39,13 @@ const NotificationCard = ({ notification }: NotificationCardProps) => {
       >
         <View style={styles.header}>
           <Text style={styles.title}>{notification.title}</Text>
+          {isTappable && (
+            <MaterialIcons
+              name='chevron-right'
+              size={24}
+              color={textColor}
+            />
+          )}
         </View>
         <Text style={styles.message}>{notification.message}</Text>
         <View style={styles.footer}>
@@ -87,16 +54,6 @@ const NotificationCard = ({ notification }: NotificationCardProps) => {
           </Text>
         </View>
       </TouchableOpacity>
-      {notification.vehicle &&
-        !isClaimed &&
-        violation &&
-        violation.status === 'reported' && (
-        <Button
-          title='Claim Unregistered Vehicle'
-          onPress={handleClaim}
-          style={{ margin: 10 }}
-        />
-      )}
     </View>
   );
 };
@@ -108,6 +65,9 @@ const styles = StyleSheet.create({
     marginVertical: 5,
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 16,
     backgroundColor: 'transparent',

@@ -11,7 +11,8 @@ import {
 import { View, Text, useThemeColor } from '@/components/Themed';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import { useAuth, Vehicle } from '@/lib/providers/AuthProvider';
+import { useAuth } from '@/lib/providers/AuthProvider';
+import { Vehicle } from '@/lib/types/resident';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import {
   getPhoenixServices,
@@ -19,8 +20,7 @@ import {
 } from '@/lib/services/phoenixService';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/config/firebaseConfig';
-// @ts-ignore
-import { Property } from '@/lib/providers/AuthProvider';
+import { useProfile } from '@/lib/context/ProfileContext';
 import DateTimePicker, {
   DateTimePickerEvent,
   DateTimePickerAndroid,
@@ -41,7 +41,8 @@ const CreateServiceRequestForm = ({
   onServiceRequestSubmitted,
   address,
 }: CreateServiceRequestFormProps) => {
-  const { user, residentProfile } = useAuth();
+  const { user } = useAuth();
+  const { residentData: residentProfile } = useProfile();
   const { isOffPremise, setIsOffPremise } = useServiceRequest();
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -52,6 +53,7 @@ const CreateServiceRequestForm = ({
   const readOnlyBackgroundColor = useThemeColor({}, 'readOnlyBackground');
   const inputBackgroundColor = useThemeColor({}, 'input');
   const dividerColor = useThemeColor({}, 'divider');
+  const switchThumbColor = useThemeColor({}, 'text');
   const colorScheme =
     useThemeColor({}, 'background') === '#000000' ? 'dark' : 'light';
 
@@ -116,58 +118,23 @@ const CreateServiceRequestForm = ({
   }, [residentProfile]);
 
   useEffect(() => {
-    const fetchPropertyAddress = async () => {
-      if (user?.organizationId && user.propertyId && !isOffPremise) {
-        setIsLoadingPropertyAddress(true);
-        setPropertyAddressError(null);
-        try {
-          const propertyDocRef = doc(
-            db,
-            'organizations',
-            user.organizationId,
-            'properties',
-            user.propertyId
-          );
-          const propertyDocSnap = await getDoc(propertyDocRef);
-          if (propertyDocSnap.exists()) {
-            const propertyData = propertyDocSnap.data() as Property;
-            if (propertyData.address) {
-              const { street, city, state, zip } = propertyData.address;
-              const fullAddress = `${street}, ${city}, ${state} ${zip}`;
-              setPropertyFullAddressString(fullAddress);
-              setAddressInput(fullAddress);
-              setServiceLocationObject({
-                address_1: street,
-                city,
-                state,
-                zipcode: zip,
-                fullAddress,
-              });
-            } else {
-              setPropertyAddressError(
-                'Property address is not available. Please enter manually.'
-              );
-            }
-          } else {
-            setPropertyAddressError(
-              'Property details not found. Please enter address manually.'
-            );
-          }
-        } catch (error) {
-          console.error('Error fetching property address:', error);
-          setPropertyAddressError(
-            'Failed to load property address. Please enter manually.'
-          );
-        } finally {
-          setIsLoadingPropertyAddress(false);
-        }
-      } else {
-        setIsLoadingPropertyAddress(false);
-      }
-    };
-
-    fetchPropertyAddress();
-  }, [user, isOffPremise]);
+    if (!isOffPremise && residentProfile?.address) {
+      const { street, city, state, zip, unit } = residentProfile.address;
+      const unitString = unit ? `, ${unit}` : '';
+      const fullAddress = `${street}, ${city}, ${state} ${zip}${unitString}`;
+      setPropertyFullAddressString(fullAddress);
+      setAddressInput(fullAddress);
+      setServiceLocationObject({
+        address_1: street,
+        address_2: unit,
+        city,
+        state,
+        zipcode: zip,
+        fullAddress,
+      });
+      setIsLoadingPropertyAddress(false);
+    }
+  }, [residentProfile, isOffPremise]);
 
   useEffect(() => {
     if (address) {
@@ -470,7 +437,7 @@ const CreateServiceRequestForm = ({
         </Text>
         <Switch
           trackColor={{ false: dividerColor, true: primaryColor }}
-          thumbColor={useThemeColor({}, 'text')}
+          thumbColor={switchThumbColor}
           onValueChange={(value) => {
             setIsOffPremise(value);
             if (value) {

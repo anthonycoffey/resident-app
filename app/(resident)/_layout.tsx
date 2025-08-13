@@ -65,13 +65,14 @@ export default function ResidentLayout() {
         <Drawer
           drawerContent={(props) => <CustomDrawerContent {...props} />}
           screenOptions={{
-            drawerActiveTintColor: activeTintColor,
-            headerRight: () => <NotificationBell />,
-            headerLeft: () => (
-              <DrawerToggleButton tintColor={activeTintColor} />
-            ),
-          }}
-        >
+          drawerActiveTintColor: activeTintColor,
+          headerTintColor: activeTintColor,
+          headerRight: () => <NotificationBell />,
+          headerLeft: () => (
+            <DrawerToggleButton tintColor={activeTintColor} />
+          ),
+        }}
+      >
           <Drawer.Screen
             name='index'
             options={{

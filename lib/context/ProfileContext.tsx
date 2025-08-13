@@ -2,22 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useCallback } fr
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/config/firebaseConfig';
 import { useAuth } from '@/lib/providers/AuthProvider';
-
-type Vehicle = {
-  make: string;
-  model: string;
-  year: number;
-  color: string;
-  plate: string;
-};
-
-type Resident = {
-  displayName: string;
-  email: string;
-  phone: string;
-  unitNumber: string;
-  vehicles: Vehicle[];
-};
+import { Resident, Vehicle } from '@/lib/types/resident';
 
 type ProfileContextType = {
   residentData: Partial<Resident>;
@@ -25,7 +10,7 @@ type ProfileContextType = {
   loading: boolean;
   error: string | null;
   fetchResidentData: () => Promise<void>;
-  setResidentData: (data: Partial<Resident>) => void;
+  setResidentData: React.Dispatch<React.SetStateAction<Partial<Resident>>>;
   addVehicle: (vehicle: Vehicle) => Promise<void>;
   updateVehicle: (vehicle: Vehicle, index: number) => Promise<void>;
   deleteVehicle: (index: number) => Promise<void>;
@@ -83,13 +68,14 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
           displayName: data.displayName || user?.displayName || '',
           email: data.email || user?.email || '',
           phone: formatPhoneNumberOnLoad(data.phone || ''),
-          unitNumber: data.unitNumber || '',
+          address: data.address || { street: '', city: '', state: '', zip: '', unit: '' },
         });
         setVehicles(data.vehicles || []);
       } else {
         setResidentData({
           displayName: user?.displayName || '',
           email: user?.email || '',
+          address: { street: '', city: '', state: '', zip: '', unit: '' },
         });
         setVehicles([]);
         setError('Profile not found, please complete your details.');

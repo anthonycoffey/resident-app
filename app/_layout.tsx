@@ -118,7 +118,13 @@ function RootLayoutNav() {
             name='(service-provider)'
             options={{ headerShown: false }}
           />
-          <Stack.Screen name='modal' options={{ presentation: 'modal' }} />
+          <Stack.Screen
+            name='modal'
+            options={{
+              presentation: 'modal',
+              headerTintColor: colorScheme === 'dark' ? DarkTheme.colors.primary : DefaultTheme.colors.primary,
+            }}
+          />
         </Stack>
       </KeyboardAvoidingView>
     </ThemeProvider>

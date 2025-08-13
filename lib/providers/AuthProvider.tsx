@@ -3,23 +3,7 @@ import { onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { auth, db } from '@/lib/config/firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import { registerForPushNotificationsAsync } from '../services/notifications';
-
-// Basic types based on the web app's data model
-export interface Vehicle {
-  make: string;
-  model: string;
-  year: string;
-  color: string;
-  plate: string;
-}
-
-export interface Resident {
-  name: string;
-  email: string;
-  phone?: string;
-  vehicles?: Vehicle[];
-  // other fields as necessary
-}
+import { Vehicle, Resident } from '@/lib/types/resident';
 
 interface AppUser {
   uid: string;
