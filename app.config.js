@@ -37,10 +37,6 @@ module.exports = ({ config }) => {
         'aps-environment': 'production',
       },
       ...config.ios,
-      infoPlist: {
-        NSLocationWhenInUseUsageDescription:
-          'This app uses location services to show maps and provide location-based features.',
-      },
       googleServicesFile: process.env.GOOGLE_SERVICES_PLIST,
       config: {
         googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,

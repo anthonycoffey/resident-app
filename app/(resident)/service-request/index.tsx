@@ -1,32 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SafeAreaView, ScrollView } from 'react-native';
-import { Text, View, useThemeColor } from '@/components/Themed';
 import Card from '@/components/ui/Card';
-import CreateServiceRequestForm from '@/components/CreateServiceRequestForm';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useServiceRequest } from '@/lib/context/ServiceRequestContext';
+import JourneySelection from './components/JourneySelection';
+import ServiceRequestForm from './components/ServiceRequestForm';
+
+type Journey = 'on-premise' | 'off-premise' | null;
 
 const ServiceRequestScreen = () => {
-  const { address } = useServiceRequest();
-  const iconColor = useThemeColor({}, 'text');
-
-  const handleServiceRequestSubmitted = () => {
-    // Could potentially trigger a refresh or navigation
-    console.log('Service request submitted successfully from the screen.');
-  };
+  const [journey, setJourney] = useState<Journey>(null);
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <ScrollView style={{ flex: 1 }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps='handled'
+      >
         <Card>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, backgroundColor: 'transparent' }}>
-            <MaterialIcons name="build" size={24} color={iconColor} />
-            <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>Service Request Form</Text>
-          </View>
-          <CreateServiceRequestForm
-            onServiceRequestSubmitted={handleServiceRequestSubmitted}
-            address={address}
-          />
+          {journey ? (
+            <ServiceRequestForm
+              journey={journey}
+              onBack={() => setJourney(null)}
+            />
+          ) : (
+            <JourneySelection onSelectJourney={setJourney} />
+          )}
         </Card>
       </ScrollView>
     </SafeAreaView>

@@ -1,79 +1,74 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  StyleSheet,
-  Switch,
-  Alert,
-  Platform,
-  ScrollView,
   TouchableOpacity,
+  StyleSheet,
+  Platform,
   ActivityIndicator,
 } from 'react-native';
-import { View, Text, useThemeColor } from '@/components/Themed';
+import { Text, View, useThemeColor } from '@/components/Themed';
+import { MaterialIcons } from '@expo/vector-icons';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { useAuth } from '@/lib/providers/AuthProvider';
 import { Vehicle } from '@/lib/types/resident';
-import { getFunctions, httpsCallable } from 'firebase/functions';
 import {
   getPhoenixServices,
   PhoenixService,
 } from '@/lib/services/phoenixService';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/config/firebaseConfig';
 import { useProfile } from '@/lib/context/ProfileContext';
 import DateTimePicker, {
   DateTimePickerEvent,
   DateTimePickerAndroid,
 } from '@react-native-community/datetimepicker';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import { format, formatDistanceToNow, addMinutes } from 'date-fns';
 import DropDownPicker from 'react-native-dropdown-picker';
 import Badge from '@/components/ui/Badge';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useServiceRequest } from '@/lib/context/ServiceRequestContext';
+import { useSubmitServiceRequest } from '@/lib/hooks/useSubmitServiceRequest';
+import AddressSearchModal from './AddressSearchModal';
 
-type CreateServiceRequestFormProps = {
-  onServiceRequestSubmitted: () => void;
-  address: any;
+type Journey = 'on-premise' | 'off-premise';
+
+interface AddressObject {
+  address_1?: string;
+  city?: string;
+  state?: string;
+  zipcode?: string;
+  country?: string;
+  fullAddress?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+type ServiceRequestFormProps = {
+  journey: Journey;
+  onBack: () => void;
 };
 
-const CreateServiceRequestForm = ({
-  onServiceRequestSubmitted,
-  address,
-}: CreateServiceRequestFormProps) => {
+const ServiceRequestForm = ({ journey, onBack }: ServiceRequestFormProps) => {
   const { user } = useAuth();
   const { residentData: residentProfile } = useProfile();
-  const { isOffPremise, setIsOffPremise } = useServiceRequest();
-  const router = useRouter();
-  const params = useLocalSearchParams();
 
+  // Theme Colors
+  const iconColor = useThemeColor({}, 'text');
+  const primaryColor = useThemeColor({}, 'primary');
   const labelColor = useThemeColor({}, 'label');
   const textColor = useThemeColor({}, 'text');
-  const primaryColor = useThemeColor({}, 'primary');
-  const readOnlyBackgroundColor = useThemeColor({}, 'readOnlyBackground');
   const inputBackgroundColor = useThemeColor({}, 'input');
   const dividerColor = useThemeColor({}, 'divider');
-  const switchThumbColor = useThemeColor({}, 'text');
+  const readOnlyBackgroundColor = useThemeColor({}, 'readOnlyBackground');
   const colorScheme =
     useThemeColor({}, 'background') === '#000000' ? 'dark' : 'light';
 
-  // Form State
-  const [residentName, setResidentName] = useState(user?.displayName || '');
-  const [email, setEmail] = useState(user?.email || '');
-  const [phone, setPhone] = useState('');
+    console.log({ residentProfile });
+
+  const [residentName] = useState(user?.displayName || '');
+  const [email] = useState(user?.email || '');
+  const [phone, setPhone] = useState(residentProfile?.phone || '');
   const [arrivalTime, setArrivalTime] = useState(addMinutes(new Date(), 30));
   const [showDateTimePicker, setShowDateTimePicker] = useState(false);
   const [serviceLocationObject, setServiceLocationObject] = useState<
     object | null
   >(null);
-  const [propertyFullAddressString, setPropertyFullAddressString] =
-    useState<string>('');
-  const [isLoadingPropertyAddress, setIsLoadingPropertyAddress] =
-    useState(true);
-  const [propertyAddressError, setPropertyAddressError] = useState<
-    string | null
-  >(null);
-  const [addressInput, setAddressInput] = useState('');
   const [phoenixServices, setPhoenixServices] = useState<PhoenixService[]>([]);
   const [selectedPhoenixServices, setSelectedPhoenixServices] = useState<
     number[]
@@ -83,15 +78,48 @@ const CreateServiceRequestForm = ({
   const [selectedVehiclePlate, setSelectedVehiclePlate] = useState<
     string | null
   >(null);
-
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [residentNotes, setResidentNotes] = useState('');
   const [smsConsent, setSmsConsent] = useState(false);
 
+  // On-Premise State
+  const [propertyFullAddressString, setPropertyFullAddressString] =
+    useState<string>('');
+  const [isLoadingPropertyAddress, setIsLoadingPropertyAddress] =
+    useState(true);
+
+  // Off-Premise State
+  const [address, setAddress] = useState<any>(null);
+  const [addressModalVisible, setAddressModalVisible] = useState(false);
+  const [offPremiseStreet, setOffPremiseStreet] = useState('');
+  const [offPremiseUnit, setOffPremiseUnit] = useState('');
+  const [offPremiseCity, setOffPremiseCity] = useState('');
+  const [offPremiseState, setOffPremiseState] = useState('');
+  const [offPremiseZip, setOffPremiseZip] = useState('');
+
   // UI State
-  const [saving, setSaving] = useState(false);
   const [servicesLoading, setServicesLoading] = useState(true);
   const [servicesError, setServicesError] = useState<string | null>(null);
+
+  const { submitRequest, saving } = useSubmitServiceRequest(
+    phoenixServices,
+    () => {
+      handleServiceRequestSubmitted();
+    }
+  );
+
+  const handleServiceRequestSubmitted = () => {
+    console.log('Service request submitted successfully from the screen.');
+    onBack(); // Reset to selection screen
+    // Clear form
+    setSelectedPhoenixServices([]);
+    setSelectedVehicle(null);
+    setResidentNotes('');
+    setSmsConsent(false);
+    setArrivalTime(addMinutes(new Date(), 30));
+    setAddress(null);
+    setServiceLocationObject(null);
+  };
 
   const handlePhoneChange = (text: string) => {
     const cleaned = text.replace(/\D/g, '');
@@ -111,19 +139,14 @@ const CreateServiceRequestForm = ({
     }
   };
 
+  // On-Premise Logic
   useEffect(() => {
-    if (residentProfile?.phone) {
-      handlePhoneChange(residentProfile.phone);
-    }
-  }, [residentProfile]);
-
-  useEffect(() => {
-    if (!isOffPremise && residentProfile?.address) {
+    if (journey === 'on-premise' && residentProfile?.address) {
       const { street, city, state, zip, unit } = residentProfile.address;
-      const unitString = unit ? `, ${unit}` : '';
-      const fullAddress = `${street}, ${city}, ${state} ${zip}${unitString}`;
+      const fullAddress = `${street}${
+        unit ? ` ${unit}` : ''
+      }, ${city}, ${state} ${zip}`;
       setPropertyFullAddressString(fullAddress);
-      setAddressInput(fullAddress);
       setServiceLocationObject({
         address_1: street,
         address_2: unit,
@@ -134,45 +157,14 @@ const CreateServiceRequestForm = ({
       });
       setIsLoadingPropertyAddress(false);
     }
-  }, [residentProfile, isOffPremise]);
+  }, [journey, residentProfile]);
 
+  // Shared Logic
   useEffect(() => {
-    if (address) {
-      const { lat, lng } = address.geometry.location;
-      const components = address.address_components;
-      let streetNumber = '';
-      let route = '';
-      let city = '';
-      let state = '';
-      let postalCode = '';
-      let country = '';
-
-      components.forEach((component: any) => {
-        if (component.types.includes('street_number'))
-          streetNumber = component.long_name;
-        if (component.types.includes('route')) route = component.long_name;
-        if (component.types.includes('locality')) city = component.long_name;
-        if (component.types.includes('administrative_area_level_1'))
-          state = component.short_name;
-        if (component.types.includes('postal_code'))
-          postalCode = component.long_name;
-        if (component.types.includes('country')) country = component.short_name;
-      });
-
-      const addressObject = {
-        address_1: `${streetNumber} ${route}`.trim(),
-        city,
-        state,
-        zipcode: postalCode,
-        country,
-        fullAddress: address.formatted_address,
-        latitude: lat,
-        longitude: lng,
-      };
-      setServiceLocationObject(addressObject);
-      setAddressInput(addressObject.fullAddress);
+    if (residentProfile?.phone) {
+      handlePhoneChange(residentProfile.phone);
     }
-  }, [address]);
+  }, [residentProfile]);
 
   useEffect(() => {
     if (selectedVehiclePlate) {
@@ -188,100 +180,54 @@ const CreateServiceRequestForm = ({
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        console.log('Fetching Phoenix services...');
         setServicesLoading(true);
         const services = await getPhoenixServices();
-        console.log('Fetched services:', { services });
         setPhoenixServices(services);
       } catch (err) {
-        const reason = err instanceof Error ? err.message : String(err);
-        console.log(`Service fetch failed. Reason: ${reason}`);
-        console.error('Failed to load service types:', err);
         setServicesError('Failed to load service types.');
       } finally {
         setServicesLoading(false);
-        console.log('Service loading complete');
       }
     };
     fetchServices();
   }, []);
 
-  const handleSubmit = async () => {
-    if (!user || !user.organizationId || !user.propertyId) {
-      Alert.alert('Error', 'Authentication details are missing.');
-      return;
-    }
-    if (
-      selectedPhoenixServices.length === 0 ||
-      !serviceLocationObject ||
-      !phone
-    ) {
-      Alert.alert(
-        'Error',
-        'Please fill out all required fields: Service Type, Location, and Phone.'
-      );
-      return;
-    }
+  const handleSubmit = () => {
+    let finalServiceLocationObject = serviceLocationObject;
 
-    setSaving(true);
-    try {
-      const functions = getFunctions();
-      const createServiceRequest = httpsCallable(
-        functions,
-        'createServiceRequest'
-      );
-
-      const serviceTypesForSubmission = selectedPhoenixServices.map((id) => {
-        const service = phoenixServices.find((s) => s.id === id);
-        return { id: service?.id, value: service?.name };
-      });
-
-      const payload = {
-        organizationId: user.organizationId,
-        propertyId: user.propertyId,
-        residentNotes: residentNotes.trim(),
-        serviceDateTime: arrivalTime.toISOString(),
-        phone: phone.trim(),
-        smsConsent,
-        serviceLocationAddress: serviceLocationObject,
-        serviceTypes: serviceTypesForSubmission,
-        isOffPremiseRequest: isOffPremise,
-        car_year: selectedVehicle?.year,
-        car_make: selectedVehicle?.make,
-        car_model: selectedVehicle?.model,
-        car_color: selectedVehicle?.color,
+    if (journey === 'off-premise') {
+      finalServiceLocationObject = {
+        address_1: offPremiseStreet,
+        address_2: offPremiseUnit,
+        city: offPremiseCity,
+        state: offPremiseState,
+        zipcode: offPremiseZip,
+        fullAddress: `${offPremiseStreet}${
+          offPremiseUnit ? ` ${offPremiseUnit}` : ''
+        }, ${offPremiseCity}, ${offPremiseState} ${offPremiseZip}`,
       };
-
-      await createServiceRequest(payload);
-      Alert.alert('Success', 'Service request submitted successfully!');
-      onServiceRequestSubmitted();
-      // Clear form
-      setSelectedPhoenixServices([]);
-      setServiceLocationObject(null);
-      setSelectedVehicle(null);
-      setResidentNotes('');
-      setSmsConsent(false);
-      setArrivalTime(addMinutes(new Date(), 30));
-    } catch (error) {
-      console.error('Error submitting service request:', error);
-      Alert.alert('Error', 'Failed to submit service request.');
-    } finally {
-      setSaving(false);
     }
+
+    submitRequest({
+      residentNotes,
+      serviceDateTime: arrivalTime,
+      phone,
+      smsConsent,
+      serviceLocationAddress: finalServiceLocationObject,
+      selectedPhoenixServices,
+      isOffPremiseRequest: journey === 'off-premise',
+      selectedVehicle,
+    });
   };
 
   const handleAppleDateTimeChange = (
     event: DateTimePickerEvent,
     selectedDate?: Date
   ) => {
-    const pickerIsCurrentlyVisible = showDateTimePicker;
-
     if (event.type === 'set' && selectedDate) {
       setArrivalTime(selectedDate);
     }
-    if (pickerIsCurrentlyVisible) {
-      setShowDateTimePicker(false);
-    }
+    setShowDateTimePicker(false);
   };
 
   const handleAndroidTimeChange = (
@@ -333,7 +279,12 @@ const CreateServiceRequestForm = ({
   };
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps='handled'>
+    <>
+      <TouchableOpacity onPress={onBack} style={styles.backButton}>
+        <MaterialIcons name='arrow-back' size={24} color={iconColor} />
+        <Text style={{ marginLeft: 5 }}>Back to Selection</Text>
+      </TouchableOpacity>
+
       <Text style={[styles.label, { color: labelColor }]}>Name</Text>
       <Input value={residentName} editable={false} />
 
@@ -393,26 +344,7 @@ const CreateServiceRequestForm = ({
       <Text style={[styles.label, { color: labelColor }]}>
         Service Location
       </Text>
-
-      {isOffPremise ? (
-        <>
-          <Button
-            title='Search for Address'
-            icon='search'
-            onPress={() => router.push('/service-request/address-search')}
-          />
-          {address && (
-            <View
-              style={[
-                styles.addressContainer,
-                { backgroundColor: useThemeColor({}, 'chip') },
-              ]}
-            >
-              <Text>{address.formatted_address}</Text>
-            </View>
-          )}
-        </>
-      ) : (
+      {journey === 'on-premise' && (
         <View style={{ backgroundColor: 'transparent' }}>
           {isLoadingPropertyAddress ? (
             <ActivityIndicator color={primaryColor} />
@@ -423,31 +355,88 @@ const CreateServiceRequestForm = ({
                 { backgroundColor: readOnlyBackgroundColor },
               ]}
             >
-              <Text style={{ color: textColor }}>{addressInput}</Text>
+              <Text style={{ color: textColor }}>
+                {propertyFullAddressString}
+              </Text>
             </View>
           )}
         </View>
       )}
+      {journey === 'off-premise' && (
+        <>
+          {address ? (
+            <View style={{ backgroundColor: 'transparent' }}>
+              <Text style={[styles.label, { color: labelColor }]}>Street</Text>
+              <Input
+                value={offPremiseStreet}
+                onChangeText={setOffPremiseStreet}
+                placeholder='Street Address'
+              />
+              <Text style={[styles.label, { color: labelColor }]}>Unit</Text>
+              <Input
+                value={offPremiseUnit}
+                onChangeText={setOffPremiseUnit}
+                placeholder='Apt, suite, etc. (optional)'
+              />
+              <Text style={[styles.label, { color: labelColor }]}>City</Text>
+              <Input
+                value={offPremiseCity}
+                onChangeText={setOffPremiseCity}
+                placeholder='City'
+              />
+              <View style={styles.row}>
+                <View
+                  style={{
+                    flex: 1,
+                    marginRight: 5,
+                    backgroundColor: 'transparent',
+                  }}
+                >
+                  <Text style={[styles.label, { color: labelColor }]}>
+                    State
+                  </Text>
+                  <Input
+                    value={offPremiseState}
+                    onChangeText={setOffPremiseState}
+                    placeholder='State'
+                  />
+                </View>
+                <View
+                  style={{
+                    flex: 1,
+                    marginLeft: 5,
+                    backgroundColor: 'transparent',
+                  }}
+                >
+                  <Text style={[styles.label, { color: labelColor }]}>
+                    Zip Code
+                  </Text>
+                  <Input
+                    value={offPremiseZip}
+                    onChangeText={setOffPremiseZip}
+                    placeholder='Zip Code'
+                    keyboardType='numeric'
+                  />
+                </View>
+              </View>
 
-      <View
-        style={[styles.switchContainer, { backgroundColor: 'transparent' }]}
-      >
-        <Text style={[styles.caption, { color: labelColor }]}>
-          Request service at a different address?
-        </Text>
-        <Switch
-          trackColor={{ false: dividerColor, true: primaryColor }}
-          thumbColor={switchThumbColor}
-          onValueChange={(value) => {
-            setIsOffPremise(value);
-            if (value) {
-              setServiceLocationObject(null);
-              setAddressInput('');
-            }
-          }}
-          value={isOffPremise}
-        />
-      </View>
+              <TouchableOpacity
+                onPress={() => setAddressModalVisible(true)}
+                style={{ marginTop: 10 }}
+              >
+                <Text style={{ color: primaryColor, textAlign: 'center' }}>
+                  Search for a different address
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <Button
+              title='Search for Address'
+              onPress={() => setAddressModalVisible(true)}
+            />
+          )}
+        </>
+      )}
 
       <Text style={[styles.label, { color: labelColor }]}>Service Type</Text>
       <DropDownPicker
@@ -462,7 +451,7 @@ const CreateServiceRequestForm = ({
           borderColor: dividerColor,
         }}
         textStyle={{ color: textColor }}
-        placeholderStyle={{ color: labelColor }}
+        placeholderStyle={{ color: labelColor, fontSize: 16 }}
         open={openServices}
         value={selectedPhoenixServices}
         items={phoenixServices.map((s) => ({
@@ -495,52 +484,52 @@ const CreateServiceRequestForm = ({
         }}
       />
 
-      {residentProfile &&
-        residentProfile.vehicles &&
-        residentProfile.vehicles.length > 0 && (
-          <>
-            <Text style={[styles.label, { color: labelColor }]}>
-              Select Vehicle
-            </Text>
-            <DropDownPicker
-              theme={colorScheme.toUpperCase() as 'LIGHT' | 'DARK'}
-              style={{
-                backgroundColor: inputBackgroundColor,
-                borderColor: dividerColor,
-                borderWidth: 1,
-              }}
-              dropDownContainerStyle={{
-                backgroundColor: inputBackgroundColor,
-                borderColor: dividerColor,
-              }}
-              textStyle={{ color: textColor }}
-              placeholderStyle={{ color: labelColor }}
-              open={openVehicles}
-              value={selectedVehiclePlate}
-              items={residentProfile.vehicles.map((v, index) => ({
+      {residentProfile?.vehicles && residentProfile.vehicles.length > 0 && (
+        <>
+          <Text style={[styles.label, { color: labelColor }]}>
+            Select Vehicle
+          </Text>
+          <DropDownPicker
+            theme={colorScheme.toUpperCase() as 'LIGHT' | 'DARK'}
+            style={{
+              backgroundColor: inputBackgroundColor,
+              borderColor: dividerColor,
+              borderWidth: 1,
+            }}
+            dropDownContainerStyle={{
+              backgroundColor: inputBackgroundColor,
+              borderColor: dividerColor,
+            }}
+            textStyle={{ color: textColor }}
+            placeholderStyle={{ color: labelColor }}
+            open={openVehicles}
+            value={selectedVehiclePlate}
+            items={
+              residentProfile.vehicles?.map((v, index) => ({
                 label: `${v.year} ${v.make} ${v.model}`,
                 value: v.plate || index.toString(),
-              }))}
-              setOpen={setOpenVehicles}
-              setValue={setSelectedVehiclePlate}
-              placeholder='Select your vehicle'
-              listMode='MODAL'
-              modalProps={{
-                animationType: 'fade',
-              }}
-              modalTitleStyle={{ color: textColor }}
-              modalContentContainerStyle={{
-                backgroundColor: inputBackgroundColor,
-              }}
-            />
-          </>
-        )}
+              })) || []
+            }
+            setOpen={setOpenVehicles}
+            setValue={setSelectedVehiclePlate}
+            placeholder='Select your vehicle'
+            listMode='MODAL'
+            modalProps={{
+              animationType: 'fade',
+            }}
+            modalTitleStyle={{ color: textColor }}
+            modalContentContainerStyle={{
+              backgroundColor: inputBackgroundColor,
+            }}
+          />
+        </>
+      )}
 
       <Text style={[styles.label, { color: labelColor }]}>
         Additional Notes
       </Text>
       <Input
-        placeholder='e.g., vehicle make/model, specific issue details'
+        // placeholder=''
         value={residentNotes}
         onChangeText={setResidentNotes}
         multiline
@@ -567,11 +556,37 @@ const CreateServiceRequestForm = ({
         disabled={saving}
         style={{ marginTop: 20 }}
       />
-    </ScrollView>
+
+      <AddressSearchModal
+        visible={addressModalVisible}
+        onClose={() => setAddressModalVisible(false)}
+        onSelectAddress={(details, addressObject: AddressObject) => {
+          setAddress(details);
+          setServiceLocationObject(addressObject);
+          // Populate the new fields
+          setOffPremiseStreet(addressObject.address_1 || '');
+          setOffPremiseCity(addressObject.city || '');
+          setOffPremiseState(addressObject.state || '');
+          setOffPremiseZip(addressObject.zipcode || '');
+          setOffPremiseUnit(''); // Reset unit as it's not provided by Google
+          setAddressModalVisible(false);
+        }}
+      />
+    </>
   );
 };
 
 const styles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: 'transparent',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   inputImitation: {
     height: 40,
     borderWidth: 1,
@@ -596,10 +611,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 10,
   },
-  container: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
   label: {
     fontSize: 16,
     fontWeight: '500',
@@ -618,4 +629,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CreateServiceRequestForm;
+export default ServiceRequestForm;

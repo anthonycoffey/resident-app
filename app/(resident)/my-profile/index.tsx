@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -15,10 +15,14 @@ import {
   reauthenticateWithCredential,
   updatePassword,
 } from 'firebase/auth';
+import debounce from 'lodash.debounce';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import StateDropdown from '@/components/ui/StateDropdown';
 import Divider from '@/components/ui/Divider';
+import Accordion from '@/components/ui/Accordion';
+import Snackbar from '@/components/ui/Snackbar';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useProfile } from '@/lib/context/ProfileContext';
 
@@ -33,7 +37,10 @@ const MyProfileScreenContent = () => {
   } = useProfile();
 
   const [saving, setSaving] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [openSection, setOpenSection] = useState('profile');
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -44,6 +51,42 @@ const MyProfileScreenContent = () => {
   const primaryColor = useThemeColor({}, 'primary');
   const errorColor = useThemeColor({}, 'error');
   const dividerColor = useThemeColor({}, 'divider');
+
+  const saveProfile = async (dataToSave: typeof residentData) => {
+    setSaving(true);
+    setSaveError(null);
+
+    const minSpinnerTime = new Promise((resolve) => setTimeout(resolve, 1000));
+    const saveData = new Promise(async (resolve, reject) => {
+      try {
+        const functions = getFunctions();
+        const updateResidentProfileCallable = httpsCallable(
+          functions,
+          'updateResidentProfile'
+        );
+        await updateResidentProfileCallable(dataToSave);
+        resolve(true);
+      } catch (err) {
+        reject(err);
+      }
+    });
+
+    try {
+      await Promise.all([saveData, minSpinnerTime]);
+      setIsDirty(false);
+      setSnackbarVisible(true);
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to update profile.';
+      setSaveError(errorMessage);
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const debouncedSave = useCallback(debounce(saveProfile, 1500), []);
 
   const formatPhoneNumberOnInput = (value: string): string => {
     if (!value) return value;
@@ -60,46 +103,38 @@ const MyProfileScreenContent = () => {
   };
 
   const handleInputChange = (
-    name: keyof Omit<typeof residentData, 'address'> | keyof NonNullable<(typeof residentData)['address']>,
+    name:
+      | keyof Omit<typeof residentData, 'address'>
+      | keyof NonNullable<(typeof residentData)['address']>,
     value: string
   ) => {
+    setIsDirty(true);
+    let updatedData;
     if (name === 'phone') {
-      setResidentData({ ...residentData, phone: formatPhoneNumberOnInput(value) });
-    } else if (['street', 'city', 'state', 'zip', 'unit'].includes(name as string)) {
-      setResidentData((prev) => ({
-        ...prev,
+      updatedData = { ...residentData, phone: formatPhoneNumberOnInput(value) };
+    } else if (
+      ['street', 'city', 'state', 'zip', 'unit'].includes(name as string)
+    ) {
+      updatedData = {
+        ...residentData,
         address: {
-          ...(prev.address || { street: '', city: '', state: '', zip: '' }),
+          ...(residentData.address || {
+            street: '',
+            city: '',
+            state: '',
+            zip: '',
+          }),
           [name]: value,
         },
-      }));
-    } else {
-      setResidentData({ ...residentData, [name as keyof typeof residentData]: value });
-    }
-  };
-
-  const handleSaveProfile = async () => {
-    setSaving(true);
-    setSaveError(null);
-    try {
-      const functions = getFunctions();
-      const updateResidentProfileCallable = httpsCallable(functions, 'updateResidentProfile');
-      
-      // Vehicles are now saved from the context, so we only need to save resident data here.
-      const payload = {
-        ...residentData,
       };
-
-      await updateResidentProfileCallable(payload);
-      Alert.alert('Success', 'Profile updated successfully!');
-    } catch (err) {
-      console.error('Error updating profile:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update profile.';
-      setSaveError(errorMessage);
-      Alert.alert('Error', errorMessage);
-    } finally {
-      setSaving(false);
+    } else {
+      updatedData = {
+        ...residentData,
+        [name as keyof typeof residentData]: value,
+      };
     }
+    setResidentData(updatedData);
+    debouncedSave(updatedData);
   };
 
   const handleChangePassword = async () => {
@@ -126,7 +161,8 @@ const MyProfileScreenContent = () => {
       setOldPassword('');
       setNewPassword('');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'An unknown error occurred.';
+      const message =
+        error instanceof Error ? error.message : 'An unknown error occurred.';
       Alert.alert('Error', message);
     } finally {
       setIsChangingPassword(false);
@@ -146,7 +182,10 @@ const MyProfileScreenContent = () => {
             try {
               await deleteVehicle(indexToDelete);
             } catch (error) {
-              const message = error instanceof Error ? error.message : 'An unknown error occurred.';
+              const message =
+                error instanceof Error
+                  ? error.message
+                  : 'An unknown error occurred.';
               Alert.alert('Delete Failed', message);
             }
           },
@@ -158,7 +197,7 @@ const MyProfileScreenContent = () => {
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color={primaryColor} />
+        <ActivityIndicator size='large' color={primaryColor} />
       </View>
     );
   }
@@ -167,126 +206,326 @@ const MyProfileScreenContent = () => {
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView style={{ flex: 1 }}>
         <Card>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15, backgroundColor: 'transparent' }}>
-            <MaterialIcons name="person" size={24} color={textColor} />
-            <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>My Profile</Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginBottom: 15,
+              backgroundColor: 'transparent',
+            }}
+          >
+            <MaterialIcons name='person' size={24} color={textColor} />
+            <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>
+              Edit Profile
+            </Text>
           </View>
-          {error && <Text style={{ color: errorColor, marginBottom: 10, textAlign: 'center' }}>{error}</Text>}
-          {saveError && <Text style={{ color: errorColor, marginBottom: 10, textAlign: 'center' }}>{saveError}</Text>}
-          <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>Full Name</Text>
-          <Input
-            placeholder="Full Name"
-            value={residentData.displayName || ''}
-            onChangeText={(val: string) => handleInputChange('displayName', val)}
-          />
-          <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>Email Address</Text>
-          <Input
-            placeholder="Email Address"
-            value={residentData.email || ''}
-            editable={false}
-          />
-          <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>Phone Number</Text>
-          <Input
-            placeholder="Phone Number"
-            value={residentData.phone || ''}
-            onChangeText={(val: string) => handleInputChange('phone', val)}
-            keyboardType="phone-pad"
-          />
-          <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>Street</Text>
-          <Input
-            placeholder="Street"
-            value={residentData.address?.street || ''}
-            onChangeText={(val: string) => handleInputChange('street', val)}
-          />
-          <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>City</Text>
-          <Input
-            placeholder="City"
-            value={residentData.address?.city || ''}
-            onChangeText={(val: string) => handleInputChange('city', val)}
-          />
-          <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>State</Text>
-          <Input
-            placeholder="State"
-            value={residentData.address?.state || ''}
-            onChangeText={(val: string) => handleInputChange('state', val)}
-          />
-          <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>Zip Code</Text>
-          <Input
-            placeholder="Zip Code"
-            value={residentData.address?.zip || ''}
-            onChangeText={(val: string) => handleInputChange('zip', val)}
-            keyboardType="numeric"
-          />
-          <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>Unit (Optional)</Text>
-          <Input
-            placeholder="Unit"
-            value={residentData.address?.unit || ''}
-            onChangeText={(val: string) => handleInputChange('unit', val)}
-          />
-          <Divider style={{ marginVertical: 20 }} />
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15, backgroundColor: 'transparent' }}>
-            <MaterialIcons name="directions-car" size={24} color={textColor} />
-            <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>Vehicle Information</Text>
-          </View>
-          {vehicles.length === 0 ? (
-            <Text style={{ textAlign: 'center', marginVertical: 20, color: labelColor }}>No vehicles added.</Text>
-          ) : (
-            vehicles.map((item, index) => (
-              <View key={`${item.plate}-${index}`} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: dividerColor, backgroundColor: 'transparent' }}>
-                <View style={{ backgroundColor: 'transparent' }}>
-                  <Text style={{ fontSize: 16, fontWeight: '500' }}>{`${item.year} ${item.color} ${item.make} ${item.model}`}</Text>
-                  <Text style={{ fontSize: 14, color: labelColor }}>{`Plate: ${item.plate}`}</Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15, backgroundColor: 'transparent' }}>
-                  <Link href={{ pathname: "/my-profile/vehicle-modal", params: { index: index.toString() } }} asChild>
-                    <TouchableOpacity>
-                      <MaterialIcons name="edit" size={24} color={primaryColor} />
+          {error && (
+            <Text
+              style={{
+                color: errorColor,
+                marginBottom: 10,
+                textAlign: 'center',
+              }}
+            >
+              {error}
+            </Text>
+          )}
+          {saveError && (
+            <Text
+              style={{
+                color: errorColor,
+                marginBottom: 10,
+                textAlign: 'center',
+              }}
+            >
+              {saveError}
+            </Text>
+          )}
+
+          <Accordion
+            title='Personal Information'
+            isOpen={openSection === 'profile'}
+            onPress={() =>
+              setOpenSection(openSection === 'profile' ? '' : 'profile')
+            }
+          >
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: '500',
+                marginBottom: 5,
+                color: labelColor,
+              }}
+            >
+              Full Name
+            </Text>
+            <Input
+              placeholder='Full Name'
+              value={residentData.displayName || ''}
+              onChangeText={(val: string) =>
+                handleInputChange('displayName', val)
+              }
+            />
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: '500',
+                marginBottom: 5,
+                color: labelColor,
+              }}
+            >
+              Email Address
+            </Text>
+            <Input
+              placeholder='Email Address'
+              value={residentData.email || ''}
+              editable={false}
+            />
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: '500',
+                marginBottom: 5,
+                color: labelColor,
+              }}
+            >
+              Phone Number
+            </Text>
+            <Input
+              placeholder='Phone Number'
+              value={residentData.phone || ''}
+              onChangeText={(val: string) => handleInputChange('phone', val)}
+              keyboardType='phone-pad'
+            />
+          </Accordion>
+
+          <Accordion
+            title='Address'
+            isOpen={openSection === 'address'}
+            onPress={() =>
+              setOpenSection(openSection === 'address' ? '' : 'address')
+            }
+          >
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: '500',
+                marginBottom: 5,
+                color: labelColor,
+              }}
+            >
+              Street
+            </Text>
+            <Input
+              placeholder='Street'
+              value={residentData.address?.street || ''}
+              onChangeText={(val: string) => handleInputChange('street', val)}
+            />
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: '500',
+                marginBottom: 5,
+                color: labelColor,
+              }}
+            >
+              Unit (Optional)
+            </Text>
+            <Input
+              placeholder='Unit'
+              value={residentData.address?.unit || ''}
+              onChangeText={(val: string) => handleInputChange('unit', val)}
+            />
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: '500',
+                marginBottom: 5,
+                color: labelColor,
+              }}
+            >
+              City
+            </Text>
+            <Input
+              placeholder='City'
+              value={residentData.address?.city || ''}
+              onChangeText={(val: string) => handleInputChange('city', val)}
+            />
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: '500',
+                marginBottom: 5,
+                color: labelColor,
+              }}
+            >
+              State
+            </Text>
+            <StateDropdown
+              value={residentData.address?.state || ''}
+              onChange={(val: string) => handleInputChange('state', val)}
+            />
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: '500',
+                marginBottom: 5,
+                color: labelColor,
+              }}
+            >
+              Zip Code
+            </Text>
+            <Input
+              placeholder='Zip Code'
+              value={residentData.address?.zip || ''}
+              onChangeText={(val: string) => handleInputChange('zip', val)}
+              keyboardType='numeric'
+            />
+          </Accordion>
+
+          <Accordion
+            title='Vehicles'
+            isOpen={openSection === 'vehicles'}
+            onPress={() =>
+              setOpenSection(openSection === 'vehicles' ? '' : 'vehicles')
+            }
+          >
+            {vehicles.length === 0 ? (
+              <Text
+                style={{
+                  textAlign: 'center',
+                  marginVertical: 20,
+                  color: labelColor,
+                }}
+              >
+                No vehicles added.
+              </Text>
+            ) : (
+              vehicles.map((item, index) => (
+                <View
+                  key={`${item.plate}-${index}`}
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    paddingVertical: 10,
+                    borderBottomWidth: 1,
+                    borderBottomColor: dividerColor,
+                    backgroundColor: 'transparent',
+                  }}
+                >
+                  <View style={{ backgroundColor: 'transparent' }}>
+                    <Text
+                      style={{ fontSize: 16, fontWeight: '500' }}
+                    >{`${item.year} ${item.color} ${item.make} ${item.model}`}</Text>
+                    <Text
+                      style={{ fontSize: 14, color: labelColor }}
+                    >{`Plate: ${item.plate}`}</Text>
+                  </View>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 15,
+                      backgroundColor: 'transparent',
+                    }}
+                  >
+                    <Link
+                      href={{
+                        pathname: '/my-profile/vehicle-modal',
+                        params: { index: index.toString() },
+                      }}
+                      asChild
+                    >
+                      <TouchableOpacity>
+                        <MaterialIcons
+                          name='edit'
+                          size={24}
+                          color={primaryColor}
+                        />
+                      </TouchableOpacity>
+                    </Link>
+                    <TouchableOpacity
+                      onPress={() => handleDeleteVehicle(index)}
+                    >
+                      <MaterialIcons
+                        name='delete'
+                        size={24}
+                        color={errorColor}
+                      />
                     </TouchableOpacity>
-                  </Link>
-                  <TouchableOpacity onPress={() => handleDeleteVehicle(index)}>
-                    <MaterialIcons name="delete" size={24} color={errorColor} />
-                  </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            ))
+              ))
+            )}
+            {vehicles.length < 2 && (
+              <Link href='/my-profile/vehicle-modal' asChild>
+                <Button
+                  title='Add Vehicle'
+                  onPress={() => {}}
+                  variant='outline'
+                  style={{ marginTop: 10 }}
+                />
+              </Link>
+            )}
+          </Accordion>
+          {saving && (
+            <View style={{ marginVertical: 10, alignItems: 'center' }}>
+              <ActivityIndicator />
+            </View>
           )}
-          {vehicles.length < 2 && (
-            <Link href="/my-profile/vehicle-modal" asChild>
-              <Button
-                title="Add Vehicle"
-                onPress={() => {}}
-                variant="outline"
-                style={{ marginTop: 10 }}
-              />
-            </Link>
-          )}
-          <Button
-            title={saving ? 'Saving...' : 'Save Profile'}
-            style={{ marginTop: 20 }}
-            onPress={handleSaveProfile}
-            disabled={saving}
-          />
         </Card>
         <Card>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15, backgroundColor: 'transparent' }}>
-            <MaterialIcons name="lock" size={24} color={textColor} />
-            <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>Change Password</Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginBottom: 15,
+              backgroundColor: 'transparent',
+            }}
+          >
+            <MaterialIcons name='lock' size={24} color={textColor} />
+            <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>
+              Change Password
+            </Text>
           </View>
-          <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>Current Password</Text>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: '500',
+              marginBottom: 5,
+              color: labelColor,
+            }}
+          >
+            Current Password
+          </Text>
           <Input
-            placeholder="Current Password"
+            placeholder='Current Password'
             value={oldPassword}
             onChangeText={setOldPassword}
             secureTextEntry
           />
-          <Text style={{ fontSize: 16, fontWeight: '500', marginBottom: 5, color: labelColor }}>New Password</Text>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: '500',
+              marginBottom: 5,
+              color: labelColor,
+            }}
+          >
+            New Password
+          </Text>
           <Input
-            placeholder="New Password"
+            placeholder='New Password'
             value={newPassword}
             onChangeText={setNewPassword}
             secureTextEntry={!isPasswordVisible}
             rightIcon={
-              <MaterialIcons name={isPasswordVisible ? 'visibility-off' : 'visibility'} size={24} color={textColor} />
+              <MaterialIcons
+                name={isPasswordVisible ? 'visibility-off' : 'visibility'}
+                size={24}
+                color={textColor}
+              />
             }
             onRightIconPress={() => setIsPasswordVisible(!isPasswordVisible)}
           />
@@ -298,6 +537,11 @@ const MyProfileScreenContent = () => {
           />
         </Card>
       </ScrollView>
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        message='Profile saved successfully!'
+      />
     </SafeAreaView>
   );
 };

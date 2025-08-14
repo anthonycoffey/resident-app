@@ -20,10 +20,13 @@
       "bundleIdentifier": "com.amenilink.resident",
       "config": {},
       "infoPlist": {
-         "UIBackgroundModes": ["remote-notification"],
+        "UIBackgroundModes": [
+          "remote-notification"
+        ],
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "This app uses the camera to allow you to take photos for violation reports.",
-        "NSPhotoLibraryUsageDescription": "This app uses the photo library to allow you to select photos for violation reports."
+        "NSPhotoLibraryUsageDescription": "This app uses the photo library to allow you to select photos for violation reports.",
+        "NSLocationWhenInUseUsageDescription": "This app uses location services to show maps and provide location-based features."
       }
     },
     "android": {

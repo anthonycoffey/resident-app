@@ -115,7 +115,8 @@ export default function NotificationsScreen() {
         <Button
           title="Clear All Notifications"
           onPress={handleClearAll}
-          variant="destructive"
+          variant="filled"
+          destructive
           icon="delete-forever"
         />
       </View>

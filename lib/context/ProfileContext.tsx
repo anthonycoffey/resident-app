@@ -11,7 +11,7 @@ type ProfileContextType = {
   error: string | null;
   fetchResidentData: () => Promise<void>;
   setResidentData: React.Dispatch<React.SetStateAction<Partial<Resident>>>;
-  addVehicle: (vehicle: Vehicle) => Promise<void>;
+  addVehicle: (vehicle: Vehicle) => Promise<number>;
   updateVehicle: (vehicle: Vehicle, index: number) => Promise<void>;
   deleteVehicle: (index: number) => Promise<void>;
   setVehicles: (vehicles: Vehicle[]) => void;
@@ -98,8 +98,9 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
   const addVehicle = async (vehicle: Vehicle) => {
     const newVehicles = [...vehicles, vehicle];
-    setVehicles(newVehicles);
     await updateVehiclesInFirestore(newVehicles);
+    setVehicles(newVehicles);
+    return newVehicles.length - 1;
   };
 
   const updateVehicle = async (vehicle: Vehicle, index: number) => {

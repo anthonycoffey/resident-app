@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Link } from 'expo-router';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getAuth, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 
@@ -72,7 +72,8 @@ export default function DeleteAccountScreen() {
           title="Delete My Account"
           onPress={handleDeleteAccount}
           loading={isLoading}
-          variant="destructive"
+          variant="filled"
+          destructive
         />
       </Card>
     </ScrollView>
@@ -86,6 +87,10 @@ const styles = StyleSheet.create({
   },
   description: {
     marginVertical: 8,
+  },
+  link: {
+    color: useThemeColor({}, 'primary'),
+    textDecorationLine: 'underline',
   },
   input: {
     marginBottom: 16,

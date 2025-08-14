@@ -1,22 +1,16 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
 
-interface ServiceRequestContextType {
-  address: any;
-  setAddress: (address: any) => void;
-  isOffPremise: boolean;
-  setIsOffPremise: (isOffPremise: boolean) => void;
-}
+// The context is now empty, but we'll keep the structure
+// in case we need to add global state related to service requests later.
+type ServiceRequestContextType = object;
 
 const ServiceRequestContext = createContext<ServiceRequestContextType | undefined>(
   undefined
 );
 
-export const ServiceRequestProvider = ({ children }: { children: React.ReactNode }) => {
-  const [address, setAddress] = useState<any>(null);
-  const [isOffPremise, setIsOffPremise] = useState(false);
-
+export const ServiceRequestProvider = ({ children }: { children: ReactNode }) => {
   return (
-    <ServiceRequestContext.Provider value={{ address, setAddress, isOffPremise, setIsOffPremise }}>
+    <ServiceRequestContext.Provider value={{}}>
       {children}
     </ServiceRequestContext.Provider>
   );
@@ -25,7 +19,9 @@ export const ServiceRequestProvider = ({ children }: { children: React.ReactNode
 export const useServiceRequest = () => {
   const context = useContext(ServiceRequestContext);
   if (context === undefined) {
-    throw new Error('useServiceRequest must be used within a ServiceRequestProvider');
+    throw new Error(
+      'useServiceRequest must be used within a ServiceRequestProvider'
+    );
   }
   return context;
 };
