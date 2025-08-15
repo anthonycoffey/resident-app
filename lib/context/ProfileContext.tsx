@@ -21,6 +21,7 @@ type ProfileContextType = {
   updateVehicle: (vehicle: Vehicle, index: number) => Promise<void>;
   deleteVehicle: (index: number) => Promise<void>;
   setVehicles: (vehicles: Vehicle[]) => void;
+  updateProfile: (data: Partial<Resident>) => Promise<void>;
 };
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -135,6 +136,14 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     await updateVehiclesInFirestore(newVehicles);
   };
 
+  const updateProfile = async (data: Partial<Resident>) => {
+    const residentDocRef = getResidentDocRef();
+    if (!residentDocRef) {
+      throw new Error('User information incomplete. Cannot save profile.');
+    }
+    await updateDoc(residentDocRef, data);
+  };
+
   const value = {
     residentData,
     vehicles,
@@ -145,6 +154,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     updateVehicle,
     deleteVehicle,
     setVehicles,
+    updateProfile,
   };
 
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>;

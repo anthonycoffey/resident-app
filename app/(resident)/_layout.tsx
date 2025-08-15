@@ -169,6 +169,18 @@ export default function ResidentLayout() {
             }}
           />
           <Drawer.Screen
+            name='job/components/JobStatusStepper'
+            options={{
+              drawerItemStyle: { display: 'none' },
+            }}
+          />
+          <Drawer.Screen
+            name='job/components/JobDetailsDisplay'
+            options={{
+              drawerItemStyle: { display: 'none' },
+            }}
+          />
+          <Drawer.Screen
             name='my-violations/[id]'
             options={{
               drawerItemStyle: { display: 'none' },

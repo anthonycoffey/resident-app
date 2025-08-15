@@ -7,8 +7,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { View, Text, useThemeColor } from '@/components/Themed';
-import { Link } from 'expo-router';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import {
   getAuth,
   EmailAuthProvider,
@@ -33,7 +32,10 @@ const MyProfileScreenContent = () => {
     error,
     setResidentData,
     deleteVehicle,
+    updateProfile,
   } = useProfile();
+  const params = useLocalSearchParams();
+  const router = useRouter();
 
   const [saving, setSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -44,6 +46,18 @@ const MyProfileScreenContent = () => {
   const [newPassword, setNewPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  useEffect(() => {
+    if (params.vehicleSaved === 'true') {
+      setSnackbarVisible(true);
+      const newParams = { ...params };
+      delete newParams.vehicleSaved;
+      router.replace({
+        pathname: '/my-profile',
+        params: newParams,
+      });
+    }
+  }, [params.vehicleSaved, router]);
 
   const textColor = useThemeColor({}, 'text');
   const labelColor = useThemeColor({}, 'label');
@@ -58,12 +72,7 @@ const MyProfileScreenContent = () => {
     const minSpinnerTime = new Promise((resolve) => setTimeout(resolve, 1000));
     const saveData = new Promise(async (resolve, reject) => {
       try {
-        const functions = getFunctions();
-        const updateResidentProfileCallable = httpsCallable(
-          functions,
-          'updateResidentProfile'
-        );
-        await updateResidentProfileCallable(dataToSave);
+        await updateProfile(dataToSave);
         resolve(true);
       } catch (err) {
         reject(err);
@@ -187,6 +196,7 @@ const MyProfileScreenContent = () => {
           onPress: async () => {
             try {
               await deleteVehicle(indexToDelete);
+              setSnackbarVisible(true);
             } catch (error) {
               const message =
                 error instanceof Error
@@ -202,7 +212,14 @@ const MyProfileScreenContent = () => {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'transparent',
+        }}
+      >
         <ActivityIndicator size='large' color={primaryColor} />
       </View>
     );
@@ -480,8 +497,14 @@ const MyProfileScreenContent = () => {
             )}
           </Accordion>
           {saving && (
-            <View style={{ marginVertical: 10, alignItems: 'center' }}>
-              <ActivityIndicator />
+            <View
+              style={{
+                marginTop: 16,
+                alignItems: 'center',
+                backgroundColor: 'transparent',
+              }}
+            >
+              <ActivityIndicator size='large' />
             </View>
           )}
         </Card>
@@ -550,7 +573,7 @@ const MyProfileScreenContent = () => {
       <Snackbar
         visible={snackbarVisible}
         onDismiss={() => setSnackbarVisible(false)}
-        message='Profile saved successfully!'
+        message='Success!'
       />
     </SafeAreaView>
   );

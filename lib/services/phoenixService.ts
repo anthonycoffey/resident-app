@@ -18,6 +18,7 @@ export interface Job {
     lat: number;
     lng: number;
     fullAddress: string;
+    short?: string;
   };
   proxy?: {
     ProxyNumber?: {
@@ -26,12 +27,30 @@ export interface Job {
   };
   notes: string;
   JobLineItems: {
+    id: number;
+    price: number;
     Service: {
       name: string;
       description: string;
     };
   }[];
-  // Add other job properties as needed
+  Customer: {
+    fullName: string;
+  };
+  Car?: {
+    year: string;
+    make: string;
+    model: string;
+  };
+  arrivalTime?: string;
+  Invoices?: {
+    status: string;
+    total: number;
+    linkCode: string;
+  }[];
+  dispatcher?: {
+    fullName: string;
+  };
   serviceSummary: string;
   serviceType: string;
   customerNotes: string;

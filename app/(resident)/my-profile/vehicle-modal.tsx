@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Platform, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
-import debounce from 'lodash.debounce';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import Input from '@/components/ui/Input';
@@ -8,6 +7,7 @@ import Button from '@/components/ui/Button';
 import { Text, View } from '@/components/Themed';
 import { useProfile } from '@/lib/context/ProfileContext';
 import { MaterialIcons } from '@expo/vector-icons';
+import Snackbar from '@/components/ui/Snackbar';
 
 type Vehicle = {
   make: string;
@@ -33,21 +33,26 @@ const VehicleModalScreen = () => {
   const [index, setIndex] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
 
-  const saveVehicle = async (currentVehicle: Vehicle, vehicleIndex: number | null) => {
-    if (!currentVehicle.make || !currentVehicle.model || !currentVehicle.year || !currentVehicle.color || !currentVehicle.plate) {
-      // Don't save if the form is incomplete
+  const saveVehicle = async () => {
+    if (!vehicle.make || !vehicle.model || !vehicle.year || !vehicle.color || !vehicle.plate) {
+      Alert.alert('Error', 'Please fill out all fields.');
       return;
     }
     setSaving(true);
     try {
-      if (isEditing && vehicleIndex !== null) {
-        await updateVehicle(currentVehicle, vehicleIndex);
+      if (isEditing && index !== null) {
+        await updateVehicle(vehicle, index);
       } else {
-        const newIndex = await addVehicle(currentVehicle);
+        const newIndex = await addVehicle(vehicle);
         router.setParams({ index: newIndex.toString() });
       }
       setIsDirty(false);
+      router.push({
+        pathname: '/my-profile',
+        params: { vehicleSaved: 'true' },
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An unknown error occurred.';
       Alert.alert('Save Failed', message);
@@ -55,8 +60,6 @@ const VehicleModalScreen = () => {
       setSaving(false);
     }
   };
-
-  const debouncedSave = useCallback(debounce(saveVehicle, 1000), [isEditing, updateVehicle, addVehicle, router]);
 
   useEffect(() => {
     if (params.index) {
@@ -84,12 +87,10 @@ const VehicleModalScreen = () => {
 
   const handleInputChange = (name: keyof Vehicle, value: string) => {
     setIsDirty(true);
-    const newVehicle = {
-      ...vehicle,
+    setVehicle((prev) => ({
+      ...prev,
       [name]: name === 'year' ? parseInt(value, 10) || 0 : name === 'plate' ? value.toUpperCase() : value,
-    };
-    setVehicle(newVehicle);
-    debouncedSave(newVehicle, index);
+    }));
   };
 
   return (
@@ -136,11 +137,11 @@ const VehicleModalScreen = () => {
         autoCapitalize="characters"
       />
       {saving && <ActivityIndicator style={{ marginVertical: 10 }} />}
-      <Button 
-        title={ isEditing ? 'Update Vehicle' : ' Add Vehicle'}
-        onPress={() => router.push('/(resident)/my-profile')} 
-        variant="outline" 
-        style={{ marginTop: 10 }} 
+      <Button
+        title={saving ? 'Saving...' : isEditing ? 'Update Vehicle' : 'Add Vehicle'}
+        onPress={saveVehicle}
+        disabled={saving}
+        style={{ marginTop: 20 }}
       />
 
       {/* Use a light status bar on iOS to account for the black space above the modal */}

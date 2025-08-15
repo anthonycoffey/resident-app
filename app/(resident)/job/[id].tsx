@@ -16,6 +16,8 @@ import MapViewDirections from 'react-native-maps-directions';
 import { getPhoenixJobDetails, Job } from '@/lib/services/phoenixService';
 import Card from '@/components/ui/Card';
 import Avatar from '@/components/ui/Avatar';
+import JobStatusStepper from './components/JobStatusStepper';
+import JobDetailsDisplay from './components/JobDetailsDisplay';
 
 const JobDetailsScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -31,6 +33,8 @@ const JobDetailsScreen = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [eta, setEta] = useState<string>('Calculating...');
+  const [distance, setDistance] = useState<string>('Calculating...');
 
   const fetchJob = useCallback(() => {
     if (!id) return Promise.resolve();
@@ -68,6 +72,26 @@ const JobDetailsScreen = () => {
     }
   };
 
+  const getCurrentStep = (): number => {
+    if (!job) return 0;
+    switch (job.status) {
+      case 'pending':
+      case 'assigned':
+      case 'en-route':
+        return 1;
+      case 'in-progress':
+        return 2;
+      case 'completed':
+        return 3;
+      case 'canceled':
+        return 3;
+      case 'cancelled':
+        return 3;
+      default:
+        return 3; // Or a specific step for canceled
+    }
+  };
+
   return (
     <SafeAreaView>
       <Stack.Screen
@@ -90,127 +114,47 @@ const JobDetailsScreen = () => {
       >
         {loading && !refreshing && <ActivityIndicator size='large' color={primaryColor} />}
         {error && (
-          <Text style={{ color: errorColor, textAlign: 'center', marginTop: 20 }}>
-            {error}
-          </Text>
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: 20,
+              marginTop: 50,
+            }}
+          >
+            <MaterialIcons
+              name='hourglass-empty'
+              size={60}
+              color={textMutedColor}
+              style={{ marginBottom: 20 }}
+            />
+            <Text
+              style={{
+                fontSize: 22,
+                fontWeight: 'bold',
+                textAlign: 'center',
+                marginBottom: 10,
+              }}
+            >
+              Your request is in queue
+            </Text>
+            <Text style={{ fontSize: 16, textAlign: 'center', color: textMutedColor }}>
+              We are finding a technician nearby. Please contact us if you require
+              additional support.
+            </Text>
+          </View>
         )}
         {job && (
           <>
+            <JobStatusStepper currentStep={getCurrentStep()} />
             <Card>
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontWeight: 'bold',
-                  marginBottom: 10,
-                  backgroundColor: 'transparent',
-                }}
-              >
-                Technician Information
-              </Text>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor: 'transparent',
-                }}
-              >
-                {job.assignedTechnician.avatar ? (
-                  <Avatar
-                    source={{ uri: job.assignedTechnician.avatar }}
-                    size={60}
-                  />
-                ) : (
-                    <View
-                      style={{
-                        width: 60,
-                        height: 60,
-                        borderRadius: 30,
-                        backgroundColor: chipColor,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <MaterialIcons name='person' size={36} color={textMutedColor} />
-                    </View>
-                  )}
-                <View
-                  style={{
-                    marginLeft: 15,
-                    flex: 1,
-                    backgroundColor: 'transparent',
-                  }}
-                >
-                  <Text style={{ fontSize: 16, fontWeight: '600' }}>
-                    {job.assignedTechnician.fullName}
-                  </Text>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      marginTop: 8,
-                      backgroundColor: 'transparent',
-                    }}
-                  >
-                    <TouchableOpacity
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        marginRight: 15,
-                      }}
-                      onPress={() => handleContact('sms')}
-                    >
-                      <MaterialIcons
-                        name='chat-bubble-outline'
-                        size={24}
-                        color={primaryColor}
-                      />
-                      <Text
-                        style={{
-                          marginLeft: 5,
-                          color: primaryColor,
-                          fontSize: 14,
-                        }}
-                      >
-                        Message
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        marginRight: 15,
-                      }}
-                      onPress={() => handleContact('tel')}
-                    >
-                      <MaterialIcons name='call' size={24} color={primaryColor} />
-                      <Text
-                        style={{
-                          marginLeft: 5,
-                          color: primaryColor,
-                          fontSize: 14,
-                        }}
-                      >
-                        Call
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            </Card>
-
-            <Card>
-              <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
-                Service Location
-              </Text>
-              <Text>{job.Address.fullAddress}</Text>
-
               <MapView
-                // provider={
-                  // Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined
-                // }
                 provider={PROVIDER_GOOGLE}
                 style={{
                   width: '100%',
-                  height: 400,
+                  height: 300,
+                  marginBottom: 16,
                 }}
                 initialRegion={{
                   latitude: job.Address.lat,
@@ -276,40 +220,161 @@ const JobDetailsScreen = () => {
                         longitude: job.assignedTechnician.longitude,
                       }}
                       apikey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY!}
-                      strokeWidth={3}
+                      strokeWidth={5}
                       strokeColor={primaryColor}
+                      onReady={(result) => {
+                        setDistance(result.distance.toFixed(2) + ' mi');
+                        setEta(result.duration.toFixed(0) + ' min');
+                      }}
                     />
                   )}
               </MapView>
-            </Card>
-
-            <Card>
               <Text
-                style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}
+                style={{
+                  fontSize: 14,
+                  fontWeight: 'bold',
+                  color: textMutedColor,
+                  textTransform: 'uppercase',
+                }}
               >
-                Job Status
+                Your Technician
               </Text>
-              <Text
-                style={{ fontSize: 16, fontWeight: 'bold', color: successColor }}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: 'transparent',
+                  marginTop: 8,
+                }}
               >
-                {job.status.replace('_', ' ').toUpperCase()}
-              </Text>
-            </Card>
-
-            <Card>
-              <Text
-                style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}
-              >
-                Service Details
-              </Text>
-              {job.JobLineItems.map((item, index) => (
-                <Text key={index}>{item.Service.name.trim()}</Text>
-              ))}
-              {job.notes && (
-                <Text>
-                  <Text style={{ fontWeight: 'bold' }}>Notes:</Text> {job.notes}
-                </Text>
+                {job.assignedTechnician.avatar ? (
+                  <Avatar
+                    source={{ uri: job.assignedTechnician.avatar }}
+                    size={56}
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 28,
+                      backgroundColor: chipColor,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <MaterialIcons name='person' size={36} color={textMutedColor} />
+                  </View>
+                )}
+                <View
+                  style={{
+                    marginLeft: 15,
+                    flex: 1,
+                    backgroundColor: 'transparent',
+                  }}
+                >
+                  <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
+                    {job.assignedTechnician.fullName}
+                  </Text>
+                  <Text style={{ color: textMutedColor }}>
+                    ETA: {eta} ({distance})
+                  </Text>
+                </View>
+                <View style={{ flexDirection: 'row', backgroundColor: 'transparent' }}>
+                  <TouchableOpacity
+                    style={{
+                      padding: 8,
+                      alignItems: 'center',
+                    }}
+                    onPress={() => handleContact('sms')}
+                  >
+                    <MaterialIcons
+                      name='chat-bubble-outline'
+                      size={24}
+                      color={primaryColor}
+                    />
+                    <Text style={{ color: textMutedColor, fontSize: 12 }}>Message</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{
+                      padding: 8,
+                      alignItems: 'center',
+                    }}
+                    onPress={() => handleContact('tel')}
+                  >
+                    <MaterialIcons name='call' size={24} color={primaryColor} />
+                    <Text style={{ color: textMutedColor, fontSize: 12 }}>Call</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              {job.dispatcher && (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: 'transparent',
+                    marginTop: 16,
+                    paddingTop: 16,
+                    borderTopWidth: 1,
+                    borderColor: chipColor,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 28,
+                      backgroundColor: chipColor,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <MaterialIcons name='support-agent' size={36} color={textMutedColor} />
+                  </View>
+                  <View
+                    style={{
+                      marginLeft: 15,
+                      flex: 1,
+                      backgroundColor: 'transparent',
+                    }}
+                  >
+                    <Text style={{ fontSize: 14, color: textMutedColor }}>Dispatcher</Text>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
+                      {job.dispatcher.fullName}
+                    </Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', backgroundColor: 'transparent' }}>
+                    <TouchableOpacity
+                      style={{
+                        padding: 8,
+                        alignItems: 'center',
+                      }}
+                      onPress={() => Linking.openURL('sms:+18444072723')}
+                    >
+                      <MaterialIcons
+                        name='chat-bubble-outline'
+                        size={24}
+                        color={primaryColor}
+                      />
+                      <Text style={{ color: textMutedColor, fontSize: 12 }}>Message</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{
+                        padding: 8,
+                        alignItems: 'center',
+                      }}
+                      onPress={() => Linking.openURL('tel:+18444072723')}
+                    >
+                      <MaterialIcons name='call' size={24} color={primaryColor} />
+                      <Text style={{ color: textMutedColor, fontSize: 12 }}>Call</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
               )}
+            </Card>
+
+            <Card>
+              <JobDetailsDisplay job={job} />
             </Card>
           </>
         )}
