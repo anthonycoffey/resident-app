@@ -13,13 +13,10 @@ const Badge: React.FC<BadgeProps> = ({ label, onPress }) => {
   const textColor = Colors.light.white; // Badge text is almost always white for contrast
 
   return (
-    <TouchableOpacity
-      onPress={() => onPress(label)}
-      style={styles.container}
-    >
-      <View style={styles.badge} backgroundColorName="badge">
+    <TouchableOpacity onPress={() => onPress(label)} style={styles.container}>
+      <View style={styles.badge} backgroundColorName='primary'>
         <Text style={[styles.badgeText, { color: textColor }]}>{label}</Text>
-        <MaterialIcons name="close" size={14} color={textColor} />
+        <MaterialIcons name='close' size={14} color={textColor} />
       </View>
     </TouchableOpacity>
   );

@@ -1,5 +1,12 @@
-import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useCallback,
+  useEffect,
+} from 'react';
+import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/config/firebaseConfig';
 import { useAuth } from '@/lib/providers/AuthProvider';
 import { Resident, Vehicle } from '@/lib/types/resident';
@@ -9,7 +16,6 @@ type ProfileContextType = {
   vehicles: Vehicle[];
   loading: boolean;
   error: string | null;
-  fetchResidentData: () => Promise<void>;
   setResidentData: React.Dispatch<React.SetStateAction<Partial<Resident>>>;
   addVehicle: (vehicle: Vehicle) => Promise<number>;
   updateVehicle: (vehicle: Vehicle, index: number) => Promise<void>;
@@ -32,9 +38,60 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     }
     return doc(
       db,
-      `organizations/${user.claims.organizationId}/properties/${user.claims.propertyId}/residents/${user.uid}`
+      `organizations/${
+        user.claims.organizationId
+      }/properties/${user.claims.propertyId.trim()}/residents/${user.uid}`
     );
   }, [user]);
+
+  useEffect(() => {
+    const residentDocRef = getResidentDocRef();
+    if (!residentDocRef) {
+      setError('User information incomplete. Cannot load profile.');
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    const unsubscribe = onSnapshot(
+      residentDocRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data() as Resident;
+          setResidentData({
+            displayName: data.displayName || user?.displayName || '',
+            email: data.email || user?.email || '',
+            phone: data.phone || '',
+            address: data.address || {
+              street: '',
+              city: '',
+              state: '',
+              zip: '',
+              unit: '',
+            },
+          });
+          setVehicles(data.vehicles || []);
+          setError(null);
+        } else {
+          setResidentData({
+            displayName: user?.displayName || '',
+            email: user?.email || '',
+            address: { street: '', city: '', state: '', zip: '', unit: '' },
+          });
+          setVehicles([]);
+          setError('Profile not found, please complete your details.');
+        }
+        setLoading(false);
+      },
+      (err) => {
+        console.error('Error fetching resident data:', err);
+        setError('Failed to load profile data.');
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user, getResidentDocRef]);
 
   const formatPhoneNumberOnLoad = (value: string): string => {
     if (!value) return value;
@@ -49,44 +106,6 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       6
     )}-${phoneNumber.slice(6, 10)}`;
   };
-
-  const fetchResidentData = useCallback(async () => {
-    const residentDocRef = getResidentDocRef();
-    if (!residentDocRef) {
-      setError('User information incomplete. Cannot load profile.');
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    try {
-      const residentDocSnap = await getDoc(residentDocRef);
-      if (residentDocSnap.exists()) {
-        const data = residentDocSnap.data() as Resident;
-        setResidentData({
-          displayName: data.displayName || user?.displayName || '',
-          email: data.email || user?.email || '',
-          phone: formatPhoneNumberOnLoad(data.phone || ''),
-          address: data.address || { street: '', city: '', state: '', zip: '', unit: '' },
-        });
-        setVehicles(data.vehicles || []);
-      } else {
-        setResidentData({
-          displayName: user?.displayName || '',
-          email: user?.email || '',
-          address: { street: '', city: '', state: '', zip: '', unit: '' },
-        });
-        setVehicles([]);
-        setError('Profile not found, please complete your details.');
-      }
-    } catch (err) {
-      console.error('Error fetching resident data:', err);
-      setError('Failed to load profile data.');
-    } finally {
-      setLoading(false);
-    }
-  }, [user, getResidentDocRef]);
 
   const updateVehiclesInFirestore = async (updatedVehicles: Vehicle[]) => {
     const residentDocRef = getResidentDocRef();
@@ -121,7 +140,6 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     vehicles,
     loading,
     error,
-    fetchResidentData,
     setResidentData,
     addVehicle,
     updateVehicle,

@@ -19,7 +19,6 @@ import debounce from 'lodash.debounce';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import StateDropdown from '@/components/ui/StateDropdown';
 import Divider from '@/components/ui/Divider';
 import Accordion from '@/components/ui/Accordion';
 import Snackbar from '@/components/ui/Snackbar';
@@ -115,6 +114,13 @@ const MyProfileScreenContent = () => {
     } else if (
       ['street', 'city', 'state', 'zip', 'unit'].includes(name as string)
     ) {
+      let processedValue = value;
+      if (name === 'state') {
+        processedValue = value.toUpperCase();
+      }
+      if (name === 'zip') {
+        processedValue = value.replace(/[^\d]/g, '');
+      }
       updatedData = {
         ...residentData,
         address: {
@@ -124,7 +130,7 @@ const MyProfileScreenContent = () => {
             state: '',
             zip: '',
           }),
-          [name]: value,
+          [name]: processedValue,
         },
       };
     } else {
@@ -361,9 +367,12 @@ const MyProfileScreenContent = () => {
             >
               State
             </Text>
-            <StateDropdown
+            <Input
+              placeholder='State'
               value={residentData.address?.state || ''}
-              onChange={(val: string) => handleInputChange('state', val)}
+              onChangeText={(val: string) => handleInputChange('state', val)}
+              maxLength={2}
+              autoCapitalize='characters'
             />
             <Text
               style={{
@@ -380,6 +389,7 @@ const MyProfileScreenContent = () => {
               value={residentData.address?.zip || ''}
               onChangeText={(val: string) => handleInputChange('zip', val)}
               keyboardType='numeric'
+              maxLength={5}
             />
           </Accordion>
 
@@ -546,14 +556,4 @@ const MyProfileScreenContent = () => {
   );
 };
 
-const MyProfileScreen = () => {
-  const { fetchResidentData } = useProfile();
-
-  useEffect(() => {
-    fetchResidentData();
-  }, [fetchResidentData]);
-
-  return <MyProfileScreenContent />;
-};
-
-export default MyProfileScreen;
+export default MyProfileScreenContent;
