@@ -138,7 +138,11 @@ const LoginScreen = () => {
   return (
     <View style={styles.container}>
       <Image
-        source={require('@/assets/images/logo-no-container.png')}
+        source={
+          colorScheme === 'dark'
+            ? require('@/assets/images/logo-dark-mode.png')
+            : require('@/assets/images/logo-no-container.png')
+        }
         style={styles.logo}
       />
       <Card>
@@ -271,8 +275,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   logo: {
-    width: 200,
-    height: 200,
+    width: 250,
+    height: 250,
     resizeMode: 'contain',
     alignSelf: 'center',
     marginBottom: 10,

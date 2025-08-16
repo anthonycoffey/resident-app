@@ -88,10 +88,6 @@ const styles = StyleSheet.create({
   description: {
     marginVertical: 8,
   },
-  link: {
-    color: useThemeColor({}, 'primary'),
-    textDecorationLine: 'underline',
-  },
   input: {
     marginBottom: 16,
   },

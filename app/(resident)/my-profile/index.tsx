@@ -23,11 +23,11 @@ import Accordion from '@/components/ui/Accordion';
 import Snackbar from '@/components/ui/Snackbar';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useProfile } from '@/lib/context/ProfileContext';
+import { Resident } from '@/lib/types/resident';
 
 const MyProfileScreenContent = () => {
   const {
     residentData,
-    vehicles,
     loading,
     error,
     setResidentData,
@@ -65,7 +65,7 @@ const MyProfileScreenContent = () => {
   const errorColor = useThemeColor({}, 'error');
   const dividerColor = useThemeColor({}, 'divider');
 
-  const saveProfile = async (dataToSave: typeof residentData) => {
+  const saveProfile = async (dataToSave: Partial<Resident>) => {
     setSaving(true);
     setSaveError(null);
 
@@ -111,18 +111,20 @@ const MyProfileScreenContent = () => {
   };
 
   const handleInputChange = (
-    name:
-      | keyof Omit<typeof residentData, 'address'>
-      | keyof NonNullable<(typeof residentData)['address']>,
+    name: keyof Resident | keyof NonNullable<Resident['address']>,
     value: string
   ) => {
+    if (!residentData) return;
+
     setIsDirty(true);
-    let updatedData;
+    let updatedData: Resident;
+
     if (name === 'phone') {
-      updatedData = { ...residentData, phone: formatPhoneNumberOnInput(value) };
-    } else if (
-      ['street', 'city', 'state', 'zip', 'unit'].includes(name as string)
-    ) {
+      updatedData = {
+        ...residentData,
+        phone: formatPhoneNumberOnInput(value),
+      };
+    } else if (['street', 'city', 'state', 'zip', 'unit'].includes(name)) {
       let processedValue = value;
       if (name === 'state') {
         processedValue = value.toUpperCase();
@@ -138,6 +140,7 @@ const MyProfileScreenContent = () => {
             city: '',
             state: '',
             zip: '',
+            unit: '',
           }),
           [name]: processedValue,
         },
@@ -145,9 +148,10 @@ const MyProfileScreenContent = () => {
     } else {
       updatedData = {
         ...residentData,
-        [name as keyof typeof residentData]: value,
+        [name as keyof Resident]: value,
       };
     }
+
     setResidentData(updatedData);
     debouncedSave(updatedData);
   };
@@ -225,6 +229,23 @@ const MyProfileScreenContent = () => {
     );
   }
 
+  if (!residentData) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'transparent',
+        }}
+      >
+        <Text style={{ color: errorColor }}>
+          {error || 'Could not load profile.'}
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView style={{ flex: 1 }}>
@@ -284,7 +305,7 @@ const MyProfileScreenContent = () => {
             </Text>
             <Input
               placeholder='Full Name'
-              value={residentData.displayName || ''}
+              value={residentData?.displayName || ''}
               onChangeText={(val: string) =>
                 handleInputChange('displayName', val)
               }
@@ -301,7 +322,7 @@ const MyProfileScreenContent = () => {
             </Text>
             <Input
               placeholder='Email Address'
-              value={residentData.email || ''}
+              value={residentData?.email || ''}
               editable={false}
             />
             <Text
@@ -316,7 +337,7 @@ const MyProfileScreenContent = () => {
             </Text>
             <Input
               placeholder='Phone Number'
-              value={residentData.phone || ''}
+              value={residentData?.phone || ''}
               onChangeText={(val: string) => handleInputChange('phone', val)}
               keyboardType='phone-pad'
             />
@@ -341,7 +362,7 @@ const MyProfileScreenContent = () => {
             </Text>
             <Input
               placeholder='Street'
-              value={residentData.address?.street || ''}
+              value={residentData?.address?.street || ''}
               onChangeText={(val: string) => handleInputChange('street', val)}
             />
             <Text
@@ -356,7 +377,7 @@ const MyProfileScreenContent = () => {
             </Text>
             <Input
               placeholder='Unit'
-              value={residentData.address?.unit || ''}
+              value={residentData?.address?.unit || ''}
               onChangeText={(val: string) => handleInputChange('unit', val)}
             />
             <Text
@@ -371,7 +392,7 @@ const MyProfileScreenContent = () => {
             </Text>
             <Input
               placeholder='City'
-              value={residentData.address?.city || ''}
+              value={residentData?.address?.city || ''}
               onChangeText={(val: string) => handleInputChange('city', val)}
             />
             <Text
@@ -386,7 +407,7 @@ const MyProfileScreenContent = () => {
             </Text>
             <Input
               placeholder='State'
-              value={residentData.address?.state || ''}
+              value={residentData?.address?.state || ''}
               onChangeText={(val: string) => handleInputChange('state', val)}
               maxLength={2}
               autoCapitalize='characters'
@@ -403,7 +424,7 @@ const MyProfileScreenContent = () => {
             </Text>
             <Input
               placeholder='Zip Code'
-              value={residentData.address?.zip || ''}
+              value={residentData?.address?.zip || ''}
               onChangeText={(val: string) => handleInputChange('zip', val)}
               keyboardType='numeric'
               maxLength={5}
@@ -417,7 +438,7 @@ const MyProfileScreenContent = () => {
               setOpenSection(openSection === 'vehicles' ? '' : 'vehicles')
             }
           >
-            {vehicles.length === 0 ? (
+            {(residentData?.vehicles?.length || 0) === 0 ? (
               <Text
                 style={{
                   textAlign: 'center',
@@ -428,7 +449,7 @@ const MyProfileScreenContent = () => {
                 No vehicles added.
               </Text>
             ) : (
-              vehicles.map((item, index) => (
+              residentData?.vehicles?.map((item, index) => (
                 <View
                   key={`${item.plate}-${index}`}
                   style={{
@@ -485,7 +506,7 @@ const MyProfileScreenContent = () => {
                 </View>
               ))
             )}
-            {vehicles.length < 2 && (
+            {(residentData?.vehicles?.length || 0) < 2 && (
               <Link href='/my-profile/vehicle-modal' asChild>
                 <Button
                   title='Add Vehicle'
@@ -573,7 +594,7 @@ const MyProfileScreenContent = () => {
       <Snackbar
         visible={snackbarVisible}
         onDismiss={() => setSnackbarVisible(false)}
-        message='Success!'
+        message='Profile updated successfully!'
       />
     </SafeAreaView>
   );

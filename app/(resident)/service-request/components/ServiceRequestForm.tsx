@@ -21,7 +21,8 @@ import DateTimePicker, {
   DateTimePickerAndroid,
 } from '@react-native-community/datetimepicker';
 import { format, formatDistanceToNow, addMinutes } from 'date-fns';
-import DropDownPicker from 'react-native-dropdown-picker';
+import ThemedDropDownPicker from '@/components/ui/DropDownPicker';
+import { Dropdown } from 'react-native-element-dropdown';
 import Badge from '@/components/ui/Badge';
 import { useSubmitServiceRequest } from '@/lib/hooks/useSubmitServiceRequest';
 import AddressSearchModal from './AddressSearchModal';
@@ -59,12 +60,10 @@ const ServiceRequestForm = ({ journey, onBack }: ServiceRequestFormProps) => {
   const colorScheme =
     useThemeColor({}, 'background') === '#000000' ? 'dark' : 'light';
 
-    console.log({ residentProfile });
-
   const [residentName] = useState(user?.displayName || '');
   const [email] = useState(user?.email || '');
   const [phone, setPhone] = useState(residentProfile?.phone || '');
-  const [arrivalTime, setArrivalTime] = useState(addMinutes(new Date(), 30));
+  const [arrivalTime, setArrivalTime] = useState(new Date());
   const [showDateTimePicker, setShowDateTimePicker] = useState(false);
   const [serviceLocationObject, setServiceLocationObject] = useState<
     object | null
@@ -74,10 +73,6 @@ const ServiceRequestForm = ({ journey, onBack }: ServiceRequestFormProps) => {
     number[]
   >([]);
   const [openServices, setOpenServices] = useState(false);
-  const [openVehicles, setOpenVehicles] = useState(false);
-  const [selectedVehiclePlate, setSelectedVehiclePlate] = useState<
-    string | null
-  >(null);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [residentNotes, setResidentNotes] = useState('');
   const [smsConsent, setSmsConsent] = useState(false);
@@ -141,20 +136,22 @@ const ServiceRequestForm = ({ journey, onBack }: ServiceRequestFormProps) => {
 
   // On-Premise Logic
   useEffect(() => {
-    if (journey === 'on-premise' && residentProfile?.address) {
-      const { street, city, state, zip, unit } = residentProfile.address;
-      const fullAddress = `${street}${
-        unit ? ` ${unit}` : ''
-      }, ${city}, ${state} ${zip}`;
-      setPropertyFullAddressString(fullAddress);
-      setServiceLocationObject({
-        address_1: street,
-        address_2: unit,
-        city,
-        state,
-        zipcode: zip,
-        fullAddress,
-      });
+    if (journey === 'on-premise') {
+      if (residentProfile?.address) {
+        const { street, city, state, zip, unit } = residentProfile.address;
+        const fullAddress = `${street}${
+          unit ? ` ${unit}` : ''
+        }, ${city}, ${state} ${zip}`;
+        setPropertyFullAddressString(fullAddress);
+        setServiceLocationObject({
+          address_1: street,
+          address_2: unit,
+          city,
+          state,
+          zipcode: zip,
+          fullAddress,
+        });
+      }
       setIsLoadingPropertyAddress(false);
     }
   }, [journey, residentProfile]);
@@ -165,17 +162,6 @@ const ServiceRequestForm = ({ journey, onBack }: ServiceRequestFormProps) => {
       handlePhoneChange(residentProfile.phone);
     }
   }, [residentProfile]);
-
-  useEffect(() => {
-    if (selectedVehiclePlate) {
-      const vehicle = residentProfile?.vehicles?.find(
-        (v) => v.plate === selectedVehiclePlate
-      );
-      setSelectedVehicle(vehicle || null);
-    } else {
-      setSelectedVehicle(null);
-    }
-  }, [selectedVehiclePlate, residentProfile?.vehicles]);
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -439,19 +425,7 @@ const ServiceRequestForm = ({ journey, onBack }: ServiceRequestFormProps) => {
       )}
 
       <Text style={[styles.label, { color: labelColor }]}>Service Type</Text>
-      <DropDownPicker
-        theme={colorScheme.toUpperCase() as 'LIGHT' | 'DARK'}
-        style={{
-          backgroundColor: inputBackgroundColor,
-          borderColor: dividerColor,
-          borderWidth: 1,
-        }}
-        dropDownContainerStyle={{
-          backgroundColor: inputBackgroundColor,
-          borderColor: dividerColor,
-        }}
-        textStyle={{ color: textColor }}
-        placeholderStyle={{ color: labelColor, fontSize: 16 }}
+      <ThemedDropDownPicker
         open={openServices}
         value={selectedPhoenixServices}
         items={phoenixServices.map((s) => ({
@@ -478,10 +452,6 @@ const ServiceRequestForm = ({ journey, onBack }: ServiceRequestFormProps) => {
         modalProps={{
           animationType: 'fade',
         }}
-        modalTitleStyle={{ color: textColor }}
-        modalContentContainerStyle={{
-          backgroundColor: inputBackgroundColor,
-        }}
       />
 
       {residentProfile?.vehicles && residentProfile.vehicles.length > 0 && (
@@ -489,38 +459,61 @@ const ServiceRequestForm = ({ journey, onBack }: ServiceRequestFormProps) => {
           <Text style={[styles.label, { color: labelColor }]}>
             Select Vehicle
           </Text>
-          <DropDownPicker
-            theme={colorScheme.toUpperCase() as 'LIGHT' | 'DARK'}
-            style={{
-              backgroundColor: inputBackgroundColor,
-              borderColor: dividerColor,
-              borderWidth: 1,
-            }}
-            dropDownContainerStyle={{
-              backgroundColor: inputBackgroundColor,
-              borderColor: dividerColor,
-            }}
-            textStyle={{ color: textColor }}
-            placeholderStyle={{ color: labelColor }}
-            open={openVehicles}
-            value={selectedVehiclePlate}
-            items={
-              residentProfile.vehicles?.map((v, index) => ({
-                label: `${v.year} ${v.make} ${v.model}`,
-                value: v.plate || index.toString(),
-              })) || []
-            }
-            setOpen={setOpenVehicles}
-            setValue={setSelectedVehiclePlate}
+          <Dropdown
+            style={[
+              styles.dropdown,
+              {
+                backgroundColor: inputBackgroundColor,
+                borderColor: dividerColor,
+              },
+            ]}
+            placeholderStyle={[styles.placeholderStyle, { color: textColor }]}
+            selectedTextStyle={[styles.selectedTextStyle, { color: textColor }]}
+            inputSearchStyle={[
+              styles.inputSearchStyle,
+              { backgroundColor: inputBackgroundColor, color: textColor },
+            ]}
+            iconStyle={styles.iconStyle}
+            data={residentProfile.vehicles.map((v) => ({
+              ...v,
+              label: `${v.year} ${v.make} ${v.model}`,
+            }))}
+            maxHeight={300}
+            labelField='label'
+            valueField='plate'
             placeholder='Select your vehicle'
-            listMode='MODAL'
-            modalProps={{
-              animationType: 'fade',
+            value={selectedVehicle}
+            onChange={(item) => {
+              setSelectedVehicle(item);
             }}
-            modalTitleStyle={{ color: textColor }}
-            modalContentContainerStyle={{
-              backgroundColor: inputBackgroundColor,
-            }}
+            renderLeftIcon={() => (
+              <MaterialIcons
+                style={styles.icon}
+                color={iconColor}
+                name='directions-car'
+                size={20}
+              />
+            )}
+            renderItem={(item) => (
+              <View
+                style={[
+                  styles.item,
+                  { backgroundColor: inputBackgroundColor },
+                ]}
+              >
+                <Text style={[styles.textItem, { color: textColor }]}>
+                  {`${item.year} ${item.make} ${item.model} - ${item.plate}`}
+                </Text>
+                {item.plate === selectedVehicle?.plate && (
+                  <MaterialIcons
+                    style={styles.icon}
+                    color={iconColor}
+                    name='check'
+                    size={20}
+                  />
+                )}
+              </View>
+            )}
           />
         </>
       )}
@@ -577,6 +570,41 @@ const ServiceRequestForm = ({ journey, onBack }: ServiceRequestFormProps) => {
 };
 
 const styles = StyleSheet.create({
+  dropdown: {
+    height: 40,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    width: '100%',
+  },
+  icon: {
+    marginRight: 5,
+  },
+  item: {
+    padding: 17,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  textItem: {
+    flex: 1,
+    fontSize: 16,
+  },
+  placeholderStyle: {
+    fontSize: 16,
+  },
+  selectedTextStyle: {
+    fontSize: 16,
+  },
+  iconStyle: {
+    width: 20,
+    height: 20,
+  },
+  inputSearchStyle: {
+    height: 40,
+    fontSize: 16,
+    borderRadius: 8,
+  },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',

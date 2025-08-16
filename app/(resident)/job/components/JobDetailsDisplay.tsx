@@ -112,7 +112,7 @@ const JobDetailsDisplay: React.FC<JobDetailsDisplayProps> = ({ job }) => {
           variant='filled'
           onPress={() =>
             Linking.openURL(
-              `${process.env.EXPO_PUBLIC_PHOENIX_API_URL}/invoices/${relevantInvoice.linkCode}`
+              `${process.env.EXPO_PUBLIC_PHOENIX_CLIENT_URL}/invoices/${relevantInvoice.linkCode}`
             )
           }
           style={{ marginTop: 20 }}

@@ -12,15 +12,13 @@ import { useAuth } from '@/lib/providers/AuthProvider';
 import { Resident, Vehicle } from '@/lib/types/resident';
 
 type ProfileContextType = {
-  residentData: Partial<Resident>;
-  vehicles: Vehicle[];
+  residentData: Resident | null;
   loading: boolean;
   error: string | null;
-  setResidentData: React.Dispatch<React.SetStateAction<Partial<Resident>>>;
+  setResidentData: React.Dispatch<React.SetStateAction<Resident | null>>;
   addVehicle: (vehicle: Vehicle) => Promise<number>;
   updateVehicle: (vehicle: Vehicle, index: number) => Promise<void>;
   deleteVehicle: (index: number) => Promise<void>;
-  setVehicles: (vehicles: Vehicle[]) => void;
   updateProfile: (data: Partial<Resident>) => Promise<void>;
 };
 
@@ -28,8 +26,7 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
-  const [residentData, setResidentData] = useState<Partial<Resident>>({});
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [residentData, setResidentData] = useState<Resident | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,27 +56,10 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data() as Resident;
-          setResidentData({
-            displayName: data.displayName || user?.displayName || '',
-            email: data.email || user?.email || '',
-            phone: data.phone || '',
-            address: data.address || {
-              street: '',
-              city: '',
-              state: '',
-              zip: '',
-              unit: '',
-            },
-          });
-          setVehicles(data.vehicles || []);
+          setResidentData(data);
           setError(null);
         } else {
-          setResidentData({
-            displayName: user?.displayName || '',
-            email: user?.email || '',
-            address: { street: '', city: '', state: '', zip: '', unit: '' },
-          });
-          setVehicles([]);
+          setResidentData(null);
           setError('Profile not found, please complete your details.');
         }
         setLoading(false);
@@ -117,23 +97,29 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addVehicle = async (vehicle: Vehicle) => {
-    const newVehicles = [...vehicles, vehicle];
+    if (!residentData) throw new Error('Resident data not loaded.');
+    const currentVehicles = residentData.vehicles || [];
+    const newVehicles = [...currentVehicles, vehicle];
     await updateVehiclesInFirestore(newVehicles);
-    setVehicles(newVehicles);
+    setResidentData({ ...residentData, vehicles: newVehicles });
     return newVehicles.length - 1;
   };
 
   const updateVehicle = async (vehicle: Vehicle, index: number) => {
-    const newVehicles = [...vehicles];
+    if (!residentData) throw new Error('Resident data not loaded.');
+    const currentVehicles = residentData.vehicles || [];
+    const newVehicles = [...currentVehicles];
     newVehicles[index] = vehicle;
-    setVehicles(newVehicles);
     await updateVehiclesInFirestore(newVehicles);
+    setResidentData({ ...residentData, vehicles: newVehicles });
   };
 
   const deleteVehicle = async (index: number) => {
-    const newVehicles = vehicles.filter((_, i) => i !== index);
-    setVehicles(newVehicles);
+    if (!residentData) throw new Error('Resident data not loaded.');
+    const currentVehicles = residentData.vehicles || [];
+    const newVehicles = currentVehicles.filter((_, i) => i !== index);
     await updateVehiclesInFirestore(newVehicles);
+    setResidentData({ ...residentData, vehicles: newVehicles });
   };
 
   const updateProfile = async (data: Partial<Resident>) => {
@@ -146,14 +132,12 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
   const value = {
     residentData,
-    vehicles,
     loading,
     error,
     setResidentData,
     addVehicle,
     updateVehicle,
     deleteVehicle,
-    setVehicles,
     updateProfile,
   };
 

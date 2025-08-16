@@ -1,7 +1,7 @@
 export interface PhoenixService {
   id: number;
   name: string;
-  isInternal: boolean;
+  isAmeniLink: boolean;
 }
 
 // Based on the structure from the example file
@@ -93,17 +93,17 @@ export const getPhoenixServices = async (
 
     const responseData = await response.json();
     const services: PhoenixService[] = responseData.data;
-    console.log('Fetched services:', services);
+    console.log('Fetched services:', services.length);
 
     if (includeInternal) {
       console.log('Returning all services (including internal)');
       return services;
     }
 
-    const filteredServices = services.filter((service) => !service.isInternal);
+    const filteredServices = services.filter((service) => service.isAmeniLink);
     console.log(
-      'Returning filtered services (excluding internal):',
-      filteredServices
+      'Returning filtered services (including AmeniLink services):',
+      filteredServices.length
     );
     return filteredServices;
   } catch (error) {

@@ -4,23 +4,16 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import { Text, View } from '@/components/Themed';
+import { Text, View, useThemeColor } from '@/components/Themed';
 import { useProfile } from '@/lib/context/ProfileContext';
 import { MaterialIcons } from '@expo/vector-icons';
-import Snackbar from '@/components/ui/Snackbar';
-
-type Vehicle = {
-  make: string;
-  model: string;
-  year: number;
-  color: string;
-  plate: string;
-};
+import { Vehicle } from '@/lib/types/resident';
 
 const VehicleModalScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { vehicles, addVehicle, updateVehicle } = useProfile();
+  const { residentData, addVehicle, updateVehicle, loading } = useProfile();
+  const primaryColor = useThemeColor({}, 'primary');
 
   const [vehicle, setVehicle] = useState<Vehicle>({
     make: '',
@@ -62,6 +55,7 @@ const VehicleModalScreen = () => {
   };
 
   useEffect(() => {
+    const vehicles = residentData?.vehicles || [];
     if (params.index) {
       const vehicleIndex = parseInt(params.index as string, 10);
       if (!isNaN(vehicleIndex) && vehicles[vehicleIndex]) {
@@ -83,7 +77,7 @@ const VehicleModalScreen = () => {
       });
       setIsDirty(false);
     }
-  }, [params.index, vehicles]);
+  }, [params.index, residentData]);
 
   const handleInputChange = (name: keyof Vehicle, value: string) => {
     setIsDirty(true);
@@ -93,9 +87,24 @@ const VehicleModalScreen = () => {
     }));
   };
 
+  if (loading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'transparent',
+        }}
+      >
+        <ActivityIndicator size='large' color={primaryColor} />
+      </View>
+    );
+  }
+
   return (
     <View style={{ flex: 1, padding: 20, justifyContent: 'center' }}>
-         <Stack.Screen
+      <Stack.Screen
         options={{
           headerTitle: isEditing ? 'Edit Vehicle' : 'Add Vehicle',
           headerLeft: () => (
@@ -103,12 +112,21 @@ const VehicleModalScreen = () => {
               onPress={() => router.push('/my-profile')}
               style={{ paddingHorizontal: 10 }}
             >
-              <MaterialIcons name='arrow-back' size={24}  />
+              <MaterialIcons name='arrow-back' size={24} />
             </TouchableOpacity>
           ),
         }}
       />
-      <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' }}>{isEditing ? 'Edit Vehicle' : 'Add Vehicle'}</Text>
+      <Text
+        style={{
+          fontSize: 24,
+          fontWeight: 'bold',
+          marginBottom: 20,
+          textAlign: 'center',
+        }}
+      >
+        {isEditing ? 'Edit Vehicle' : 'Add Vehicle'}
+      </Text>
       <Input
         placeholder="Make"
         value={vehicle.make}

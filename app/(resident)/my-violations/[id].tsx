@@ -22,6 +22,8 @@ import { useAuth } from '@/lib/providers/AuthProvider';
 import { formatRelativeTime, formatStandardTime } from '@/lib/utils/dates';
 import { Violation } from '@/lib/types/violation';
 import Chip from '@/components/ui/Chip';
+import CountdownTimer from '@/components/ui/CountdownTimer';
+import { Timestamp } from 'firebase/firestore';
 
 const getStatusVariant = (status: string) => {
   switch (status.toLowerCase()) {
@@ -257,6 +259,19 @@ export default function ViolationDetailScreen() {
           >
             ({formatRelativeTime(violation.createdAt)})
           </Text>
+
+          {violation.status === 'reported' && (
+            <CountdownTimer
+              createdAt={
+                violation.createdAt instanceof Timestamp
+                  ? violation.createdAt
+                  : new Timestamp(
+                      (violation.createdAt as any)._seconds,
+                      (violation.createdAt as any)._nanoseconds
+                    )
+              }
+            />
+          )}
 
           {violation.status === 'reported' && !violation.residentId && (
             <Button
