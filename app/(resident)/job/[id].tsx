@@ -76,19 +76,21 @@ const JobDetailsScreen = () => {
     if (!job) return 0;
     switch (job.status) {
       case 'pending':
+        return 1
       case 'assigned':
+        return 1
       case 'en-route':
-        return 1;
+        return 2
       case 'in-progress':
-        return 2;
+        return 3;
       case 'completed':
-        return 3;
+        return 4;
       case 'canceled':
-        return 3;
+        return 4;
       case 'cancelled':
-        return 3;
+        return 4;
       default:
-        return 3; // Or a specific step for canceled
+        return 4; // Or a specific step for canceled
     }
   };
 

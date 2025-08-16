@@ -9,6 +9,13 @@ interface StepProps {
   label: string;
 }
 
+const steps = [
+  'Assigned',
+  'En Route',
+  'In Progress',
+  'Completed',
+];
+
 const JobStatusStepper = ({ currentStep }: { currentStep: number }) => {
   const primaryColor = useThemeColor({}, 'primary');
   const textMutedColor = useThemeColor({}, 'textMuted');
@@ -39,33 +46,23 @@ const JobStatusStepper = ({ currentStep }: { currentStep: number }) => {
 
   return (
     <View style={styles.container}>
-      <Step
-        label='En Route'
-        isCompleted={currentStep > 1}
-        isCurrent={currentStep === 1}
-      />
-      <View
-        style={[
-          styles.line,
-          { backgroundColor: currentStep > 1 ? primaryColor : textMutedColor },
-        ]}
-      />
-      <Step
-        label='In Progress'
-        isCompleted={currentStep > 2}
-        isCurrent={currentStep === 2}
-      />
-      <View
-        style={[
-          styles.line,
-          { backgroundColor: currentStep > 2 ? primaryColor : textMutedColor },
-        ]}
-      />
-      <Step
-        label='Completed'
-        isCompleted={currentStep >= 3}
-        isCurrent={currentStep === 3}
-      />
+      {steps.map((label, idx) => (
+        <React.Fragment key={label}>
+          <Step
+            label={label}
+            isCompleted={currentStep > idx + 1}
+            isCurrent={currentStep === idx + 1}
+          />
+          {idx < steps.length - 1 && (
+            <View
+              style={[
+                styles.line,
+                { backgroundColor: currentStep > idx + 1 ? primaryColor : textMutedColor },
+              ]}
+            />
+          )}
+        </React.Fragment>
+      ))}
     </View>
   );
 };
@@ -86,11 +83,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
     fontSize: 12,
+    width: 75
   },
   line: {
     height: 2,
     flex: 1,
-    marginTop: 11, // Align with the center of the icon
+    marginTop: 11,
   },
 });
 
