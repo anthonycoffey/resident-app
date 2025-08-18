@@ -181,6 +181,12 @@ export default function ResidentLayout() {
             }}
           />
           <Drawer.Screen
+            name='job/components/ServiceRequestDetailsDisplay'
+            options={{
+              drawerItemStyle: { display: 'none' },
+            }}
+          />
+          <Drawer.Screen
             name='my-violations/[id]'
             options={{
               drawerItemStyle: { display: 'none' },
