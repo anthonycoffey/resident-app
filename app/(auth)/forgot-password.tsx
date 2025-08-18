@@ -29,7 +29,11 @@ const ForgotPasswordScreen = () => {
   return (
     <View style={styles.container}>
       <Image
-        source={require('@/assets/images/logo-no-container.png')}
+        source={
+          colorScheme === 'dark'
+            ? require('@/assets/images/logo-dark-mode.png')
+            : require('@/assets/images/logo-no-container.png')
+        }
         style={localStyles.logo}
       />
       <Card>

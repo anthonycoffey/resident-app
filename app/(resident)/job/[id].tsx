@@ -18,9 +18,22 @@ import Card from '@/components/ui/Card';
 import Avatar from '@/components/ui/Avatar';
 import JobStatusStepper from './components/JobStatusStepper';
 import JobDetailsDisplay from './components/JobDetailsDisplay';
+import { db } from '@/lib/config/firebaseConfig';
+import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore';
+import { useAuth } from '@/lib/providers/AuthProvider';
+import ServiceRequestDetailsDisplay from './components/ServiceRequestDetailsDisplay';
+
+interface ServiceRequest {
+  id: string;
+  requestType: string[];
+  serviceLocation: string;
+  submittedAt: Timestamp;
+  status: string;
+}
 
 const JobDetailsScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { user } = useAuth();
   const router = useRouter();
   const primaryColor = useThemeColor({}, 'primary');
   const tintColor = useThemeColor({}, 'tint');
@@ -30,26 +43,43 @@ const JobDetailsScreen = () => {
   const textMutedColor = useThemeColor({}, 'textMuted');
   const white = useThemeColor({}, 'white');
   const [job, setJob] = useState<Job | null>(null);
+  const [serviceRequest, setServiceRequest] = useState<ServiceRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [eta, setEta] = useState<string>('Calculating...');
   const [distance, setDistance] = useState<string>('Calculating...');
 
-  const fetchJob = useCallback(() => {
-    if (!id) return Promise.resolve();
-    return getPhoenixJobDetails(id)
-      .then((data) => {
-        setJob(data);
-        setError(null);
-      })
-      .catch((err) => {
+  const fetchJob = useCallback(async () => {
+    if (!id) return;
+    try {
+      const data = await getPhoenixJobDetails(id);
+      setJob(data);
+      setError(null);
+    } catch (err) {
+      // Failed to load from Phoenix, try Firestore silently
+      try {
+        if (!user?.claims?.organizationId) {
+          throw new Error('User organization not found');
+        }
+        const servicesCollectionPath = `organizations/${user.claims.organizationId}/services`;
+        const q = query(
+          collection(db, servicesCollectionPath),
+          where('phoenixSubmissionId', '==', Number(id))
+        );
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          const doc = querySnapshot.docs[0];
+          setServiceRequest({ id: doc.id, ...doc.data() } as ServiceRequest);
+        } else {
+          setError('Failed to load job details.');
+        }
+      } catch (firestoreError) {
         setError('Failed to load job details.');
-        console.error(err);
-        // Re-throw to be caught by callers
-        throw err;
-      });
-  }, [id]);
+        console.error(firestoreError);
+      }
+    }
+  }, [id, user]);
 
   useEffect(() => {
     setLoading(true);
@@ -115,7 +145,7 @@ const JobDetailsScreen = () => {
         }
       >
         {loading && !refreshing && <ActivityIndicator size='large' color={primaryColor} />}
-        {error && (
+        {error && !serviceRequest && (
           <View
             style={{
               flex: 1,
@@ -126,9 +156,9 @@ const JobDetailsScreen = () => {
             }}
           >
             <MaterialIcons
-              name='hourglass-empty'
+              name='error-outline'
               size={60}
-              color={textMutedColor}
+              color={errorColor}
               style={{ marginBottom: 20 }}
             />
             <Text
@@ -139,12 +169,46 @@ const JobDetailsScreen = () => {
                 marginBottom: 10,
               }}
             >
-              Your request is in queue
+              {error}
             </Text>
-            <Text style={{ fontSize: 16, textAlign: 'center', color: textMutedColor }}>
-              We are finding a technician nearby. Please contact us if you require
-              additional support.
-            </Text>
+          </View>
+        )}
+        {serviceRequest && !job && (
+          <View style={{ padding: 10 }}>
+            <Card>
+              <View
+                style={{
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  padding: 20,
+                  backgroundColor: 'transparent'
+                }}
+              >
+                <MaterialIcons
+                  name='hourglass-empty'
+                  size={60}
+                  color={textMutedColor}
+                  style={{ marginBottom: 20 }}
+                />
+                <Text
+                  style={{
+                    fontSize: 22,
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    marginBottom: 10,
+                  }}
+                >
+                  Your request is in queue
+                </Text>
+                <Text style={{ fontSize: 16, textAlign: 'center', color: textMutedColor }}>
+                  We are finding a technician nearby. Please contact us if you require
+                  additional support.
+                </Text>
+              </View>
+            </Card>
+            <Card>
+              <ServiceRequestDetailsDisplay serviceRequest={serviceRequest} />
+            </Card>
           </View>
         )}
         {job && (

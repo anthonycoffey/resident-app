@@ -28,7 +28,7 @@ type ServiceStatus = 'Completed' | 'In Progress' | 'Pending' | 'submitted';
 
 type ServiceRequest = {
   id: string;
-  requestType: string;
+  requestType: string[];
   status: ServiceStatus;
   submittedAt: Timestamp;
   phoenixSubmissionId?: string;
@@ -105,7 +105,7 @@ const ServiceRequestItem = ({ item }: { item: ServiceRequest }) => {
         <View
           style={[styles.chipContainer, { backgroundColor: 'transparent' }]}
         >
-          {item.requestType.split(',').map((type, index) => (
+          {item.requestType.map((type, index) => (
             <Chip key={index} label={type.trim()} />
           ))}
         </View>

@@ -4,6 +4,7 @@ import {
   StyleSheet,
   Platform,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Text, View, useThemeColor } from '@/components/Themed';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -179,6 +180,14 @@ const ServiceRequestForm = ({ journey, onBack }: ServiceRequestFormProps) => {
   }, []);
 
   const handleSubmit = () => {
+    if (
+      residentProfile?.vehicles &&
+      residentProfile.vehicles.length > 0 &&
+      !selectedVehicle
+    ) {
+      Alert.alert('Vehicle Required', 'Please select a vehicle to continue.');
+      return;
+    }
     let finalServiceLocationObject = serviceLocationObject;
 
     if (journey === 'off-premise') {
@@ -546,7 +555,12 @@ const ServiceRequestForm = ({ journey, onBack }: ServiceRequestFormProps) => {
       <Button
         title={saving ? 'Submitting...' : 'Submit Request'}
         onPress={handleSubmit}
-        disabled={saving}
+        disabled={
+          saving ||
+          (residentProfile?.vehicles &&
+            residentProfile.vehicles.length > 0 &&
+            !selectedVehicle)
+        }
         style={{ marginTop: 20 }}
       />
 

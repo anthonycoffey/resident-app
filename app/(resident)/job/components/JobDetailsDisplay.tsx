@@ -50,7 +50,7 @@ const JobDetailsDisplay: React.FC<JobDetailsDisplayProps> = ({ job }) => {
 
   const vehicleDisplay = car ? `${car.year} ${car.make} ${car.model}` : 'N/A';
   const relevantInvoice =
-    invoices?.find((inv) => inv.status === 'pending') || invoices?.[0];
+    invoices?.find((inv) => inv.status === 'pending') || invoices?.[invoices.length - 1];
 
   return (
     <View>

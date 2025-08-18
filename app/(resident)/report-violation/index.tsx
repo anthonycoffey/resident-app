@@ -5,10 +5,11 @@ import {
   Image,
   useColorScheme,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { useNavigation } from 'expo-router';
+import { router, Stack, useNavigation } from 'expo-router';
 
 import { View, Text } from '@/components/Themed';
 import Colors from '@/constants/Colors';
@@ -142,6 +143,15 @@ const ReportViolationScreen = () => {
 
   return (
     <ScrollView style={{ flex: 1 }}>
+      <Stack.Screen
+        options={{
+          title: 'Report Violation',
+          headerStyle: {
+            backgroundColor: themeColors.background,
+          },
+          headerTintColor: themeColors.text,
+        }}
+      />
       <Card>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15, backgroundColor: 'transparent' }}>
           <MaterialIcons name="report" size={24} color={themeColors.text} />
@@ -151,7 +161,9 @@ const ReportViolationScreen = () => {
         <Input
           placeholder='Enter License Plate'
           value={licensePlate}
-          onChangeText={setLicensePlate}
+          onChangeText={(text) =>
+            setLicensePlate(text.replace(/[^a-zA-Z0-9]/g, '').toUpperCase())
+          }
           autoCapitalize='characters'
         />
 

@@ -7,7 +7,14 @@ export interface PhoenixService {
 // Based on the structure from the example file
 export interface Job {
   id: string;
-  status: 'pending' | 'assigned' | 'en-route' | 'in-progress' | 'completed' | 'canceled' | 'cancelled';
+  status:
+    | 'pending'
+    | 'assigned'
+    | 'en-route'
+    | 'in-progress'
+    | 'completed'
+    | 'canceled'
+    | 'cancelled';
   assignedTechnician: {
     latitude: number;
     longitude: number;
@@ -59,13 +66,7 @@ export interface Job {
 
 const PHOENIX_API_URL = process.env.EXPO_PUBLIC_PHOENIX_API_URL;
 
-export const getPhoenixServices = async (
-  includeInternal = false
-): Promise<PhoenixService[]> => {
-  console.log(
-    'getPhoenixServices called with includeInternal:',
-    includeInternal
-  );
+export const getPhoenixServices = async (): Promise<PhoenixService[]> => {
   if (!PHOENIX_API_URL) {
     console.error(
       'Phoenix API URL is not configured. Please set EXPO_PUBLIC_PHOENIX_API_URL in your environment.'
@@ -76,7 +77,7 @@ export const getPhoenixServices = async (
   }
 
   try {
-    const url = `${PHOENIX_API_URL}/services`;
+    const url = `${PHOENIX_API_URL}/services?limit=50&isAmeniLink=true`;
     console.log('Fetching Phoenix services from:', url);
     const response = await fetch(url);
     console.log('Fetch response status:', response.status, response.statusText);
@@ -93,19 +94,7 @@ export const getPhoenixServices = async (
 
     const responseData = await response.json();
     const services: PhoenixService[] = responseData.data;
-    console.log('Fetched services:', services.length);
-
-    if (includeInternal) {
-      console.log('Returning all services (including internal)');
-      return services;
-    }
-
-    const filteredServices = services.filter((service) => service.isAmeniLink);
-    console.log(
-      'Returning filtered services (including AmeniLink services):',
-      filteredServices.length
-    );
-    return filteredServices;
+    return services;
   } catch (error) {
     console.error('Failed to fetch Phoenix services:', error);
     // Re-throw the error to be handled by the calling component
@@ -115,7 +104,7 @@ export const getPhoenixServices = async (
 
 export const getPhoenixJobDetails = async (id: string): Promise<Job> => {
   if (!PHOENIX_API_URL) {
-    throw new Error("Phoenix API URL is not configured.");
+    throw new Error('Phoenix API URL is not configured.');
   }
 
   try {
@@ -123,13 +112,15 @@ export const getPhoenixJobDetails = async (id: string): Promise<Job> => {
     const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Network response was not ok: ${response.status} ${response.statusText}`
+      );
     }
 
     const data = await response.json();
     return data as Job;
   } catch (error) {
-    console.error(`Failed to fetch job details for id ${id}:`, error);
+    // console.error(`Failed to fetch job details for id ${id}:`, error);
     throw error;
   }
 };
