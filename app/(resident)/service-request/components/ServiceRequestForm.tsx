@@ -191,6 +191,18 @@ const ServiceRequestForm = ({ journey, onBack }: ServiceRequestFormProps) => {
     let finalServiceLocationObject = serviceLocationObject;
 
     if (journey === 'off-premise') {
+      if (
+        !offPremiseStreet ||
+        !offPremiseCity ||
+        !offPremiseState ||
+        !offPremiseZip
+      ) {
+        Alert.alert(
+          'Missing Address Information',
+          'Please fill in all required address fields to continue.'
+        );
+        return;
+      }
       finalServiceLocationObject = {
         address_1: offPremiseStreet,
         address_2: offPremiseUnit,

@@ -51,6 +51,7 @@ export default function ViolationDetailScreen() {
   const [violation, setViolation] = useState<Violation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<object | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalContent, setModalContent] = useState({
@@ -65,6 +66,11 @@ export default function ViolationDetailScreen() {
   const violationId = Array.isArray(id) ? id[0] : id;
 
   const fetchViolation = useCallback(async () => {
+    setDebugInfo({
+      violationId,
+      organizationId: user?.organizationId,
+      propertyId: user?.propertyId,
+    });
     if (!violationId || !user?.organizationId || !user?.propertyId) {
       // This check is now primarily a safeguard, as the useEffect should prevent this.
       const errorMsg =
@@ -183,8 +189,48 @@ export default function ViolationDetailScreen() {
 
   if (error) {
     return (
-      <View style={[styles.container, { backgroundColor }]}>
-        <Text style={{ color: textColor }}>{error}</Text>
+      <View style={[styles.container, { backgroundColor, padding: 16 }]}>
+        <Text style={{ color: textColor, fontSize: 18, marginBottom: 20 }}>
+          {error}
+        </Text>
+        <Card>
+          <Text
+            style={{
+              color: textColor,
+              fontWeight: 'bold',
+              fontSize: 16,
+              marginBottom: 10,
+            }}
+          >
+            Diagnostic Information
+          </Text>
+          <Text style={{ color: textColor }}>
+            The following details were used in the request. Please verify they
+            are correct.
+          </Text>
+          <View style={{ marginTop: 15 }}>
+            <Text style={{ color: textColor, fontWeight: 'bold' }}>
+              Violation ID:
+            </Text>
+            <Text style={{ color: textColor }}>{violationId}</Text>
+            <Text
+              style={{ color: textColor, fontWeight: 'bold', marginTop: 10 }}
+            >
+              Organization ID:
+            </Text>
+            <Text style={{ color: textColor }}>
+              {user?.organizationId || 'Not available'}
+            </Text>
+            <Text
+              style={{ color: textColor, fontWeight: 'bold', marginTop: 10 }}
+            >
+              Property ID:
+            </Text>
+            <Text style={{ color: textColor }}>
+              {user?.propertyId || 'Not available'}
+            </Text>
+          </View>
+        </Card>
       </View>
     );
   }
