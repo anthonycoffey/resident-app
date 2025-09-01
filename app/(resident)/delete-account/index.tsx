@@ -1,8 +1,19 @@
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useRouter, Link } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { getAuth, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import {
+  getAuth,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+} from 'firebase/auth';
 
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -11,6 +22,7 @@ import { Text as ThemedText, useThemeColor } from '@/components/Themed';
 
 export default function DeleteAccountScreen() {
   const [password, setPassword] = useState('');
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const functions = getFunctions();
@@ -21,7 +33,10 @@ export default function DeleteAccountScreen() {
 
   const handleDeleteAccount = async () => {
     if (!password) {
-      Alert.alert('Password Required', 'Please enter your password to delete your account.');
+      Alert.alert(
+        'Password Required',
+        'Please enter your password to delete your account.'
+      );
       return;
     }
 
@@ -37,14 +52,23 @@ export default function DeleteAccountScreen() {
       const credential = EmailAuthProvider.credential(user.email!, password);
       await reauthenticateWithCredential(user, credential);
 
-      const anonymizeAndDeleteUser = httpsCallable(functions, 'anonymizeAndDeleteUser');
+      const anonymizeAndDeleteUser = httpsCallable(
+        functions,
+        'anonymizeAndDeleteUser'
+      );
       await anonymizeAndDeleteUser();
 
-      Alert.alert('Account Deleted', 'Your account has been successfully deleted.');
+      Alert.alert(
+        'Account Deleted',
+        'Your account has been successfully deleted.'
+      );
       router.replace('/(auth)/login');
     } catch (error: any) {
       console.error('Account deletion error:', error);
-      Alert.alert('Error', error.message || 'An error occurred while deleting your account.');
+      Alert.alert(
+        'Error',
+        error.message || 'An error occurred while deleting your account.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -53,26 +77,34 @@ export default function DeleteAccountScreen() {
   return (
     <ScrollView style={[styles.container, { backgroundColor }]}>
       <Card>
-        <ThemedText variant="title">Delete Account</ThemedText>
+        <ThemedText variant='title'>Delete Account</ThemedText>
         <ThemedText style={styles.description}>
-          This action is irreversible. Please be certain you want to delete your account before
-          proceeding.
+          This action is irreversible. Please be certain you want to delete your
+          account before proceeding.
         </ThemedText>
         <ThemedText style={styles.description}>
           To confirm, please enter your password below.
         </ThemedText>
         <Input
-          placeholder="Password"
+          placeholder='Password'
           value={password}
           onChangeText={setPassword}
-          secureTextEntry
+          secureTextEntry={!isPasswordVisible}
           style={styles.input}
+          rightIcon={
+            <Feather
+              name={isPasswordVisible ? 'eye-off' : 'eye'}
+              size={24}
+              color='gray'
+            />
+          }
+          onRightIconPress={() => setIsPasswordVisible(!isPasswordVisible)}
         />
         <Button
-          title="Delete My Account"
+          title='Delete My Account'
           onPress={handleDeleteAccount}
           loading={isLoading}
-          variant="filled"
+          variant='filled'
           destructive
         />
       </Card>
@@ -88,7 +120,5 @@ const styles = StyleSheet.create({
   description: {
     marginVertical: 8,
   },
-  input: {
-    marginBottom: 16,
-  },
+  input: {},
 });
