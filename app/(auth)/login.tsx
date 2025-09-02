@@ -59,6 +59,9 @@ const LoginScreen = () => {
     if (loading) return;
     setLoading(true);
     try {
+      // Sign out the user to force account selection
+      await GoogleSignin.signOut();
+      
       // Get the user's ID token
       const response = await GoogleSignin.signIn();
       console.log('Google Sign-In response:', response);
