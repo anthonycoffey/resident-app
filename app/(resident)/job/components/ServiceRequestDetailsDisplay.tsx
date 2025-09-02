@@ -40,19 +40,31 @@ const DetailRow = ({ label, value }: { label: string; value: string }) => {
   );
 };
 
-const ServiceRequestDetailsDisplay: React.FC<ServiceRequestDetailsDisplayProps> = ({ serviceRequest }) => {
+const ServiceRequestDetailsDisplay: React.FC<
+  ServiceRequestDetailsDisplayProps
+> = ({ serviceRequest }) => {
   const tintColor = useThemeColor({}, 'tint');
 
   return (
     <View>
-      <Text style={[styles.title, { color: tintColor }]}>Service Request Details</Text>
+      <Text style={[styles.title, { color: tintColor }]}>
+        Service Request Details
+      </Text>
       <DetailRow label='Status' value={serviceRequest.status.toUpperCase()} />
-      <DetailRow label='Service Location' value={serviceRequest.serviceLocation} />
-      <DetailRow label='Submitted At' value={formatDateTime(serviceRequest.submittedAt)} />
+      <DetailRow
+        label='Service Location'
+        value={serviceRequest.serviceLocation}
+      />
+      <DetailRow
+        label='Submitted At'
+        value={formatDateTime(serviceRequest.submittedAt)}
+      />
 
       <Divider style={{ marginVertical: 15 }} />
 
-      <Text style={[styles.title, { color: tintColor }]}>Services Requested</Text>
+      <Text style={[styles.title, { color: tintColor }]}>
+        Services Requested
+      </Text>
       <View style={styles.chipContainer}>
         {serviceRequest.requestType.map((type, index) => (
           <Chip key={index} label={type.trim()} />

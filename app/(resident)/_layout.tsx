@@ -76,9 +76,9 @@ export default function ResidentLayout() {
           <Drawer.Screen
             name='index'
             options={{
-              title: 'Dashboard',
+              title: 'Notifications',
               drawerIcon: ({ color }) => (
-                <MaterialIcons size={28} name='dashboard' color={color} />
+                <MaterialIcons size={28} name='notifications' color={color} />
               ),
             }}
           />
@@ -191,25 +191,6 @@ export default function ResidentLayout() {
             options={{
               drawerItemStyle: { display: 'none' },
               title: 'Violation Details',
-            }}
-          />
-          <Drawer.Screen
-            name='notifications'
-            options={{
-              drawerItemStyle: { display: 'none' },
-              title: 'Notifications',
-              headerRight: () => (
-                <TouchableOpacity
-                  onPress={() => router.back()}
-                  style={{ marginRight: 15 }}
-                >
-                  <MaterialIcons
-                    name='arrow-back'
-                    size={24}
-                    color={activeTintColor}
-                  />
-                </TouchableOpacity>
-              ),
             }}
           />
         </Drawer>

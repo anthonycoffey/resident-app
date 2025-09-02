@@ -38,7 +38,7 @@ const NotificationBell = () => {
 
   const handleViewAllPress = () => {
     setShowPopover(false);
-    router.push('/(resident)/notifications');
+    router.push('/(resident)');
   };
 
   return (
@@ -46,12 +46,12 @@ const NotificationBell = () => {
       <TouchableOpacity ref={touchable} onPress={() => setShowPopover(true)}>
         <View style={styles.container}>
           <MaterialIcons
-            name="notifications-none"
+            name='notifications-none'
             size={24}
             color={themeColors.text}
           />
           {unreadCount > 0 && (
-            <ThemedView style={styles.badge} backgroundColorName="badge">
+            <ThemedView style={styles.badge} backgroundColorName='badge'>
               <Text
                 style={styles.badgeText}
                 lightColor={Colors.light.white}

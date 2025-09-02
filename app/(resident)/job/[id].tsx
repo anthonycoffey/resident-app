@@ -125,7 +125,7 @@ const JobDetailsScreen = () => {
   };
 
   return (
-    <SafeAreaView>
+    <SafeAreaView style={{ flex: 1 }}>
       <Stack.Screen
         options={{
           headerTitle: 'Service Request Details',
