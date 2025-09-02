@@ -3,7 +3,7 @@
     "name": "AmeniLink",
     "description": "AmeniLink Resident App",
     "slug": "amenilink-resident",
-    "version": "1.0.17",
+    "version": "1.0.18",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "owner": "phoenix-crm",
