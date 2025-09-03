@@ -5,6 +5,8 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { View, Text, useThemeColor } from '@/components/Themed';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
@@ -247,7 +249,12 @@ const MyProfileScreenContent = () => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+      }}
+    >
       <ScrollView style={{ flex: 1 }}>
         <Card>
           <View

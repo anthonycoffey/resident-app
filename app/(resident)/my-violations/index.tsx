@@ -7,6 +7,9 @@ import {
   RefreshControl,
   StyleSheet,
   TouchableOpacity,
+  SafeAreaView,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { router } from 'expo-router';
 import Card from '@/components/ui/Card';
@@ -138,8 +141,12 @@ export default function MyViolationsScreen() {
   );
 
   useEffect(() => {
-    fetchViolations();
-  }, [user]);
+    if (user) {
+      fetchViolations();
+    } else {
+      setViolations([]); // Clear violations when user signs out
+    }
+  }, [user, fetchViolations]);
 
   const onRefresh = () => fetchViolations(true);
 
@@ -183,9 +190,10 @@ export default function MyViolationsScreen() {
   }
 
   return (
-    <FlatList
-      data={violations}
-      renderItem={renderItem}
+    <SafeAreaView style={{ flex: 1, backgroundColor }}>
+      <FlatList
+        data={violations}
+        renderItem={renderItem}
       keyExtractor={(item) => item.id}
       contentContainerStyle={{ padding: 10 }}
       style={{ backgroundColor }}
@@ -210,6 +218,7 @@ export default function MyViolationsScreen() {
         </View>
       }
     />
+    </SafeAreaView>
   );
 }
 

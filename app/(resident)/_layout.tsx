@@ -31,9 +31,8 @@ function CustomDrawerContent(props: any) {
       />
       <DrawerItem
         label='Logout'
-        labelStyle={{ color: destructiveColor }}
-        icon={({ size }) => (
-          <MaterialIcons name='logout' size={size} color={destructiveColor} />
+        icon={({ size , color}) => (
+          <MaterialIcons name='logout' size={size} color={color} />
         )}
         onPress={logout}
       />
@@ -88,15 +87,6 @@ export default function ResidentLayout() {
               title: 'My Profile',
               drawerIcon: ({ color }) => (
                 <MaterialIcons size={28} name='person' color={color} />
-              ),
-            }}
-          />
-          <Drawer.Screen
-            name='my-property/index'
-            options={{
-              title: 'My Property',
-              drawerIcon: ({ color }) => (
-                <MaterialIcons size={28} name='apartment' color={color} />
               ),
             }}
           />

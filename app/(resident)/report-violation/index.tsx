@@ -6,6 +6,9 @@ import {
   useColorScheme,
   ScrollView,
   TouchableOpacity,
+  SafeAreaView,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -142,9 +145,10 @@ const ReportViolationScreen = () => {
   };
 
   return (
-    <ScrollView style={{ flex: 1 }}>
-      <Stack.Screen
-        options={{
+    <SafeAreaView style={{ flex: 1 }}>
+      <ScrollView>
+        <Stack.Screen
+          options={{
           title: 'Report Violation',
           headerStyle: {
             backgroundColor: themeColors.background,
@@ -257,7 +261,8 @@ const ReportViolationScreen = () => {
           }
         />
       </Card>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

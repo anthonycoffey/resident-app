@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   SafeAreaView,
   RefreshControl,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { View, Text, useThemeColor } from '@/components/Themed';
@@ -285,6 +287,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'space-between',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   centered: {
     flex: 1,

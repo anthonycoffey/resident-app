@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Alert,
   SafeAreaView,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import Button from '@/components/ui/Button';
 import { useNotifications } from '@/lib/context/NotificationsContext';
@@ -127,6 +129,7 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   headerButtons: {
     padding: 10,
