@@ -109,12 +109,12 @@ const ViolationList = forwardRef<ViolationListRef, ViolationListProps>(
             'violations'
           );
 
-          let q = query(
+            let q = query(
             violationsCollectionRef,
-            where('reporterId', '==', user.uid),
+            where('reportedBy.uid', '==', user.uid),
             orderBy('createdAt', 'desc'),
             limit(10)
-          );
+            );
 
           if (lastVisible && !isRefresh) {
             q = query(q, startAfter(lastVisible));
@@ -150,7 +150,7 @@ const ViolationList = forwardRef<ViolationListRef, ViolationListProps>(
 
     useEffect(() => {
       fetchViolations();
-    }, [user]);
+    }, []);
 
     useImperativeHandle(ref, () => ({
       refresh: () => {
