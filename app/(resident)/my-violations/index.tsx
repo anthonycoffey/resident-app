@@ -143,10 +143,9 @@ export default function MyViolationsScreen() {
   useEffect(() => {
     if (user) {
       fetchViolations();
-    } else {
-      setViolations([]); // Clear violations when user signs out
     }
-  }, [user, fetchViolations]);
+  }, [user]);
+
 
   const onRefresh = () => fetchViolations(true);
 
