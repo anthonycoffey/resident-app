@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Card from '@/components/ui/Card';
 import JourneySelection from './components/JourneySelection';
 import ServiceRequestForm from './components/ServiceRequestForm';
@@ -11,7 +10,6 @@ const ServiceRequestScreen = () => {
   const [journey, setJourney] = useState<Journey>(null);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ flexGrow: 1 }}
@@ -28,7 +26,6 @@ const ServiceRequestScreen = () => {
           )}
         </Card>
       </ScrollView>
-    </SafeAreaView>
   );
 };
 

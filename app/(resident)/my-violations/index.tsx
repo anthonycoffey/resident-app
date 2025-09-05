@@ -7,9 +7,6 @@ import {
   RefreshControl,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
-  Platform,
-  StatusBar,
 } from 'react-native';
 import { router } from 'expo-router';
 import Card from '@/components/ui/Card';
@@ -146,7 +143,6 @@ export default function MyViolationsScreen() {
     }
   }, [user]);
 
-
   const onRefresh = () => fetchViolations(true);
 
   const loadMore = () => {
@@ -156,9 +152,7 @@ export default function MyViolationsScreen() {
   };
 
   const renderItem = ({ item }: { item: Violation }) => (
-    <TouchableOpacity
-      onPress={() => router.push(`/my-violations/${item.id}`)}
-    >
+    <TouchableOpacity onPress={() => router.push(`/my-violations/${item.id}`)}>
       <Card style={styles.card}>
         <Text style={[styles.violationType, { color: textColor }]}>
           {formatViolationType(item.violationType)}
@@ -183,41 +177,41 @@ export default function MyViolationsScreen() {
           backgroundColor,
         }}
       >
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size='large' />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor }}>
+    <View style={{ flex: 1, backgroundColor }}>
       <FlatList
         data={violations}
         renderItem={renderItem}
-      keyExtractor={(item) => item.id}
-      contentContainerStyle={{ padding: 10 }}
-      style={{ backgroundColor }}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-      onEndReached={loadMore}
-      onEndReachedThreshold={0.5}
-      ListFooterComponent={loadingMore ? <ActivityIndicator /> : null}
-      ListEmptyComponent={
-        <View
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginTop: 50,
-          }}
-        >
-          <Text style={{ color: textColor, fontSize: 18 }}>
-            You have no outstanding violations.
-          </Text>
-        </View>
-      }
-    />
-    </SafeAreaView>
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ padding: 10 }}
+        style={{ backgroundColor }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={loadingMore ? <ActivityIndicator /> : null}
+        ListEmptyComponent={
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginTop: 50,
+            }}
+          >
+            <Text style={{ color: textColor, fontSize: 18 }}>
+              You have no outstanding violations.
+            </Text>
+          </View>
+        }
+      />
+    </View>
   );
 }
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Modal,
-  SafeAreaView,
   TextInput,
   FlatList,
   TouchableOpacity,
@@ -193,7 +192,7 @@ const AddressSearchModal = ({
       visible={visible}
       onRequestClose={onClose}
     >
-      <SafeAreaView style={styles.modalCenteredView}>
+      <View style={styles.modalCenteredView}>
         <View
           style={[
             styles.modalView,
@@ -257,7 +256,7 @@ const AddressSearchModal = ({
             style={{ marginTop: 15 }}
           />
         </View>
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 };

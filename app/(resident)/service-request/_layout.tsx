@@ -10,13 +10,6 @@ export default function ServiceRequestLayout() {
     <ServiceRequestProvider>
       <Stack>
         <Stack.Screen name='index' options={{ headerShown: false , title: 'Back',}} />
-        <Stack.Screen
-          name='address-search'
-          options={{
-            title: 'Search Address',
-            headerTintColor: headerTintColor,
-          }}
-        />
       </Stack>
     </ServiceRequestProvider>
   );

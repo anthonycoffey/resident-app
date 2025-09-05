@@ -4,7 +4,6 @@ import {
   Alert,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   Platform,
   StatusBar,
 } from 'react-native';
@@ -249,7 +248,7 @@ const MyProfileScreenContent = () => {
   }
 
   return (
-    <SafeAreaView
+    <View
       style={{
         flex: 1,
         paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
@@ -603,7 +602,7 @@ const MyProfileScreenContent = () => {
         onDismiss={() => setSnackbarVisible(false)}
         message='Profile updated successfully!'
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

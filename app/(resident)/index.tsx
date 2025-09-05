@@ -6,10 +6,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
-  SafeAreaView,
-  Platform,
-  StatusBar,
 } from 'react-native';
+
 import Button from '@/components/ui/Button';
 import { useNotifications } from '@/lib/context/NotificationsContext';
 import { Notification } from '@/lib/context/NotificationsContext';
@@ -67,33 +65,46 @@ export default function NotificationsScreen() {
           ]}
         >
           <View style={styles.notificationContent}>
-            <Text style={[styles.notificationTitle, { color: themeColors.text }]}>
+            <Text
+              style={[styles.notificationTitle, { color: themeColors.text }]}
+            >
               {item.title}
             </Text>
             <Text style={{ color: themeColors.text }}>{item.body}</Text>
-            <Text style={[styles.notificationDate, { color: themeColors.textMuted }]}>
+            <Text
+              style={[
+                styles.notificationDate,
+                { color: themeColors.textMuted },
+              ]}
+            >
               {formatRelativeTime(item.createdAt)}
             </Text>
           </View>
-          {!isRead && <View style={[styles.unreadDot, { backgroundColor: themeColors.primary }]} />}
+          {!isRead && (
+            <View
+              style={[
+                styles.unreadDot,
+                { backgroundColor: themeColors.primary },
+              ]}
+            />
+          )}
         </View>
       </TouchableOpacity>
     );
   };
 
   return (
-    <SafeAreaView
+    <View
       style={[
-        { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 },
         styles.container,
         { backgroundColor: Colors[colorScheme].background },
       ]}
     >
       <View style={styles.headerButtons}>
         <Button
-          title="Mark All as Read"
+          title='Mark All as Read'
           onPress={markAllAsRead}
-          icon="mark-email-read"
+          icon='mark-email-read'
         />
       </View>
       <FlatList
@@ -114,16 +125,18 @@ export default function NotificationsScreen() {
           </Text>
         }
       />
-      <View style={[styles.footer, { borderColor: Colors[colorScheme].divider }]}>
+      <View
+        style={[styles.footer, { borderColor: Colors[colorScheme].divider }]}
+      >
         <Button
-          title="Clear All Notifications"
+          title='Clear All Notifications'
           onPress={handleClearAll}
-          variant="filled"
+          variant='filled'
           destructive
-          icon="delete-forever"
+          icon='delete-forever'
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

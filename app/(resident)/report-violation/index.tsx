@@ -1,4 +1,4 @@
-import React, { use, useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Alert,
@@ -6,8 +6,8 @@ import {
   useColorScheme,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
 } from 'react-native';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { router, Stack, useNavigation } from 'expo-router';
@@ -140,33 +140,42 @@ const ReportViolationScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
       <ScrollView>
         <Stack.Screen
           options={{
-          title: 'Report Violation',
-          headerStyle: {
-            backgroundColor: themeColors.background,
-          },
-          headerTintColor: themeColors.text,
-        }}
-      />
-      <Card>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15, backgroundColor: 'transparent' }}>
-          <MaterialIcons name="report" size={24} color={themeColors.text} />
-          <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>Report Violation</Text>
-        </View>
-        <Text style={styles.label}>License Plate</Text>
-        <Input
-          placeholder='Enter License Plate'
-          value={licensePlate}
-          onChangeText={(text) =>
-            setLicensePlate(text.replace(/[^a-zA-Z0-9]/g, '').toUpperCase())
-          }
-          autoCapitalize='characters'
+            title: 'Report Violation',
+            headerStyle: {
+              backgroundColor: themeColors.background,
+            },
+            headerTintColor: themeColors.text,
+          }}
         />
+        <Card>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginBottom: 15,
+              backgroundColor: 'transparent',
+            }}
+          >
+            <MaterialIcons name='report' size={24} color={themeColors.text} />
+            <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>
+              Report Violation
+            </Text>
+          </View>
+          <Text style={styles.label}>License Plate</Text>
+          <Input
+            placeholder='Enter License Plate'
+            value={licensePlate}
+            onChangeText={(text) =>
+              setLicensePlate(text.replace(/[^a-zA-Z0-9]/g, '').toUpperCase())
+            }
+            autoCapitalize='characters'
+          />
 
-        {/* <Text style={styles.label}>Vehicle Make</Text>
+          {/* <Text style={styles.label}>Vehicle Make</Text>
         <Input
           placeholder='Enter Vehicle Make'
           value={make}
@@ -192,67 +201,96 @@ const ReportViolationScreen = () => {
           style={{ height: 100, textAlignVertical: 'top' }}
         /> */}
 
-        <Text style={styles.label}>Violation Type</Text>
-        <Dropdown
-          style={[
-            styles.dropdown,
-            {
-              borderColor: themeColors.divider,
-              backgroundColor: themeColors.input,
-            },
-          ]}
-          placeholderStyle={{ color: themeColors.label }}
-          selectedTextStyle={{ color: themeColors.text }}
-          data={violationTypes}
-          labelField='label'
-          valueField='value'
-          placeholder='Select Violation Type'
-          value={violationType}
-          onChange={(item) => {
-            setViolationType(item.value);
-          }}
-        />
-
-        <View style={styles.imageButtons}>
-          <Button
-            title='Take Photo'
-            onPress={() => handlePickImage(true)}
-            icon='photo-camera'
-            variant='outline'
-            style={styles.imageButton}
+          <Text style={styles.label}>Violation Type</Text>
+          <Dropdown
+            style={[
+              styles.dropdown,
+              {
+                borderColor: themeColors.divider,
+                backgroundColor: themeColors.input,
+              },
+            ]}
+            placeholderStyle={{ color: themeColors.label }}
+            selectedTextStyle={{ color: themeColors.text }}
+            data={violationTypes}
+            labelField='label'
+            valueField='value'
+            placeholder='Select Violation Type'
+            value={violationType}
+            onChange={(item) => {
+              setViolationType(item.value);
+            }}
           />
-          <Button
-            title='Choose Photo'
-            onPress={() => handlePickImage(false)}
-            icon='photo-library'
-            variant='outline'
-            style={styles.imageButton}
-          />
-        </View>
 
-        {image && <Image source={{ uri: image }} style={styles.imagePreview} />}
-
-        <Button
-          title='Submit Violation'
-          onPress={handleSubmit}
-          loading={loading}
-          disabled={loading}
-          style={styles.submitButton}
-        />
-      </Card>
-      <TouchableOpacity onPress={() => router.push('/report-violation/my-violations')}>
-        <Card>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'transparent' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'transparent' }}>
-              <MaterialIcons name="history" size={24} color={themeColors.text} />
-              <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>My Reported Violations</Text>
-            </View>
-            <MaterialIcons name="chevron-right" size={24} color={themeColors.text} />
+          <View style={styles.imageButtons}>
+            <Button
+              title='Take Photo'
+              onPress={() => handlePickImage(true)}
+              icon='photo-camera'
+              variant='outline'
+              style={styles.imageButton}
+            />
+            <Button
+              title='Choose Photo'
+              onPress={() => handlePickImage(false)}
+              icon='photo-library'
+              variant='outline'
+              style={styles.imageButton}
+            />
           </View>
+
+          {image && (
+            <Image source={{ uri: image }} style={styles.imagePreview} />
+          )}
+
+          <Button
+            title='Submit Violation'
+            onPress={handleSubmit}
+            loading={loading}
+            disabled={loading}
+            style={styles.submitButton}
+          />
         </Card>
-      </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => router.push('/report-violation/my-violations')}
+        >
+          <Card>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                backgroundColor: 'transparent',
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: 'transparent',
+                }}
+              >
+                <MaterialIcons
+                  name='history'
+                  size={24}
+                  color={themeColors.text}
+                />
+                <Text
+                  style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}
+                >
+                  My Reported Violations
+                </Text>
+              </View>
+              <MaterialIcons
+                name='chevron-right'
+                size={24}
+                color={themeColors.text}
+              />
+            </View>
+          </Card>
+        </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

@@ -2,9 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
-  Platform,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
@@ -19,7 +17,13 @@ import Avatar from '@/components/ui/Avatar';
 import JobStatusStepper from './components/JobStatusStepper';
 import JobDetailsDisplay from './components/JobDetailsDisplay';
 import { db } from '@/lib/config/firebaseConfig';
-import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore';
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  Timestamp,
+} from 'firebase/firestore';
 import { useAuth } from '@/lib/providers/AuthProvider';
 import ServiceRequestDetailsDisplay from './components/ServiceRequestDetailsDisplay';
 
@@ -43,7 +47,9 @@ const JobDetailsScreen = () => {
   const textMutedColor = useThemeColor({}, 'textMuted');
   const white = useThemeColor({}, 'white');
   const [job, setJob] = useState<Job | null>(null);
-  const [serviceRequest, setServiceRequest] = useState<ServiceRequest | null>(null);
+  const [serviceRequest, setServiceRequest] = useState<ServiceRequest | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -106,11 +112,11 @@ const JobDetailsScreen = () => {
     if (!job) return 0;
     switch (job.status) {
       case 'pending':
-        return 1
+        return 1;
       case 'assigned':
-        return 1
+        return 1;
       case 'en-route':
-        return 2
+        return 2;
       case 'in-progress':
         return 3;
       case 'completed':
@@ -125,7 +131,7 @@ const JobDetailsScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
       <Stack.Screen
         options={{
           headerTitle: 'Service Request Details',
@@ -144,7 +150,9 @@ const JobDetailsScreen = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {loading && !refreshing && <ActivityIndicator size='large' color={primaryColor} />}
+        {loading && !refreshing && (
+          <ActivityIndicator size='large' color={primaryColor} />
+        )}
         {error && !serviceRequest && (
           <View
             style={{
@@ -181,7 +189,7 @@ const JobDetailsScreen = () => {
                   justifyContent: 'center',
                   alignItems: 'center',
                   padding: 20,
-                  backgroundColor: 'transparent'
+                  backgroundColor: 'transparent',
                 }}
               >
                 <MaterialIcons
@@ -200,9 +208,15 @@ const JobDetailsScreen = () => {
                 >
                   Your request is in queue
                 </Text>
-                <Text style={{ fontSize: 16, textAlign: 'center', color: textMutedColor }}>
-                  We are finding a technician nearby. Please contact us if you require
-                  additional support.
+                <Text
+                  style={{
+                    fontSize: 16,
+                    textAlign: 'center',
+                    color: textMutedColor,
+                  }}
+                >
+                  We are finding a technician nearby. Please contact us if you
+                  require additional support.
                 </Text>
               </View>
             </Card>
@@ -329,7 +343,11 @@ const JobDetailsScreen = () => {
                       justifyContent: 'center',
                     }}
                   >
-                    <MaterialIcons name='person' size={36} color={textMutedColor} />
+                    <MaterialIcons
+                      name='person'
+                      size={36}
+                      color={textMutedColor}
+                    />
                   </View>
                 )}
                 <View
@@ -346,7 +364,12 @@ const JobDetailsScreen = () => {
                     ETA: {eta} ({distance})
                   </Text>
                 </View>
-                <View style={{ flexDirection: 'row', backgroundColor: 'transparent' }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    backgroundColor: 'transparent',
+                  }}
+                >
                   <TouchableOpacity
                     style={{
                       padding: 8,
@@ -359,7 +382,9 @@ const JobDetailsScreen = () => {
                       size={24}
                       color={primaryColor}
                     />
-                    <Text style={{ color: textMutedColor, fontSize: 12 }}>Message</Text>
+                    <Text style={{ color: textMutedColor, fontSize: 12 }}>
+                      Message
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={{
@@ -369,7 +394,9 @@ const JobDetailsScreen = () => {
                     onPress={() => handleContact('tel')}
                   >
                     <MaterialIcons name='call' size={24} color={primaryColor} />
-                    <Text style={{ color: textMutedColor, fontSize: 12 }}>Call</Text>
+                    <Text style={{ color: textMutedColor, fontSize: 12 }}>
+                      Call
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -395,7 +422,11 @@ const JobDetailsScreen = () => {
                       justifyContent: 'center',
                     }}
                   >
-                    <MaterialIcons name='support-agent' size={36} color={textMutedColor} />
+                    <MaterialIcons
+                      name='support-agent'
+                      size={36}
+                      color={textMutedColor}
+                    />
                   </View>
                   <View
                     style={{
@@ -404,12 +435,19 @@ const JobDetailsScreen = () => {
                       backgroundColor: 'transparent',
                     }}
                   >
-                    <Text style={{ fontSize: 14, color: textMutedColor }}>Dispatcher</Text>
+                    <Text style={{ fontSize: 14, color: textMutedColor }}>
+                      Dispatcher
+                    </Text>
                     <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
                       {job.dispatcher.fullName}
                     </Text>
                   </View>
-                  <View style={{ flexDirection: 'row', backgroundColor: 'transparent' }}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      backgroundColor: 'transparent',
+                    }}
+                  >
                     <TouchableOpacity
                       style={{
                         padding: 8,
@@ -422,7 +460,9 @@ const JobDetailsScreen = () => {
                         size={24}
                         color={primaryColor}
                       />
-                      <Text style={{ color: textMutedColor, fontSize: 12 }}>Message</Text>
+                      <Text style={{ color: textMutedColor, fontSize: 12 }}>
+                        Message
+                      </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={{
@@ -431,8 +471,14 @@ const JobDetailsScreen = () => {
                       }}
                       onPress={() => Linking.openURL('tel:+18444072723')}
                     >
-                      <MaterialIcons name='call' size={24} color={primaryColor} />
-                      <Text style={{ color: textMutedColor, fontSize: 12 }}>Call</Text>
+                      <MaterialIcons
+                        name='call'
+                        size={24}
+                        color={primaryColor}
+                      />
+                      <Text style={{ color: textMutedColor, fontSize: 12 }}>
+                        Call
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -445,7 +491,7 @@ const JobDetailsScreen = () => {
           </>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

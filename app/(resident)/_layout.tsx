@@ -31,7 +31,7 @@ function CustomDrawerContent(props: any) {
       />
       <DrawerItem
         label='Logout'
-        icon={({ size , color}) => (
+        icon={({ size, color }) => (
           <MaterialIcons name='logout' size={size} color={color} />
         )}
         onPress={logout}
@@ -64,14 +64,14 @@ export default function ResidentLayout() {
         <Drawer
           drawerContent={(props) => <CustomDrawerContent {...props} />}
           screenOptions={{
-          drawerActiveTintColor: activeTintColor,
-          headerTintColor: activeTintColor,
-          headerRight: () => <NotificationBell />,
-          headerLeft: () => (
-            <DrawerToggleButton tintColor={activeTintColor} />
-          ),
-        }}
-      >
+            drawerActiveTintColor: activeTintColor,
+            headerTintColor: activeTintColor,
+            headerRight: () => <NotificationBell />,
+            headerLeft: () => (
+              <DrawerToggleButton tintColor={activeTintColor} />
+            ),
+          }}
+        >
           <Drawer.Screen
             name='index'
             options={{

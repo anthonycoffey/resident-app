@@ -4,7 +4,6 @@ import {
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
-  SafeAreaView,
   RefreshControl,
   Platform,
   StatusBar,
@@ -200,7 +199,7 @@ const ServiceRequestsScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       {serviceRequests.length > 0 ? (
         <>
           <FlatList
@@ -279,7 +278,7 @@ const ServiceRequestsScreen = () => {
           You have no recent service requests.
         </Text>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 

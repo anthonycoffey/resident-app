@@ -3,13 +3,10 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
-  View,
-  SafeAreaView,
   Platform,
   StatusBar,
 } from 'react-native';
-import { useRouter, Link } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import {
@@ -78,42 +75,40 @@ export default function DeleteAccountScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor }]}>
-      <ScrollView>
-        <Card>
-          <ThemedText variant='title'>Delete Account</ThemedText>
-          <ThemedText style={styles.description}>
-            This action is irreversible. Please be certain you want to delete
-            your account before proceeding.
-          </ThemedText>
-          <ThemedText style={styles.description}>
-            To confirm, please enter your password below.
-          </ThemedText>
-          <Input
-            placeholder='Password'
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!isPasswordVisible}
-            style={styles.input}
-            rightIcon={
-              <Feather
-                name={isPasswordVisible ? 'eye-off' : 'eye'}
-                size={24}
-                color='gray'
-              />
-            }
-            onRightIconPress={() => setIsPasswordVisible(!isPasswordVisible)}
-          />
-          <Button
-            title='Delete My Account'
-            onPress={handleDeleteAccount}
-            loading={isLoading}
-            variant='filled'
-            destructive
-          />
-        </Card>
-      </ScrollView>
-    </SafeAreaView>
+    <ScrollView style={[styles.container, { backgroundColor }]}>
+      <Card>
+        <ThemedText variant='title'>Delete Account</ThemedText>
+        <ThemedText style={styles.description}>
+          This action is irreversible. Please be certain you want to delete your
+          account before proceeding.
+        </ThemedText>
+        <ThemedText style={styles.description}>
+          To confirm, please enter your password below.
+        </ThemedText>
+        <Input
+          placeholder='Password'
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!isPasswordVisible}
+          style={styles.input}
+          rightIcon={
+            <Feather
+              name={isPasswordVisible ? 'eye-off' : 'eye'}
+              size={24}
+              color='gray'
+            />
+          }
+          onRightIconPress={() => setIsPasswordVisible(!isPasswordVisible)}
+        />
+        <Button
+          title='Delete My Account'
+          onPress={handleDeleteAccount}
+          loading={isLoading}
+          variant='filled'
+          destructive
+        />
+      </Card>
+    </ScrollView>
   );
 }
 
@@ -121,7 +116,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-    padding: 16,
+    padding: 5,
   },
   description: {
     marginVertical: 8,
