@@ -84,6 +84,7 @@ export default function NotificationsScreen() {
   return (
     <SafeAreaView
       style={[
+        { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 },
         styles.container,
         { backgroundColor: Colors[colorScheme].background },
       ]}
@@ -129,7 +130,6 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   headerButtons: {
     padding: 10,

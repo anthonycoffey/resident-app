@@ -145,6 +145,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   badgeText: {
+    top: -4,
     color: 'white',
     fontSize: 10,
     fontWeight: 'bold',
