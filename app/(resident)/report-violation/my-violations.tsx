@@ -1,5 +1,6 @@
 import React from 'react';
-import { SafeAreaView, TouchableOpacity } from 'react-native';
+import { TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import ViolationList from '@/components/ViolationList';
 import { Stack, useRouter } from 'expo-router';
 import { useThemeColor } from '@/components/Themed';

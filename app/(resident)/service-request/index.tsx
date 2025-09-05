@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { SafeAreaView, ScrollView } from 'react-native';
+import { ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Card from '@/components/ui/Card';
 import JourneySelection from './components/JourneySelection';
 import ServiceRequestForm from './components/ServiceRequestForm';
