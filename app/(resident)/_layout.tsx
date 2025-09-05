@@ -183,6 +183,13 @@ export default function ResidentLayout() {
               title: 'Violation Details',
             }}
           />
+          <Drawer.Screen
+            name='report-violation/my-violations'
+            options={{
+              drawerItemStyle: { display: 'none' },
+              title: 'Violation Details',
+            }}
+          />
         </Drawer>
       </KeyboardAvoidingView>
     </ProfileProvider>

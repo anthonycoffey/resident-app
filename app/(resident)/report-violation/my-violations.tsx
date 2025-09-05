@@ -14,6 +14,7 @@ const MyReportedViolationsScreen = () => {
     <SafeAreaView style={{ flex: 1, backgroundColor }}>
       <Stack.Screen
         options={{
+          headerShown: true,
           title: 'My Reported Violations',
           headerStyle: {
             backgroundColor: backgroundColor,
