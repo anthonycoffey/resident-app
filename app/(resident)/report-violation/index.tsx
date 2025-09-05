@@ -7,8 +7,6 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
-  Platform,
-  StatusBar,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -24,10 +22,8 @@ import { functions, storage } from '@/lib/config/firebaseConfig';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
 import { Dropdown } from 'react-native-element-dropdown';
-import ViolationList, { ViolationListRef } from '@/components/ViolationList';
 
 const ReportViolationScreen = () => {
-  const violationListRef = useRef<ViolationListRef>(null);
   const navigation = useNavigation();
   const { user } = useAuth();
   const theme = useColorScheme() ?? 'light';
@@ -135,7 +131,6 @@ const ReportViolationScreen = () => {
       setAdditionalInfo('');
       setViolationType(null);
       setImage(null);
-      violationListRef.current?.refresh();
     } catch (error) {
       console.error('Error submitting violation report:', error);
       Alert.alert('Error', 'There was a problem submitting your report.');
@@ -245,22 +240,17 @@ const ReportViolationScreen = () => {
           style={styles.submitButton}
         />
       </Card>
-
-      <Card>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15, backgroundColor: 'transparent' }}>
-          <MaterialIcons name="history" size={24} color={themeColors.text} />
-          <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>My Reported Violations</Text>
-        </View>
-        <ViolationList
-          ref={violationListRef}
-          scrollEnabled={false}
-          ListEmptyComponent={
-            <Text style={{ textAlign: 'center', marginVertical: 20, color: themeColors.label }}>
-              You have not reported any violations.
-            </Text>
-          }
-        />
-      </Card>
+      <TouchableOpacity onPress={() => router.push('/report-violation/my-violations')}>
+        <Card>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'transparent' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'transparent' }}>
+              <MaterialIcons name="history" size={24} color={themeColors.text} />
+              <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>My Reported Violations</Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={24} color={themeColors.text} />
+          </View>
+        </Card>
+      </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );

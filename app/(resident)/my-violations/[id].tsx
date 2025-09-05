@@ -175,7 +175,7 @@ export default function ViolationDetailScreen() {
     if (violation?.residentId === user?.uid) {
       router.push('/my-violations');
     } else {
-      router.push('/');
+      router.push('/report-violation');
     }
   };
 

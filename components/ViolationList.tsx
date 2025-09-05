@@ -31,6 +31,8 @@ import { Violation } from '@/lib/types/violation';
 import Chip from '@/components/ui/Chip';
 import { formatStandardTime } from '@/lib/utils/dates';
 import { View, Text } from '@/components/Themed';
+import { TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 
 const formatViolationType = (type: string) => {
   if (!type) return '';
@@ -76,7 +78,7 @@ const ViolationList = forwardRef<ViolationListRef, ViolationListProps>(
     const [lastVisible, setLastVisible] =
       useState<QueryDocumentSnapshot<DocumentData> | null>(null);
     const [loadingMore, setLoadingMore] = useState(false);
-
+    const router = useRouter();
     const backgroundColor = useThemeColor({}, 'background');
     const textColor = useThemeColor({}, 'text');
 
@@ -109,12 +111,12 @@ const ViolationList = forwardRef<ViolationListRef, ViolationListProps>(
             'violations'
           );
 
-            let q = query(
+          let q = query(
             violationsCollectionRef,
             where('reportedBy.uid', '==', user.uid),
             orderBy('createdAt', 'desc'),
             limit(10)
-            );
+          );
 
           if (lastVisible && !isRefresh) {
             q = query(q, startAfter(lastVisible));
@@ -166,19 +168,29 @@ const ViolationList = forwardRef<ViolationListRef, ViolationListProps>(
       }
     };
 
-    const renderItem = ({ item }: { item: Violation }) => (
-      <View style={[styles.card, { backgroundColor }]}>
-        <Text style={[styles.violationType, { color: textColor }]}>
-          {formatViolationType(item.violationType)}
-        </Text>
-        <View style={styles.detailsContainer}>
-          <Text style={{ color: textColor }}>
-            {formatStandardTime(item.createdAt)}
-          </Text>
-          <Chip label={item.status} variant={getStatusVariant(item.status)} />
-        </View>
-      </View>
-    );
+    const renderItem = ({ item }: { item: Violation }) => {
+      return (
+        <TouchableOpacity
+          onPress={() => router.push(`/my-violations/${item.id}`)}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.card, { backgroundColor }]}>
+            <Text style={[styles.violationType, { color: textColor }]}>
+              {formatViolationType(item.violationType)}
+            </Text>
+            <View style={styles.detailsContainer}>
+              <Text style={{ color: textColor }}>
+                {formatStandardTime(item.createdAt)}
+              </Text>
+              <Chip
+                label={item.status}
+                variant={getStatusVariant(item.status)}
+              />
+            </View>
+          </View>
+        </TouchableOpacity>
+      );
+    };
 
     if (loading && !refreshing) {
       return (
