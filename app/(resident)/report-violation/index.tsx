@@ -175,32 +175,6 @@ const ReportViolationScreen = () => {
             autoCapitalize='characters'
           />
 
-          {/* <Text style={styles.label}>Vehicle Make</Text>
-        <Input
-          placeholder='Enter Vehicle Make'
-          value={make}
-          onChangeText={setMake}
-          autoCapitalize='words'
-        />
-
-        <Text style={styles.label}>Vehicle Model</Text>
-        <Input
-          placeholder='Enter Vehicle Model'
-          value={model}
-          onChangeText={setModel}
-          autoCapitalize='words'
-        />
-
-        <Text style={styles.label}>Additional Info (Optional)</Text>
-        <Input
-          placeholder='Additional Info (Optional)'
-          value={additionalInfo}
-          onChangeText={setAdditionalInfo}
-          multiline
-          numberOfLines={4}
-          style={{ height: 100, textAlignVertical: 'top' }}
-        /> */}
-
           <Text style={styles.label}>Violation Type</Text>
           <Dropdown
             style={[
@@ -251,10 +225,10 @@ const ReportViolationScreen = () => {
             style={styles.submitButton}
           />
         </Card>
-        <TouchableOpacity
-          onPress={() => router.push('/report-violation/my-violations')}
-        >
-          <Card>
+        <Card>
+          <TouchableOpacity
+            onPress={() => router.push('/report-violation/my-violations')}
+          >
             <View
               style={{
                 flexDirection: 'row',
@@ -287,8 +261,8 @@ const ReportViolationScreen = () => {
                 color={themeColors.text}
               />
             </View>
-          </Card>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </Card>
       </ScrollView>
     </View>
   );
